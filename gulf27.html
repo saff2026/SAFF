@@ -2438,7 +2438,7 @@ function genDailySummary(){
   if(typeof html2canvas!=='function'){toast('فشل: html2canvas غير محمل');return;}
   var TH = { title:'ملخّص اليوم', toastDone:'ملخص اليوم جاهز 📸' };
   var L = {
-    brand1:'دوري التوقّعات', brand2:'خليجي 27 · جدة',
+    brand1:'دوري التوقّعات', brand2:'خليجي 27 - جدة',
     heroHdr:'الترتيب', bestLabel:'أفضل لاعب اليوم', bestLabelPl:'أفضل لاعبي اليوم',
     resultsHdr:'النتائج السابقة', tomorrowHdr:'المباريات القادمة',
     noPts:'ما فيه نقاط اليوم.', noLb:'ما فيه لاعبين بعد.',
@@ -2731,7 +2731,7 @@ function genTraitorsPoster(matchId, forcedLoserSide){
   arcRings.forEach(function(g){arcsHtml+='<circle cx="-100" cy="-70" r="'+g[0]+'" fill="none" stroke="#FFD050" stroke-width="'+g[1]+'" stroke-opacity="'+g[2]+'"/>';});
   arcsHtml+='</svg>';
 
-  var brand1='دوري التوقّعات', brand2='خليجي 27 · جدة';
+  var brand1='دوري التوقّعات', brand2='خليجي 27 - جدة';
   var headerHtml='\
 <div style="display:flex;justify-content:space-between;align-items:center;">\
   <div style="display:flex;align-items:center;gap:20px;">\
@@ -2820,7 +2820,7 @@ function genStatsSummaryPoster(){
       +'<div style="width:2px;height:56px;background:rgba(255,255,255,.28);"></div>'
       +'<div style="text-align:right;line-height:1.25;">'
         +'<div style="font-size:24px;font-weight:900;color:#fff;">دوري التوقّعات</div>'
-        +'<div style="font-size:17px;font-weight:700;color:var(--gold);margin-top:3px;">خليجي 27 · جدة</div>'
+        +'<div style="font-size:17px;font-weight:700;color:var(--gold);margin-top:3px;">خليجي 27 - جدة</div>'
       +'</div>'
     +'</div>'
     +'<div class="kick" style="font-size:21px;color:var(--mute);">إحصائيات</div>'
@@ -4029,7 +4029,7 @@ function genScenariosPoster(){
       +'<div style="width:2px;height:56px;background:rgba(255,255,255,.28);"></div>'
       +'<div style="text-align:right;line-height:1.25;">'
         +'<div style="font-size:24px;font-weight:900;color:#fff;">دوري التوقّعات</div>'
-        +'<div style="font-size:17px;font-weight:700;color:var(--gold);margin-top:3px;">خليجي 27 · جدة</div>'
+        +'<div style="font-size:17px;font-weight:700;color:var(--gold);margin-top:3px;">خليجي 27 - جدة</div>'
       +'</div>'
     +'</div>'
     +'<div class="kick" style="font-size:21px;color:var(--mute);">'+arNum(d.remaining.length)+' مباراة متبقية</div>'
@@ -4321,7 +4321,7 @@ function computeSeasonSummary(){
     topByMatch: topByMatch
   };
 }
-// Shared poster header (SAFF logo + دوري التوقّعات · خليجي 27 + kick badge)
+// Shared poster header (SAFF logo + دوري التوقّعات - خليجي 27 + kick badge)
 function _seasonPosterHeader(kickLabel){
   return '<div style="display:flex;justify-content:space-between;align-items:center;">'
     +'<div style="display:flex;align-items:center;gap:20px;">'
@@ -4329,7 +4329,7 @@ function _seasonPosterHeader(kickLabel){
       +'<div style="width:2px;height:56px;background:rgba(255,255,255,.28);"></div>'
       +'<div style="text-align:right;line-height:1.25;">'
         +'<div style="font-size:24px;font-weight:900;color:#fff;">دوري التوقّعات</div>'
-        +'<div style="font-size:17px;font-weight:700;color:var(--gold);margin-top:3px;">خليجي 27 · جدة</div>'
+        +'<div style="font-size:17px;font-weight:700;color:var(--gold);margin-top:3px;">خليجي 27 - جدة</div>'
       +'</div>'
     +'</div>'
     +'<div class="kick" style="font-size:21px;color:var(--mute);">'+esc(kickLabel)+'</div>'
