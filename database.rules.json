@@ -2,7 +2,6 @@
   "rules": {
     "portas": {
       ".read": "auth != null",
-
       "users": {
         "$key": {
           ".write": "auth != null && newData.exists()",
@@ -14,7 +13,6 @@
           }
         }
       },
-
       "predictions": {
         "$emp": {
           "$key": {
@@ -23,28 +21,24 @@
           }
         }
       },
-
       "results": {
         "$emp": {
           ".write": "auth != null",
           ".validate": "newData.isString() && (newData.val() === 'up' || newData.val() === 'out' || newData.val() === 'stay')"
         }
       },
-
       "excluded": {
         "$emp": {
           ".write": "auth != null",
           ".validate": "newData.isBoolean()"
         }
       },
-
       "section": {
         "$emp": {
           ".write": "auth != null",
           ".validate": "newData.isString() && newData.val().length <= 40"
         }
       },
-
       "doubles": {
         "$key": {
           ".write": "auth != null",
@@ -52,10 +46,8 @@
         }
       }
     },
-
     "wc2026": {
       ".read": "auth != null",
-
       "users": {
         "$key": {
           ".write": "auth != null && newData.exists()",
@@ -67,7 +59,6 @@
           }
         }
       },
-
       "predictions": {
         "$mid": {
           "$key": {
@@ -76,30 +67,25 @@
           }
         }
       },
-
       "results": {
         "$mid": {
           ".write": "auth != null",
           ".validate": "newData.hasChildren(['h','a']) && newData.child('h').isNumber() && newData.child('a').isNumber() && newData.child('h').val() >= 0 && newData.child('a').val() >= 0"
         }
       },
-
       "teams": {
         "$mid": {
           ".write": "auth != null"
         }
       },
-
       "rooms": {
         "$rid": {
           ".write": "auth != null"
         }
       }
     },
-
     "saff2026": {
       ".read": "auth != null",
-
       "users": {
         "$key": {
           ".write": "auth != null && newData.exists()",
@@ -111,7 +97,6 @@
           }
         }
       },
-
       "predictions": {
         "$mid": {
           "$key": {
@@ -120,32 +105,90 @@
           }
         }
       },
-
       "results": {
         "$mid": {
           ".write": "auth != null",
           ".validate": "newData.hasChildren(['h','a']) && newData.child('h').isNumber() && newData.child('a').isNumber() && newData.child('h').val() >= 0 && newData.child('a').val() >= 0"
         }
       },
-
       "teams": {
         "$mid": {
           ".write": "auth != null"
         }
       },
-
       "rooms": {
         "$rid": {
           ".write": "auth != null"
         }
       },
-
       "polls": {
         "$pid": {
           "$key": {
             ".write": "auth != null",
             ".validate": "newData.isString() && newData.val().length <= 4"
           }
+        }
+      }
+    },
+    "gulf27": {
+      ".read": "auth != null",
+      "users": {
+        "$key": {
+          ".write": "auth != null && newData.exists()",
+          "name": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 30"
+          },
+          "ph": {
+            ".validate": "!data.exists() || newData.val() === data.val()"
+          }
+        }
+      },
+      "predictions": {
+        "$mid": {
+          "$key": {
+            ".write": "auth != null",
+            ".validate": "newData.hasChildren(['h','a']) && newData.child('h').isNumber() && newData.child('a').isNumber() && newData.child('h').val() >= 0 && newData.child('h').val() <= 30 && newData.child('a').val() >= 0 && newData.child('a').val() <= 30"
+          }
+        }
+      },
+      "results": {
+        "$mid": {
+          ".write": "auth != null",
+          ".validate": "newData.hasChildren(['h','a']) && newData.child('h').isNumber() && newData.child('a').isNumber() && newData.child('h').val() >= 0 && newData.child('a').val() >= 0"
+        }
+      },
+      "teams": {
+        "$mid": {
+          ".write": "auth != null"
+        }
+      },
+      "rooms": {
+        "$rid": {
+          ".write": "auth != null"
+        }
+      },
+      "polls": {
+        "$pid": {
+          "$key": {
+            ".write": "auth != null",
+            ".validate": "newData.isString() && newData.val().length <= 4"
+          }
+        }
+      },
+      "live": {
+        "$mid": {
+          ".write": "auth != null"
+        }
+      },
+      "storyResets": {
+        "$day": {
+          ".write": "auth != null"
+        }
+      },
+      "scorers": {
+        "$sid": {
+          ".write": "auth != null",
+          ".validate": "!newData.exists() || (newData.hasChildren(['name','goals']) && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 60 && newData.child('goals').isNumber() && newData.child('goals').val() >= 0 && newData.child('goals').val() <= 30)"
         }
       }
     }
