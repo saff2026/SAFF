@@ -603,11 +603,13 @@ img.flag{display:inline-block;width:1.45em;height:.95em;vertical-align:-2px;bord
   </div>
   <div class="section-title">📊 المجموعات والهدافون</div>
   <div class="sub-tabs">
-    <button class="sub-tab active" data-sub="standings">الترتيب</button>
+    <button class="sub-tab active" data-sub="bracket">الإقصائيات</button>
     <button class="sub-tab" data-sub="scorers">الهدافون</button>
+    <button class="sub-tab" data-sub="standings">الترتيب</button>
   </div>
+  <div id="bracketView" style="width:100%;display:flex;flex-direction:column;gap:8px;"></div>
   <div id="scorersView" style="width:100%;display:none;flex-direction:column;gap:8px;"></div>
-  <div id="standingsView" style="width:100%;display:flex;flex-direction:column;gap:14px;"></div>
+  <div id="standingsView" style="width:100%;display:none;flex-direction:column;gap:14px;"></div>
 </div>
 
 <!-- RULES -->
@@ -1038,12 +1040,12 @@ var STORIES=[
   {team:'عمان',aliases:['عُمان','سلطنة عمان','سلطنه عمان','الاحمر','الأحمر','oman'],hint1:'حصد كأس الخليج لأول مرة في تاريخه عام ٢٠٠٩ وهو يستضيف البطولة، بعد ركلات ترجيح في النهائي.',hint2:'لم يتأهل لكأس العالم في تاريخه رغم وصوله لأدوار متقدمة في التصفيات الآسيوية.'},
   {team:'البحرين',aliases:['بحرين','الاحمر البحريني','bahrain'],hint1:'خسر ملحق التأهل لكأس العالم مرتين: أمام ترينيداد وتوباغو لنسخة ٢٠٠٦، وأمام نيوزيلندا لنسخة ٢٠١٠.',hint2:'حصد لقب كأس الخليج لأول مرة في تاريخه عام ٢٠١٩ في الدوحة.'},
   {team:'اليمن',aliases:['يمن','yemen'],hint1:'تشكّل منتخبه الحالي بعد توحيد شطري البلاد عام ١٩٩٠.',hint2:'ظهر لأول مرة في نهائيات كأس آسيا عام ٢٠١٩ في الإمارات.'},
-  {team:'المغرب',aliases:['مغرب','اسود الاطلس','أسود الأطلس','morocco'],hint1:'في كأس العالم ١٩٨٦ صار أول منتخب عربي وأفريقي يتصدّر مجموعته ويبلغ دور الـ١٦.',hint2:'في كأس العالم ٢٠٢٢ بقطر أقصى بلجيكا وإسبانيا والبرتغال ليصبح أول منتخب عربي وأفريقي يبلغ نصف النهائي.'},
-  {team:'مصر',aliases:['مصر','الفراعنه','الفراعنة','egypt'],hint1:'أول منتخب أفريقي وعربي يشارك في نهائيات كأس العالم، وكان ذلك عام ١٩٣٤.',hint2:'أكثر منتخب تتويجًا بكأس أمم أفريقيا برصيد ٧ ألقاب.'},
-  {team:'الجزائر',aliases:['جزائر','الخضر','محاربو الصحراء','algeria'],hint1:'في كأس العالم ١٩٨٢ فاز على ألمانيا الغربية ٢-١ ثم أُقصي بعد مباراة مثيرة للجدل بين ألمانيا والنمسا.',hint2:'حصد كأس أمم أفريقيا مرتين: ١٩٩٠ على أرضه، و٢٠١٩ في مصر.'},
-  {team:'تونس',aliases:['تونس','نسور قرطاج','tunisia'],hint1:'صاحب أول فوز لمنتخب أفريقي في نهائيات كأس العالم، بفوزه على المكسيك ٣-١ عام ١٩٧٨.',hint2:'حصد كأس أمم أفريقيا ٢٠٠٤ على أرضه بفوزه على المغرب في النهائي.'},
-  {team:'الأردن',aliases:['الاردن','اردن','النشامى','النشامي','jordan'],hint1:'بلغ نهائي كأس آسيا لأول مرة في تاريخه عام ٢٠٢٤ بعد أن أقصى كوريا الجنوبية في نصف النهائي.',hint2:'تأهّل لأول مرة في تاريخه لنهائيات كأس العالم في نسخة ٢٠٢٦.'},
-  {team:'السودان',aliases:['سودان','صقور الجديان','sudan'],hint1:'من المنتخبات الأربعة المؤسِّسة لبطولة كأس أمم أفريقيا عام ١٩٥٧.',hint2:'حصد لقب كأس أمم أفريقيا مرة واحدة، عام ١٩٧٠ على أرضه.'}
+  {team:'الكويت',aliases:['كويت','الازرق','الأزرق','kuwait'],hint1:'شارك في نهائيات كأس العالم مرة واحدة في تاريخه، في إسبانيا ١٩٨٢، وخرج بتعادل أمام تشيكوسلوفاكيا.',hint2:'فاز بأربع نسخ متتالية من كأس الخليج في السبعينيات: ١٩٧٠ و١٩٧٢ و١٩٧٤ و١٩٧٦.'},
+  {team:'العراق',aliases:['عراق','اسود الرافدين','أسود الرافدين','iraq'],hint1:'شارك في نهائيات كأس العالم مرة واحدة، في المكسيك ١٩٨٦، وخسر مبارياته الثلاث.',hint2:'حصد ذهبية كرة القدم في دورة الألعاب الآسيوية ١٩٨٢ بنيودلهي.'},
+  {team:'قطر',aliases:['قطر','العنابي','qatar'],hint1:'شارك ضيفًا في كوبا أمريكا ٢٠١٩، وبلغ نصف نهائي الكأس الذهبية عام ٢٠٢١.',hint2:'توّج بكأس الخليج ٣ مرات، أولها عام ١٩٩٢ على أرضه.'},
+  {team:'الإمارات',aliases:['الامارات','امارات','الابيض','الأبيض','uae','emirates','united arab emirates'],hint1:'حلّ ثالثًا في كأس آسيا ٢٠١٥ بأستراليا بعد فوزه على العراق في مباراة تحديد المركز.',hint2:'توّج بكأس الخليج مرتين: ٢٠٠٧ في أبوظبي، و٢٠١٣ في المنامة.'},
+  {team:'عمان',aliases:['عُمان','سلطنة عمان','سلطنه عمان','الاحمر','الأحمر','oman'],hint1:'أحرز لقبه الثاني في كأس الخليج عام ٢٠١٧ بالكويت، بركلات الترجيح أمام الإمارات.',hint2:'ظهر لأول مرة في نهائيات كأس آسيا عام ٢٠٠٤، ويُلقّب منتخبه بـ«الأحمر».'},
+  {team:'السعودية',aliases:['السعوديه','المملكه العربيه السعوديه','المملكة العربية السعودية','الاخضر','الأخضر','saudi arabia','saudi','ksa'],hint1:'في كأس العالم ١٩٩٤ سجّل أحد لاعبيه هدفًا فرديًا بعد أن راوغ نصف دفاع بلجيكا، ويُعدّ من أشهر أهداف البطولة.',hint2:'فاز على الأرجنتين ٢-١ في مونديال ٢٠٢٢، والأرجنتين توّجت باللقب في تلك النسخة.'}
 ];
 function _ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function todayKey(){return _ymd(new Date());}
@@ -3620,7 +3622,8 @@ function brWhen(m){
   var d=new Date(t);
   if(m.tbd) return arNum(d.getDate())+' '+AR_MONTH[d.getMonth()];
   var hh=d.getHours(), suf=(hh>=12?'م':'ص'); var h12=hh%12; if(h12===0) h12=12;
-  return arNum(d.getDate())+' '+AR_MONTH[d.getMonth()]+' · '+arNum(h12)+suf;
+  var mm=d.getMinutes(); var mmS=(mm<10?'0':'')+mm;   // الدقائق مهمة: ٦:٥٥ ليست ٦
+  return arNum(d.getDate())+' '+AR_MONTH[d.getMonth()]+' · '+arNum(h12+':'+mmS)+suf;
 }
 function bracketCard(m, ctx){
   var t=teamsOf(m), r=result(m), lv=liveScore(m);
@@ -5019,6 +5022,8 @@ document.querySelectorAll('.sub-tab[data-sub]').forEach(function(b){b.addEventLi
   document.querySelectorAll('.sub-tab[data-sub]').forEach(function(x){x.classList.toggle('active',x.dataset.sub===s);});
   document.getElementById('standingsView').style.display=s==='standings'?'flex':'none';
   document.getElementById('scorersView').style.display=s==='scorers'?'flex':'none';
+  document.getElementById('bracketView').style.display=s==='bracket'?'flex':'none';
+  if(s==='bracket') renderBracket();
 });});
 document.querySelectorAll('.sub-tab[data-leadsub]').forEach(function(b){b.addEventListener('click',function(){
   var s=b.dataset.leadsub;
