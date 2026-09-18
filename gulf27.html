@@ -1024,6 +1024,7 @@ var editingMatch=null;
 var draft={}; // matchId -> {h,a}
 var draftEdited={}; // matchId -> true once the user has touched the draft this session
 var predsLoaded=false; // flips to true after the first predictions snapshot lands
+var usersLoaded=false; // يصير true بعد أول لقطة من users — قبلها ما نعرض خانات توقّعات البطولة
 var storyScores={}; // userKey -> { 'YYYY-MM-DD': {pts:0/5/10, won, idx} }
 var storyResets={}; // 'YYYY-MM-DD' -> reset timestamp; invalidates stale localStorage
 // ===== "قصة منتخب" daily game =====
@@ -1866,6 +1867,7 @@ function listen(){
   var __myPicksDigest=null;
   ROOT.child('users').on('value',function(s){
     usersData=s.val()||{};
+    usersLoaded=true;
     // Rebuild storyScores from users/<key>/story/<date> so the daily-story
     // record follows the account (Firebase users node) instead of the device.
     storyScores={};
@@ -1950,12 +1952,41 @@ function filteredMatches(){
 }
 
 // ===== RENDER MATCHES =====
+// حالة خانات بطاقة توقّعات البطولة قبل إعادة بناء القائمة.
+// renderMatches تُستدعى كل ٣٠ ثانية ومع كل تحديث من فايربيس، وكانت تبني
+// البطاقة من جديد فتضيع الاختيارات التي لم تُحفظ بعد.
+var TOUR_PICK_IDS=['__pickChampion','__pickScorer','__pickMvp','__pickGk'];
+var __tourUI=null;
+function captureTourUI(){
+  __tourUI=null;
+  if(!usersLoaded) return;                       // الخانات غير معروضة أصلًا
+  if(!document.getElementById(TOUR_PICK_IDS[0])) return;
+  var st={};
+  TOUR_PICK_IDS.forEach(function(id){
+    var h=document.getElementById(id); if(!h) return;
+    var vi=h.parentElement&&h.parentElement.querySelector('.psearch-input');
+    st[id]={v:h.value||'', t:vi?vi.value:''};
+  });
+  __tourUI=st;
+}
+function restoreTourUI(){
+  if(!__tourUI) return;
+  var st=__tourUI; __tourUI=null;
+  Object.keys(st).forEach(function(id){
+    var h=document.getElementById(id); if(!h) return;
+    var vi=h.parentElement&&h.parentElement.querySelector('.psearch-input');
+    h.value=st[id].v;
+    if(vi) vi.value=st[id].t;
+  });
+}
+
 // أزرار ×2 الظاهرة حاليًا، عشان يتحدّث العدّاد في كل البطاقات مع أي تبديل
 var __x2btns=[];
 function refreshBoostLabels(){__x2btns.forEach(function(f){try{f();}catch(e){}});}
 function renderMatches(){
   var list=document.getElementById('matchList');
   if(!list)return;
+  captureTourUI();      // لا نفقد اختيارات البطولة غير المحفوظة عند إعادة البناء
   __x2btns=[];
   // Build the new content in a DocumentFragment so the page never momentarily
   // shrinks — that brief shrink is what was throwing iOS Safari's scroll
@@ -1983,6 +2014,7 @@ function renderMatches(){
   }
   if(list.replaceChildren) list.replaceChildren(frag);
   else { while(list.firstChild) list.removeChild(list.firstChild); list.appendChild(frag); }
+  restoreTourUI();
   // Pin scroll BEFORE releasing the height lock so the document can't dip.
   if(sy && Math.abs(window.scrollY-sy)>2) window.scrollTo(0,sy);
   // Drop the height pin on the next frame, after the new cards have laid out.
@@ -2081,6 +2113,13 @@ function tournamentCard(){
   var truth=tournamentTruth();
   var picks=tournamentPicksOf(myKey);
   var eye=document.createElement('div');eye.className='tour-eye';
+  if(!locked && !usersLoaded){
+    // لقطة users ما وصلت بعد. لو عرضنا الخانات الآن لطلعت فارغة، وأي ضغطة
+    // حفظ تكتب قيمًا فارغة فوق توقّعات محفوظة فعلًا وتمسحها.
+    eye.textContent='جاري تحميل توقّعاتك…';
+    card.appendChild(eye);
+    return card;
+  }
   if(!locked){
     eye.textContent='التوقّع يتقفل مع بداية أول مباراة.';
     card.appendChild(eye);
@@ -2101,8 +2140,14 @@ function tournamentCard(){
     var btn=document.createElement('button');btn.className='tour-save';
     btn.textContent=(picks.scorer||picks.champion||picks.mvp||picks.gk)?'حدّث التوقّعات':'احفظ التوقّعات';
     btn.addEventListener('click',function(){
-      var upd={champion:resolveTeamPick('__pickChampion'),scorer:resolveScorerPick('__pickScorer'),
-               mvp:resolveScorerPick('__pickMvp'),gk:resolveScorerPick('__pickGk')};
+      if(!usersLoaded){toast('جاري تحميل توقّعاتك… حاول بعد لحظة');return;}
+      var vals={champion:resolveTeamPick('__pickChampion'),scorer:resolveScorerPick('__pickScorer'),
+                mvp:resolveScorerPick('__pickMvp'),gk:resolveScorerPick('__pickGk')};
+      // خانة فارغة تعني «ما اخترت بعد»، لا «امسح اختياري». نكتب المملوء فقط،
+      // فلا يمسح حفظٌ لخانة واحدة بقية التوقّعات المحفوظة.
+      var upd={}, n=0;
+      Object.keys(vals).forEach(function(k){ if(vals[k]){upd[k]=vals[k];n++;} });
+      if(!n){toast('اختر توقّعًا واحدًا على الأقل');return;}
       ROOT.child('users/'+myKey).update(upd).then(function(){toast('انحفظت التوقعات 🏆');btn.textContent='حدّث التوقّعات';}).catch(function(e){toast('فشل الحفظ: '+((e&&e.code)||e));});
     });
     card.appendChild(btn);
