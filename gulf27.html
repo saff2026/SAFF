@@ -603,13 +603,11 @@ img.flag{display:inline-block;width:1.45em;height:.95em;vertical-align:-2px;bord
   </div>
   <div class="section-title">📊 المجموعات والهدافون</div>
   <div class="sub-tabs">
-    <button class="sub-tab active" data-sub="bracket">شجرة الإقصائيات</button>
+    <button class="sub-tab active" data-sub="standings">الترتيب</button>
     <button class="sub-tab" data-sub="scorers">الهدافون</button>
-    <button class="sub-tab" data-sub="standings">الترتيب</button>
   </div>
-  <div id="bracketView" style="width:100%;display:flex;flex-direction:column;gap:8px;"></div>
   <div id="scorersView" style="width:100%;display:none;flex-direction:column;gap:8px;"></div>
-  <div id="standingsView" style="width:100%;display:none;flex-direction:column;gap:14px;"></div>
+  <div id="standingsView" style="width:100%;display:flex;flex-direction:column;gap:14px;"></div>
 </div>
 
 <!-- RULES -->
@@ -5021,8 +5019,6 @@ document.querySelectorAll('.sub-tab[data-sub]').forEach(function(b){b.addEventLi
   document.querySelectorAll('.sub-tab[data-sub]').forEach(function(x){x.classList.toggle('active',x.dataset.sub===s);});
   document.getElementById('standingsView').style.display=s==='standings'?'flex':'none';
   document.getElementById('scorersView').style.display=s==='scorers'?'flex':'none';
-  document.getElementById('bracketView').style.display=s==='bracket'?'flex':'none';
-  if(s==='bracket') renderBracket();
 });});
 document.querySelectorAll('.sub-tab[data-leadsub]').forEach(function(b){b.addEventListener('click',function(){
   var s=b.dataset.leadsub;
