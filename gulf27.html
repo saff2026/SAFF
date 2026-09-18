@@ -683,14 +683,24 @@ img.flag{display:inline-block;width:1.45em;height:.95em;vertical-align:-2px;bord
     <table class="ptable">
       <tr><th>النقاط</th><th>الحالة</th><th>مثال</th></tr>
       <tr>
-        <td class="pcell">30</td>
+        <td class="pcell">5</td>
         <td><b>بطل الكأس:</b> اخترت المنتخب الفائز بخليجي 27</td>
         <td>اخترت <b>السعودية</b> وفازت بالنهائي</td>
       </tr>
       <tr>
-        <td class="pcell">15</td>
+        <td class="pcell">5</td>
         <td><b>هدّاف البطولة:</b> اخترت اللاعب اللي يطلع هدّاف البطولة</td>
-        <td>اخترت <b>سالم الدوسري</b> وطلع هدّاف البطولة بأعلى عدد أهداف</td>
+        <td>اخترت <b>فراس البريكان</b> وطلع هدّاف البطولة بأعلى عدد أهداف</td>
+      </tr>
+      <tr>
+        <td class="pcell">3</td>
+        <td><b>أفضل لاعب:</b> اخترت اللاعب اللي يُختار أفضل لاعب في البطولة</td>
+        <td>اخترت <b>أكرم عفيف</b> وطلع أفضل لاعب</td>
+      </tr>
+      <tr>
+        <td class="pcell">3</td>
+        <td><b>أفضل حارس:</b> اخترت الحارس اللي يُختار أفضل حارس في البطولة</td>
+        <td>اخترت <b>مشعل برشم</b> وطلع أفضل حارس</td>
       </tr>
     </table>
     <div style="font-size:.78rem;color:var(--muted);margin-top:8px">يتقفل التوقّع مع بداية أول مباراة في البطولة، وما تقدر تعدّله بعدها.</div>
@@ -698,7 +708,7 @@ img.flag{display:inline-block;width:1.45em;height:.95em;vertical-align:-2px;bord
 
   <div class="rules">
     <b>📌 ملاحظات مهمة</b><br>
-    • <b>بطاقات ×2:</b> عندك 5 مرات تستخدم فيها البطاقة في البطولة كاملة، فعّلها على المباراة قبل ما تبدأ <b>وبتتضاعف نقاطك</b> فيها<br>
+    • <b>بطاقات ×2:</b> عندك <b>بطاقتين</b> فقط في البطولة كاملة، فعّلها على المباراة قبل ما تبدأ <b>وبتتضاعف نقاطك</b> فيها<br>
     • <b>التوقع يفتح قبل المباراة بـ24 ساعة</b>، وتقدر تغيّره زي ما تبغى لين تبدأ المباراة<br>
     • <b>لو تعادلتوا في الترتيب</b>، اللي توقع نتائج صح أكثر هو اللي يكون مركزه أعلى
   </div>
@@ -896,56 +906,92 @@ var ADMIN_CODE = "2026";
 // الإعدادات (⚙️) وأدوات الإدارة تظهر فقط لهذا الحساب
 var ADMIN_NAME = "Mnajjar3";
 
-// ===== توقعات البطولة الكاملة (البطل + الهدّاف) =====
+// ===== توقعات البطولة الكاملة (البطل + الهدّاف + أفضل لاعب + أفضل حارس) =====
 // تتقفل التوقعات مع بداية أول مباراة. النقاط تتحسب بعد ما يدخل الأدمن النتيجة الفعلية.
-var TOURNAMENT_CHAMPION_PTS = 30;
-var TOURNAMENT_SCORER_PTS   = 15;
+var TOURNAMENT_CHAMPION_PTS = 5;
+var TOURNAMENT_SCORER_PTS   = 5;
+var TOURNAMENT_MVP_PTS      = 3;   // أفضل لاعب في البطولة
+var TOURNAMENT_GK_PTS       = 3;   // أفضل حارس مرمى
 var SCORER_TEAM_ALIAS={};
-// قائمة مقترحة بأبرز لاعبي منتخبات خليجي 27 — للمساعدة في اختيار الهدّاف فقط.
-// القائمة استرشادية وليست كشوفات رسمية، ويقدر اللاعب يكتب أي اسم آخر يدويًا.
+// قوائم المنتخبات المعلنة لخليجي 27 (سبتمبر 2026). p:'G' = حارس مرمى.
+// اليمن: لم تُنشر قائمته النهائية للبطولة، فاستُخدمت آخر قائمة نهائية معلنة له.
 var PLAYERS = [
-{n:"سالم الدوسري",t:"Saudi Arabia"},{n:"فراس البريكان",t:"Saudi Arabia"},{n:"صالح الشهري",t:"Saudi Arabia"},
-{n:"عبدالله رديف",t:"Saudi Arabia"},{n:"مصعب الجوير",t:"Saudi Arabia"},{n:"مروان الصحفي",t:"Saudi Arabia"},
-{n:"أيمن يحيى",t:"Saudi Arabia"},{n:"عبدالرحمن العبود",t:"Saudi Arabia"},{n:"ناصر الدوسري",t:"Saudi Arabia"},
-{n:"محمد كنو",t:"Saudi Arabia"},{n:"سلطان الغنام",t:"Saudi Arabia"},{n:"سعود عبدالحميد",t:"Saudi Arabia"},
-{n:"علي البليهي",t:"Saudi Arabia"},{n:"حسن كادش",t:"Saudi Arabia"},{n:"علي لاجامي",t:"Saudi Arabia"},
-{n:"عبدالله الحمدان",t:"Saudi Arabia"},{n:"هيثم عسيري",t:"Saudi Arabia"},{n:"تركي العمار",t:"Saudi Arabia"},
-{n:"نواف العقيدي",t:"Saudi Arabia"},{n:"أحمد الكسار",t:"Saudi Arabia"},
+// ===== السعودية — دونيس (26) =====
+{n:"محمد العويس",t:"Saudi Arabia",p:"G"},{n:"نواف العقيدي",t:"Saudi Arabia",p:"G"},{n:"حامد يوسف",t:"Saudi Arabia",p:"G"},
+{n:"عبدالإله العمري",t:"Saudi Arabia"},{n:"جهاد ذكري",t:"Saudi Arabia"},{n:"ريان حامد",t:"Saudi Arabia"},
+{n:"حسن كادش",t:"Saudi Arabia"},{n:"حسان تمبكتي",t:"Saudi Arabia"},{n:"نواف بوشل",t:"Saudi Arabia"},
+{n:"محمد محرزي",t:"Saudi Arabia"},{n:"متعب الحربي",t:"Saudi Arabia"},{n:"زكريا هوساوي",t:"Saudi Arabia"},
+{n:"مصعب الجوير",t:"Saudi Arabia"},{n:"محمد القحطاني",t:"Saudi Arabia"},{n:"محمد كنو",t:"Saudi Arabia"},
+{n:"زياد الجهني",t:"Saudi Arabia"},{n:"عبدالله الخيبري",t:"Saudi Arabia"},{n:"ناصر الدوسري",t:"Saudi Arabia"},
+{n:"علاء آل حجي",t:"Saudi Arabia"},{n:"فراس البريكان",t:"Saudi Arabia"},{n:"عبدالله الحمدان",t:"Saudi Arabia"},
+{n:"سلطان مندش",t:"Saudi Arabia"},{n:"محمد أبو الشامات",t:"Saudi Arabia"},{n:"صالح أبو الشامات",t:"Saudi Arabia"},
+{n:"همام الهمامي",t:"Saudi Arabia"},{n:"عبدالله آل سالم",t:"Saudi Arabia"},
 
-{n:"أيمن حسين",t:"Iraq"},{n:"علي جاسم",t:"Iraq"},{n:"مهند علي",t:"Iraq"},{n:"أمير العماري",t:"Iraq"},
-{n:"زيدان إقبال",t:"Iraq"},{n:"إبراهيم بايش",t:"Iraq"},{n:"أسامة رشيد",t:"Iraq"},{n:"شيركو كريم",t:"Iraq"},
-{n:"علي الحمادي",t:"Iraq"},{n:"يوسف أمين",t:"Iraq"},{n:"ريبين سولاكا",t:"Iraq"},
-{n:"حسين علي",t:"Iraq"},{n:"مناف يونس",t:"Iraq"},{n:"أحمد يحيى",t:"Iraq"},{n:"جلال حسن",t:"Iraq"},
+// ===== العراق — أرنولد (26) =====
+{n:"أحمد باسل",t:"Iraq",p:"G"},{n:"حسين حسن",t:"Iraq",p:"G"},{n:"محمد صالح",t:"Iraq",p:"G"},
+{n:"أحمد يحيى",t:"Iraq"},{n:"محمد دلاور",t:"Iraq"},{n:"ميرخاس دوسكي",t:"Iraq"},{n:"يوسف الإمام",t:"Iraq"},
+{n:"آكام هاشم",t:"Iraq"},{n:"زيد تحسين",t:"Iraq"},{n:"ميثم جبار",t:"Iraq"},{n:"مصطفى سعدون",t:"Iraq"},
+{n:"زيدان إقبال",t:"Iraq"},{n:"إبراهيم بايش",t:"Iraq"},{n:"محمد قاسم",t:"Iraq"},{n:"كيفن يعقوب",t:"Iraq"},
+{n:"عبدالرزاق قاسم",t:"Iraq"},{n:"حيدر عبدالكريم",t:"Iraq"},{n:"أمير العماري",t:"Iraq"},{n:"زيد إسماعيل",t:"Iraq"},
+{n:"بسام شاكر",t:"Iraq"},{n:"يوسف النصراوي",t:"Iraq"},{n:"علي جاسم",t:"Iraq"},{n:"أحمد قاسم",t:"Iraq"},
+{n:"أيمن حسين",t:"Iraq"},{n:"سيف رشيد",t:"Iraq"},{n:"علي الحمادي",t:"Iraq"},
 
-{n:"يوسف ناصر",t:"Kuwait"},{n:"شبيب الخالدي",t:"Kuwait"},{n:"عيد الرشيدي",t:"Kuwait"},
-{n:"حمد القلاف",t:"Kuwait"},{n:"رضا هاني",t:"Kuwait"},{n:"سلطان العنزي",t:"Kuwait"},{n:"فيصل زايد",t:"Kuwait"},
-{n:"محمد دهام",t:"Kuwait"},{n:"أحمد الظفيري",t:"Kuwait"},{n:"عبدالله البلوشي",t:"Kuwait"},
+// ===== الكويت — هيليو سوزا (27) =====
+{n:"خالد الرشيدي",t:"Kuwait",p:"G"},{n:"سعود الحوشان",t:"Kuwait",p:"G"},{n:"عبدالرحمن الفضلي",t:"Kuwait",p:"G"},
+{n:"راكان السعيد",t:"Kuwait",p:"G"},
+{n:"فهد الهاجري",t:"Kuwait"},{n:"خالد صباح",t:"Kuwait"},{n:"يوسف الحقان",t:"Kuwait"},{n:"عبدالعزيز مهران",t:"Kuwait"},
+{n:"عبدالوهاب العوضي",t:"Kuwait"},{n:"راشد الدوسري",t:"Kuwait"},{n:"معاذ الظفيري",t:"Kuwait"},{n:"محسن فلاح",t:"Kuwait"},
+{n:"رضا هاني",t:"Kuwait"},{n:"خالد المرشد",t:"Kuwait"},{n:"جاسم المطر",t:"Kuwait"},{n:"أحمد الظفيري",t:"Kuwait"},
+{n:"عذبي شهاب",t:"Kuwait"},{n:"عبدالله القرزعي",t:"Kuwait"},{n:"ناصر فالح",t:"Kuwait"},{n:"مهدي دشتي",t:"Kuwait"},
+{n:"عيد الرشيدي",t:"Kuwait"},{n:"يوسف ماجد",t:"Kuwait"},{n:"محمد دحام",t:"Kuwait"},{n:"مبارك الفنيني",t:"Kuwait"},
+{n:"عبدالله العوضي",t:"Kuwait"},{n:"شبيب الخالدي",t:"Kuwait"},{n:"يوسف ناصر",t:"Kuwait"},
 
+// ===== عُمان — السكتيوي (26) =====
+{n:"إبراهيم المخيني",t:"Oman",p:"G"},{n:"أحمد الرواحي",t:"Oman",p:"G"},{n:"إبراهيم الراجحي",t:"Oman",p:"G"},
+{n:"حارب السعدي",t:"Oman"},{n:"خالد البريكي",t:"Oman"},{n:"عبدالمجيد البلوشي",t:"Oman"},{n:"محسن الغساني",t:"Oman"},
+{n:"جميل اليحمدي",t:"Oman"},{n:"أحمد الكعبي",t:"Oman"},{n:"أمجد الحارثي",t:"Oman"},{n:"عبدالله فواز",t:"Oman"},
+{n:"زاهر الأغبري",t:"Oman"},{n:"مصعب الشقصي",t:"Oman"},{n:"غانم الحبشي",t:"Oman"},{n:"عصام الصبحي",t:"Oman"},
+{n:"ناصر الرواحي",t:"Oman"},{n:"عاهد المشايخي",t:"Oman"},{n:"سلطان المرزوق",t:"Oman"},{n:"خالد الغطريفي",t:"Oman"},
+{n:"عبدالحافظ المخيني",t:"Oman"},{n:"تركي بيت ربيع",t:"Oman"},{n:"يوسف المالكي",t:"Oman"},{n:"حسين الشحري",t:"Oman"},
+{n:"الحارث المخيني",t:"Oman"},{n:"أرشد العلوي",t:"Oman"},{n:"وليد المسلمي",t:"Oman"},
 
-{n:"محسن الغساني",t:"Oman"},{n:"عصام السبحي",t:"Oman"},{n:"عبدالرحمن المشيفري",t:"Oman"},{n:"أرشد العلوي",t:"Oman"},
-{n:"صلاح اليحيائي",t:"Oman"},{n:"جميل اليحمدي",t:"Oman"},{n:"حارب السعدي",t:"Oman"},{n:"علي البوسعيدي",t:"Oman"},
-{n:"إبراهيم المخيني",t:"Oman"},{n:"أحمد الخميسي",t:"Oman"},{n:"زاهر الأغبري",t:"Oman"},{n:"عمر المالكي",t:"Oman"},
-{n:"أمجد الحارثي",t:"Oman"},{n:"فايز الرشيدي",t:"Oman"},
+// ===== الإمارات — داليتش (26) =====
+{n:"فهد الظنحاني",t:"United Arab Emirates",p:"G"},{n:"خالد عيسى",t:"United Arab Emirates",p:"G"},
+{n:"حمد المقبالي",t:"United Arab Emirates",p:"G"},
+{n:"روبن فيليب",t:"United Arab Emirates"},{n:"لوكاس بيمنتا",t:"United Arab Emirates"},{n:"خليفة الحمادي",t:"United Arab Emirates"},
+{n:"ماركوس ميلوني",t:"United Arab Emirates"},{n:"علاء الدين زهير",t:"United Arab Emirates"},{n:"إيريك مينزيس",t:"United Arab Emirates"},
+{n:"خالد الظنحاني",t:"United Arab Emirates"},{n:"زايد العامري",t:"United Arab Emirates"},{n:"ساشا إيفكوفيتش",t:"United Arab Emirates"},
+{n:"فابيو ليما",t:"United Arab Emirates"},{n:"عصام فايز",t:"United Arab Emirates"},{n:"لوان بيريرا",t:"United Arab Emirates"},
+{n:"حارب عبدالله",t:"United Arab Emirates"},{n:"نيكولاس خيمينيس",t:"United Arab Emirates"},{n:"عبدالله حمد",t:"United Arab Emirates"},
+{n:"مامادو كوليبالي",t:"United Arab Emirates"},{n:"عثمان كمارا",t:"United Arab Emirates"},{n:"علي صالح",t:"United Arab Emirates"},
+{n:"بالا غويليرام",t:"United Arab Emirates"},{n:"ريتشارد أكونور",t:"United Arab Emirates"},{n:"برونو أوليفيرا",t:"United Arab Emirates"},
+{n:"يوري سيزار",t:"United Arab Emirates"},{n:"سلطان عادل",t:"United Arab Emirates"},
 
-{n:"علي مبخوت",t:"United Arab Emirates"},{n:"كايو لوكاس",t:"United Arab Emirates"},{n:"فابيو دي ليما",t:"United Arab Emirates"},
-{n:"سلطان عادل",t:"United Arab Emirates"},{n:"يحيى الغساني",t:"United Arab Emirates"},{n:"حارب عبدالله",t:"United Arab Emirates"},
-{n:"عبدالله رمضان",t:"United Arab Emirates"},{n:"خالد إبراهيم",t:"United Arab Emirates"},{n:"برونو أوليفيرا",t:"United Arab Emirates"},
-{n:"لوانزينيو",t:"United Arab Emirates"},{n:"ماركوس ميلوني",t:"United Arab Emirates"},{n:"نيكولاس خيمينيز",t:"United Arab Emirates"},
-{n:"خليفة الحمادي",t:"United Arab Emirates"},{n:"لوكاس بيمنتا",t:"United Arab Emirates"},{n:"علي صالح",t:"United Arab Emirates"},
-{n:"يحيى نادر",t:"United Arab Emirates"},{n:"خالد عيسى",t:"United Arab Emirates"},
+// ===== قطر — لوبيتيغي (26) =====
+{n:"مشعل برشم",t:"Qatar",p:"G"},{n:"محمود أبو ندى",t:"Qatar",p:"G"},{n:"صلاح زكريا",t:"Qatar",p:"G"},
+{n:"أحمد فتحي",t:"Qatar"},{n:"أحمد علاء",t:"Qatar"},{n:"أحمد الجانحي",t:"Qatar"},{n:"أيوب العلوي",t:"Qatar"},
+{n:"بيدرو ميغيل",t:"Qatar"},{n:"بوعلام خوخي",t:"Qatar"},{n:"طارق سلمان",t:"Qatar"},{n:"سلطان البريك",t:"Qatar"},
+{n:"همام الأمين",t:"Qatar"},{n:"هاشم علي",t:"Qatar"},{n:"عاصم مادبو",t:"Qatar"},{n:"عبدالعزيز حاتم",t:"Qatar"},
+{n:"عيسى لاي",t:"Qatar"},{n:"حسن الهيدوس",t:"Qatar"},{n:"جاسم جابر",t:"Qatar"},{n:"تحسين محمد",t:"Qatar"},
+{n:"يوسف عبدالرزاق",t:"Qatar"},{n:"نايف الحضرمي",t:"Qatar"},{n:"محمد مناعي",t:"Qatar"},{n:"كريم بوضياف",t:"Qatar"},
+{n:"أكرم عفيف",t:"Qatar"},{n:"المعز علي",t:"Qatar"},{n:"إدميلسون جونيور",t:"Qatar"},
 
-{n:"أكرم عفيف",t:"Qatar"},{n:"المعز علي",t:"Qatar"},{n:"حسن الهيدوس",t:"Qatar"},{n:"يوسف عبدالرزاق",t:"Qatar"},
-{n:"أحمد علاء الدين",t:"Qatar"},{n:"مصطفى مشعل",t:"Qatar"},{n:"إسماعيل محمد",t:"Qatar"},{n:"همام أحمد",t:"Qatar"},
-{n:"عبدالكريم حسن",t:"Qatar"},{n:"بوعلام خوخي",t:"Qatar"},{n:"طارق سلمان",t:"Qatar"},{n:"بيدرو ميغيل",t:"Qatar"},
-{n:"مشعل برشم",t:"Qatar"},{n:"جاسم جابر",t:"Qatar"},{n:"لوكاس مينديز",t:"Qatar"},{n:"محمد وعد",t:"Qatar"},
+// ===== البحرين — تالاييتش =====
+{n:"إبراهيم لطف الله",t:"Bahrain",p:"G"},{n:"محمد الغرابلي",t:"Bahrain",p:"G"},{n:"عمر سالم",t:"Bahrain",p:"G"},
+{n:"حمد شمسان",t:"Bahrain"},{n:"فنسنت إيمانويل",t:"Bahrain"},{n:"أمين بنعدي",t:"Bahrain"},{n:"أحمد ربيعة",t:"Bahrain"},
+{n:"وليد الحيام",t:"Bahrain"},{n:"سيد مهدي باقر",t:"Bahrain"},{n:"عبدالله الخلاصي",t:"Bahrain"},
+{n:"حسن الكراني",t:"Bahrain"},{n:"سيد ضياء سعيد",t:"Bahrain"},{n:"عباس العصفور",t:"Bahrain"},{n:"علي مدن",t:"Bahrain"},
+{n:"عمر صابر",t:"Bahrain"},{n:"مهدي حميدان",t:"Bahrain"},{n:"إبراهيم الختال",t:"Bahrain"},{n:"علي الدوسري",t:"Bahrain"},
+{n:"كميل الأسود",t:"Bahrain"},{n:"محمد عبدالقيوم",t:"Bahrain"},{n:"جاسم الشيخ",t:"Bahrain"},{n:"محمد مرهون",t:"Bahrain"},
 
-{n:"محمد مرهون",t:"Bahrain"},{n:"علي مدن",t:"Bahrain"},{n:"عبدالله يوسف هلال",t:"Bahrain"},{n:"كميل الأسود",t:"Bahrain"},
-{n:"مهدي الحميدان",t:"Bahrain"},{n:"سيد ضياء سعيد",t:"Bahrain"},{n:"جاسم الشيخ",t:"Bahrain"},{n:"علي حرم",t:"Bahrain"},
-{n:"أحمد بوغمار",t:"Bahrain"},{n:"وليد الحيام",t:"Bahrain"},{n:"سيد محمد جعفر",t:"Bahrain"},{n:"أمين بن عدي",t:"Bahrain"},
-{n:"مهدي عبدالجبار",t:"Bahrain"},{n:"إبراهيم لطف الله",t:"Bahrain"},
-
-{n:"أحمد السروري",t:"Yemen"},{n:"محمد بقشان",t:"Yemen"},{n:"علاء الصاصي",t:"Yemen"},{n:"عبدالواسع المطري",t:"Yemen"},
-{n:"أيمن الحجري",t:"Yemen"},{n:"محمد عياش",t:"Yemen"}
+// ===== اليمن — ولد علي (آخر قائمة نهائية معلنة) =====
+{n:"محمد أمان",t:"Yemen",p:"G"},{n:"عبدالله السعدي",t:"Yemen"},{n:"أسامة حيدر",t:"Yemen"},{n:"هارون الزبيدي",t:"Yemen"},
+{n:"عمرو طلال",t:"Yemen"},{n:"حمزة الريمي",t:"Yemen"},{n:"أحمد ناصر",t:"Yemen"},{n:"رضوان الحبيشي",t:"Yemen"},
+{n:"حمزة الصرابي",t:"Yemen"},{n:"رامي الوسماني",t:"Yemen"},{n:"علي الدقين",t:"Yemen"},{n:"أحمد الخميسي",t:"Yemen"},
+{n:"عمر جولان",t:"Yemen"},{n:"محمد الطيري",t:"Yemen"},{n:"أسامة عنبر",t:"Yemen"},{n:"أنيس المعاري",t:"Yemen"},
+{n:"محمد هاشم",t:"Yemen"},{n:"طارق شكيب",t:"Yemen"},{n:"عبدالواسع المطري",t:"Yemen"},{n:"عمر الداحي",t:"Yemen"},
+{n:"قاسم الشرفي",t:"Yemen"},{n:"ناصر محمدوه",t:"Yemen"},{n:"عبدالمجيد صبارة",t:"Yemen"},{n:"ممدوح بن عجاج",t:"Yemen"},
+{n:"حمزة محروس",t:"Yemen"},{n:"عبدالعزيز مصنوم",t:"Yemen"}
 ];
 
 var configReady = firebaseConfig.apiKey && firebaseConfig.apiKey.indexOf('YOUR_')!==0;
@@ -1381,7 +1427,7 @@ function genStoryChampionPoster(){
   var html='<div class="poster" style="width:1080px;min-height:1200px;">'+_seasonPosterArcs(1400)
     +'<div class="pad" style="padding:64px 60px 60px;">'+_seasonPosterHeader('🧠 قصة منتخب')+title+podium+runners+'</div></div>';
   document.getElementById('posterRoot').innerHTML=html;
-  _seasonRenderShare('wc2026-story-champion.png','بطل قصة منتخب');
+  _seasonRenderShare('gulf27-story-champion.png','بطل قصة منتخب');
 }
 
 // ===== HELPERS =====
@@ -1482,7 +1528,7 @@ function pointsFor(pred,r){
   return base+bonus;
 }
 // ===== 2x BOOST CARDS (5 per player; stored inside the prediction as x2) =====
-var MAX_BOOST=5;
+var MAX_BOOST=2;
 function boostsUsed(key,exceptId){var n=0;MATCHES.forEach(function(m){if(m.id===exceptId)return;var p=predsData[m.id]&&predsData[m.id][key];if(p&&p.x2)n++;});return n;}
 function scoreOf(pred,r){var p=pointsFor(pred,r);return p==null?null:p*((pred&&pred.x2)?2:1);}
 
@@ -1496,7 +1542,8 @@ var apiTopScorer=null;
 // نتيجة النهائي، والهدّاف من قائمة الهدافين، فتنزل نقاط البونص تلقائيًا.
 function tournamentTruth(){
   var manual=(teamsData&&teamsData.__truth__)||{};
-  var out={champion:manual.champion||null, scorer:manual.scorer||null};
+  var out={champion:manual.champion||null, scorer:manual.scorer||null,
+           mvp:manual.mvp||null, gk:manual.gk||null};
   if(!out.champion){
     var fm=null;
     for(var i=0;i<MATCHES.length;i++){ if(MATCHES[i].stage==='FINAL'){fm=MATCHES[i];break;} }
@@ -1515,12 +1562,23 @@ function tournamentTruth(){
   if(!out.scorer && apiTopScorer) out.scorer=apiTopScorer;
   return out;
 }
-function tournamentPicksOf(key){var u=usersData[key]||{};return {scorer:u.scorer||null,champion:u.champion||null};}
+function tournamentPicksOf(key){var u=usersData[key]||{};return {scorer:u.scorer||null,champion:u.champion||null,mvp:u.mvp||null,gk:u.gk||null};}
+// الاسم العربي المكتوب يدويًا يرجع للاسم الإنجليزي اللي يعتمده باقي التطبيق.
+// يُبنى عند أول استخدام لأن TEAM_AR معرّف لاحقًا في الملف.
+var _teamArRev=null;
+function teamArRev(){
+  if(!_teamArRev){_teamArRev={};Object.keys(TEAM_AR).forEach(function(en){_teamArRev[TEAM_AR[en]]=en;});}
+  return _teamArRev;
+}
 function resolveTeamPick(id){
   var h=document.getElementById(id);if(!h)return null;
   if(h.value)return h.value;
   var vi=h.parentElement&&h.parentElement.querySelector('.psearch-input');
-  if(vi){var t=vi.value.trim();if(t&&COUNTRY_FLAG[t])return t;}
+  if(vi){
+    var t=vi.value.trim();
+    if(t&&COUNTRY_FLAG[t]) return t;          // كُتب بالإنجليزي
+    if(t&&teamArRev()[t])  return teamArRev()[t]; // كُتب بالعربي
+  }
   return null;
 }
 function resolveScorerPick(id){
@@ -1531,7 +1589,15 @@ function resolveScorerPick(id){
   if(vi){var t=vi.value.trim();if(t.length>=2)return t;}
   return null;
 }
-function tournamentPointsFor(picks,truth){if(!picks||!truth)return 0;var p=0;if(picks.champion&&truth.champion&&picks.champion===truth.champion)p+=TOURNAMENT_CHAMPION_PTS;if(picks.scorer&&truth.scorer&&picks.scorer===truth.scorer)p+=TOURNAMENT_SCORER_PTS;return p;}
+function tournamentPointsFor(picks,truth){
+  if(!picks||!truth) return 0;
+  var p=0;
+  if(picks.champion && truth.champion && picks.champion===truth.champion) p+=TOURNAMENT_CHAMPION_PTS;
+  if(picks.scorer   && truth.scorer   && picks.scorer===truth.scorer)     p+=TOURNAMENT_SCORER_PTS;
+  if(picks.mvp      && truth.mvp      && picks.mvp===truth.mvp)           p+=TOURNAMENT_MVP_PTS;
+  if(picks.gk       && truth.gk       && picks.gk===truth.gk)             p+=TOURNAMENT_GK_PTS;
+  return p;
+}
 function allTeamsAlpha(){var ts=[];Object.keys(SCHEDULE_DATA.groups||{}).forEach(function(g){(SCHEDULE_DATA.groups[g]||[]).forEach(function(t){ts.push(t.name);});});return ts.sort();}
 
 // ===== الترتيب + الهدافون =====
@@ -1878,7 +1944,8 @@ function renderMatches(){
 function _wcFlagEmoji(team){
   try{return COUNTRY_FLAG[team]||'';}catch(e){return '';}
 }
-function playerPicker(id, placeholder, current, hostInputFont){
+// onlyGK=true → يعرض حراس المرمى أولًا (ويظل البحث شاملًا وتقدر تكتب أي اسم)
+function playerPicker(id, placeholder, current, onlyGK){
   var wrap=document.createElement('div');wrap.className='psearch';
   var hidden=document.createElement('input');hidden.type='hidden';hidden.id=id;hidden.value=current||'';
   var input=document.createElement('input');input.type='text';input.className='psearch-input';
@@ -1890,9 +1957,14 @@ function playerPicker(id, placeholder, current, hostInputFont){
     drop.innerHTML='';
     q=(q||'').trim().toLowerCase();
     var starts=[],contains=[];
-    for(var i=0;i<PLAYERS.length;i++){
-      var p=PLAYERS[i];
-      var nm=p.n.toLowerCase(), tm=p.t.toLowerCase();
+    var pool=PLAYERS;
+    if(onlyGK){ // الحراس أولًا ثم بقية اللاعبين
+      pool=PLAYERS.filter(function(p){return p.p==='G';})
+           .concat(PLAYERS.filter(function(p){return p.p!=='G';}));
+    }
+    for(var i=0;i<pool.length;i++){
+      var p=pool[i];
+      var nm=p.n.toLowerCase(), tm=(arTeam(p.t)+' '+p.t).toLowerCase();
       if(!q){contains.push(p);continue;}
       if(nm.indexOf(q)===0||tm.indexOf(q)===0) starts.push(p);
       else if(nm.indexOf(q)!==-1||tm.indexOf(q)!==-1) contains.push(p);
@@ -1904,7 +1976,8 @@ function playerPicker(id, placeholder, current, hostInputFont){
     hits.forEach(function(p){
       var row=document.createElement('div');row.className='psearch-row';row.setAttribute('data-val',p.n);
       var flag=flagImg(p.t,20);
-      row.innerHTML='<span>'+esc(p.n)+'</span><span class="psearch-team">'+(flag?flag+' ':'')+esc(p.t)+'</span>';
+      row.innerHTML='<span>'+esc(p.n)+(p.p==='G'?' <span style="color:var(--muted);font-size:.78rem">(حارس)</span>':'')+'</span>'
+        +'<span class="psearch-team">'+(flag?flag+' ':'')+esc(arTeam(p.t))+'</span>';
       row.addEventListener('mousedown',function(ev){
         ev.preventDefault();
         hidden.value=p.n;input.value=p.n;drop.classList.remove('open');
@@ -1925,19 +1998,19 @@ function teamPicker(id, placeholder, current){
   var hidden=document.createElement('input');hidden.type='hidden';hidden.id=id;hidden.value=current||'';
   var input=document.createElement('input');input.type='text';input.className='psearch-input';input.style.direction='rtl';
   input.setAttribute('placeholder',placeholder);input.setAttribute('autocomplete','off');
-  if(current) input.value=current;
+  if(current) input.value=arTeam(current);
   var drop=document.createElement('div');drop.className='psearch-drop';
   var teams=allTeamsAlpha();
   function render(q){
     drop.innerHTML='';
     q=(q||'').trim().toLowerCase();
-    var hits=q?teams.filter(function(t){return t.toLowerCase().indexOf(q)!==-1;}):teams.slice();
+    var hits=q?teams.filter(function(t){return (arTeam(t)+' '+t).toLowerCase().indexOf(q)!==-1;}):teams.slice();
     hits=hits.slice(0,60);
     if(!hits.length){var em=document.createElement('div');em.className='psearch-empty';em.textContent=placeholder;drop.appendChild(em);return;}
     hits.forEach(function(t){
       var row=document.createElement('div');row.className='psearch-row';row.setAttribute('data-val',t);
-      row.innerHTML='<span>'+flagImg(t,20)+' '+esc(t)+'</span>';
-      row.addEventListener('mousedown',function(ev){ev.preventDefault();hidden.value=t;input.value=t;drop.classList.remove('open');});
+      row.innerHTML='<span>'+flagImg(t,20)+' '+esc(arTeam(t))+'</span>';
+      row.addEventListener('mousedown',function(ev){ev.preventDefault();hidden.value=t;input.value=arTeam(t);drop.classList.remove('open');});
       drop.appendChild(row);
     });
   }
@@ -1957,19 +2030,30 @@ function tournamentCard(){
   var picks=tournamentPicksOf(myKey);
   var eye=document.createElement('div');eye.className='tour-eye';
   if(!locked){
-    eye.textContent='التوقّع يتقفل مع بداية أول مباراة. بطل الكأس = '+ptsPhrase(TOURNAMENT_CHAMPION_PTS)+' · هدّاف البطولة = '+ptsPhrase(TOURNAMENT_SCORER_PTS)+'.';
+    eye.textContent='التوقّع يتقفل مع بداية أول مباراة. بطل الكأس = '+ptsPhrase(TOURNAMENT_CHAMPION_PTS)
+      +' · الهدّاف = '+ptsPhrase(TOURNAMENT_SCORER_PTS)
+      +' · أفضل لاعب = '+ptsPhrase(TOURNAMENT_MVP_PTS)
+      +' · أفضل حارس = '+ptsPhrase(TOURNAMENT_GK_PTS)+'.';
     card.appendChild(eye);
-    var chRow=document.createElement('div');chRow.className='tour-row';
-    var lc=document.createElement('label');lc.textContent='🏆 بطل الكأس';chRow.appendChild(lc);
-    chRow.appendChild(teamPicker('__pickChampion','ابحث عن منتخب…',picks.champion||''));
-    var scRow=document.createElement('div');scRow.className='tour-row';
-    var ls=document.createElement('label');ls.textContent='⚽ هدّاف البطولة';scRow.appendChild(ls);
-    scRow.appendChild(playerPicker('__pickScorer','ابحث عن لاعب…',picks.scorer||''));
-    card.appendChild(chRow);card.appendChild(scRow);
+    function pickRow(label, node){
+      var row=document.createElement('div');row.className='tour-row';
+      var l=document.createElement('label');l.textContent=label;row.appendChild(l);
+      row.appendChild(node);
+      card.appendChild(row);
+    }
+    pickRow('🏆 بطل الكأس',      teamPicker('__pickChampion','ابحث عن منتخب…',picks.champion||''));
+    pickRow('⚽ هدّاف البطولة',   playerPicker('__pickScorer','ابحث عن لاعب…',picks.scorer||''));
+    pickRow('⭐ أفضل لاعب',      playerPicker('__pickMvp','ابحث عن لاعب…',picks.mvp||''));
+    pickRow('🧤 أفضل حارس',      playerPicker('__pickGk','ابحث عن حارس…',picks.gk||'',true));
+    var hintP=document.createElement('div');hintP.className='tour-eye';
+    hintP.style.marginTop='-4px';
+    hintP.textContent='القوائم هي الكشوفات المعلنة للمنتخبات — وتقدر تكتب أي اسم غير موجود.';
+    card.appendChild(hintP);
     var btn=document.createElement('button');btn.className='tour-save';
-    btn.textContent=(picks.scorer||picks.champion)?'حدّث التوقّعات':'احفظ التوقّعات';
+    btn.textContent=(picks.scorer||picks.champion||picks.mvp||picks.gk)?'حدّث التوقّعات':'احفظ التوقّعات';
     btn.addEventListener('click',function(){
-      var upd={champion:resolveTeamPick('__pickChampion'),scorer:resolveScorerPick('__pickScorer')};
+      var upd={champion:resolveTeamPick('__pickChampion'),scorer:resolveScorerPick('__pickScorer'),
+               mvp:resolveScorerPick('__pickMvp'),gk:resolveScorerPick('__pickGk')};
       ROOT.child('users/'+myKey).update(upd).then(function(){toast('انحفظت التوقعات 🏆');btn.textContent='حدّث التوقّعات';}).catch(function(e){toast('فشل الحفظ: '+((e&&e.code)||e));});
     });
     card.appendChild(btn);
@@ -1980,7 +2064,7 @@ function tournamentCard(){
       var row=document.createElement('div');row.className='tour-locked';
       var l=document.createElement('span');l.className='lbl';l.textContent=label;
       var v=document.createElement('span');v.className='val';
-      function withFlag(name){return (COUNTRY_FLAG[name]?flagImg(name,18)+' ':'')+esc(name);}
+      function withFlag(name){return (COUNTRY_FLAG[name]?flagImg(name,18)+' ':'')+esc(arTeam(name));}
       if(truthVal){
         var ok=pickVal && pickVal===truthVal;
         v.className='val '+(ok?'ok':'no');
@@ -1997,6 +2081,8 @@ function tournamentCard(){
     }
     card.appendChild(lockedRow('🏆 بطل الكأس', picks.champion, truth&&truth.champion, TOURNAMENT_CHAMPION_PTS));
     card.appendChild(lockedRow('⚽ هدّاف البطولة', picks.scorer, truth&&truth.scorer, TOURNAMENT_SCORER_PTS));
+    card.appendChild(lockedRow('⭐ أفضل لاعب', picks.mvp, truth&&truth.mvp, TOURNAMENT_MVP_PTS));
+    card.appendChild(lockedRow('🧤 أفضل حارس', picks.gk, truth&&truth.gk, TOURNAMENT_GK_PTS));
   }
   if(isAdmin && locked){
     var ad=document.createElement('div');ad.style.borderTop='1px dashed rgba(255,255,255,.15)';ad.style.paddingTop='12px';ad.style.marginTop='4px';ad.style.display='flex';ad.style.flexDirection='column';ad.style.gap='10px';
@@ -2008,9 +2094,16 @@ function tournamentCard(){
     var r2=document.createElement('div');r2.className='tour-row';var lr2=document.createElement('label');lr2.textContent='الهدّاف الفعلي';r2.appendChild(lr2);
     r2.appendChild(playerPicker('__truthScorer','ابحث عن لاعب…',(truth&&truth.scorer)||''));
     ad.appendChild(r2);
+    var r3=document.createElement('div');r3.className='tour-row';var lr3=document.createElement('label');lr3.textContent='أفضل لاعب الفعلي';r3.appendChild(lr3);
+    r3.appendChild(playerPicker('__truthMvp','ابحث عن لاعب…',(truth&&truth.mvp)||''));
+    ad.appendChild(r3);
+    var r4=document.createElement('div');r4.className='tour-row';var lr4=document.createElement('label');lr4.textContent='أفضل حارس الفعلي';r4.appendChild(lr4);
+    r4.appendChild(playerPicker('__truthGk','ابحث عن حارس…',(truth&&truth.gk)||'',true));
+    ad.appendChild(r4);
     var ab=document.createElement('button');ab.className='tour-save';ab.style.background='#34d399';ab.style.color='#04130b';ab.textContent='احفظ النتيجة الفعلية';
     ab.addEventListener('click',function(){
-      ROOT.child('teams/__truth__').set({champion:resolveTeamPick('__truthChampion'),scorer:resolveScorerPick('__truthScorer')}).then(function(){toast('انحفظت النتيجة 🏆');}).catch(function(e){toast('فشل الحفظ: '+((e&&e.code)||e));});
+      ROOT.child('teams/__truth__').set({champion:resolveTeamPick('__truthChampion'),scorer:resolveScorerPick('__truthScorer'),
+                                         mvp:resolveScorerPick('__truthMvp'),gk:resolveScorerPick('__truthGk')}).then(function(){toast('انحفظت النتيجة 🏆');}).catch(function(e){toast('فشل الحفظ: '+((e&&e.code)||e));});
     });
     ad.appendChild(ab);
     card.appendChild(ad);
@@ -2464,7 +2557,7 @@ function genDailySummary(){
   var posterRoot = document.getElementById('posterRoot');
   posterRoot.innerHTML = posterHtml;
 
-  var fname='wc2026-summary-'+new Date(now).toISOString().slice(0,10)+'.png';
+  var fname='gulf27-summary-'+new Date(now).toISOString().slice(0,10)+'.png';
 
   function shareCanvas(cv){
     toast('2/3: جاري التحويل…');
@@ -2613,7 +2706,7 @@ function genTraitorsPoster(matchId, forcedLoserSide){
   var posterRoot=document.getElementById('posterRoot');
   posterRoot.innerHTML=posterHtml;
 
-  var fname='wc2026-traitors-'+m.id+'-'+new Date().toISOString().slice(0,10)+'.png';
+  var fname='gulf27-traitors-'+m.id+'-'+new Date().toISOString().slice(0,10)+'.png';
   function shareCanvas(cv){
     toast('2/3: جاري التحويل…');
     try{
@@ -2860,7 +2953,7 @@ function genStatsSummaryPoster(){
   var posterRoot=document.getElementById('posterRoot');
   posterRoot.innerHTML=posterHtml;
 
-  var fname='wc2026-stats-summary.png';
+  var fname='gulf27-stats-summary.png';
   function shareCanvas(cv){
     toast('2/3: جاري التحويل…');
     try{
@@ -3617,11 +3710,19 @@ function renderLeader(){
     if(locked){
       var picksHtml='';
       if(r.picks.champion){
-        picksHtml+='<div class="lb-sub lb-picks"><bdi>🏆 '+(COUNTRY_FLAG[r.picks.champion]?flagImg(r.picks.champion,16)+' ':'')+esc(r.picks.champion)+'</bdi></div>';
+        picksHtml+='<div class="lb-sub lb-picks"><bdi>🏆 '+(COUNTRY_FLAG[r.picks.champion]?flagImg(r.picks.champion,16)+' ':'')+esc(arTeam(r.picks.champion))+'</bdi></div>';
       }
       if(r.picks.scorer){
         var st=scorerTeam(r.picks.scorer);
         picksHtml+='<div class="lb-sub lb-picks"><bdi>⚽ '+(st&&COUNTRY_FLAG[st]?flagImg(st,16)+' ':'')+esc(r.picks.scorer)+'</bdi></div>';
+      }
+      if(r.picks.mvp){
+        var mt=scorerTeam(r.picks.mvp);
+        picksHtml+='<div class="lb-sub lb-picks"><bdi>⭐ '+(mt&&COUNTRY_FLAG[mt]?flagImg(mt,16)+' ':'')+esc(r.picks.mvp)+'</bdi></div>';
+      }
+      if(r.picks.gk){
+        var gt=scorerTeam(r.picks.gk);
+        picksHtml+='<div class="lb-sub lb-picks"><bdi>🧤 '+(gt&&COUNTRY_FLAG[gt]?flagImg(gt,16)+' ':'')+esc(r.picks.gk)+'</bdi></div>';
       }
       picksLine=picksHtml;
     }
@@ -3695,10 +3796,10 @@ function computeWinScenarios(){
       if(!p) return;
       s += scoreOf(p, r) || 0;
     });
-    if(truth && truth.scorer){
-      var picks=tournamentPicksOf(k);
-      if(picks.scorer===truth.scorer) s += TOURNAMENT_SCORER_PTS;
-    }
+    var _tp=tournamentPicksOf(k);
+    if(truth && truth.scorer && _tp.scorer===truth.scorer) s += TOURNAMENT_SCORER_PTS;
+    if(truth && truth.mvp    && _tp.mvp===truth.mvp)       s += TOURNAMENT_MVP_PTS;
+    if(truth && truth.gk     && _tp.gk===truth.gk)         s += TOURNAMENT_GK_PTS;
     base[k]=s;
   });
 
@@ -3776,10 +3877,10 @@ function computeFinalBuckets(){
       if(!p) return;
       s += scoreOf(p, r) || 0;
     });
-    if(truth && truth.scorer){
-      var picks=tournamentPicksOf(k);
-      if(picks.scorer===truth.scorer) s += TOURNAMENT_SCORER_PTS;
-    }
+    var _tp=tournamentPicksOf(k);
+    if(truth && truth.scorer && _tp.scorer===truth.scorer) s += TOURNAMENT_SCORER_PTS;
+    if(truth && truth.mvp    && _tp.mvp===truth.mvp)       s += TOURNAMENT_MVP_PTS;
+    if(truth && truth.gk     && _tp.gk===truth.gk)         s += TOURNAMENT_GK_PTS;
     base[k]=s;
   });
 
@@ -3983,7 +4084,7 @@ function genScenariosPoster(){
   var posterRoot=document.getElementById('posterRoot');
   posterRoot.innerHTML=posterHtml;
 
-  var fname='wc2026-scenarios.png';
+  var fname='gulf27-scenarios.png';
   function shareCanvas(cv){
     toast('2/3: جاري التحويل…');
     try{
@@ -4251,7 +4352,7 @@ function genTopPointsPoster(){
   var html='<div class="poster" style="width:1080px;min-height:1200px;">'+_seasonPosterArcs(1300)
     +'<div class="pad" style="padding:64px 60px 60px;">'+_seasonPosterHeader('👑 المتصدّر')+title+body+'</div></div>';
   document.getElementById('posterRoot').innerHTML=html;
-  _seasonRenderShare('wc2026-top-points.png','أعلى نقاط الموسم');
+  _seasonRenderShare('gulf27-top-points.png','أعلى نقاط الموسم');
 }
 // Poster 2: 🎯 أفضل توقّع (بدون بونص البطل/الهدّاف)
 function genBestPredictorPoster(){
@@ -4271,22 +4372,24 @@ function genBestPredictorPoster(){
   var html='<div class="poster" style="width:1080px;min-height:1200px;">'+_seasonPosterArcs(1300)
     +'<div class="pad" style="padding:64px 60px 60px;">'+_seasonPosterHeader('🎯 أدقّ لاعب')+title+body+'</div></div>';
   document.getElementById('posterRoot').innerHTML=html;
-  _seasonRenderShare('wc2026-best-predictor.png','أفضل توقّع');
+  _seasonRenderShare('gulf27-best-predictor.png','أفضل توقّع');
 }
 // Poster 4: 🏆 اللي توقعوا البطل والهدّاف صح
 function genCorrectPicksPoster(){
   toast('جاري تجهيز البوستر…');
   var truth=tournamentTruth();
-  if(!truth || (!truth.champion && !truth.scorer)){
-    toast('ما تحدّدت النتيجة بعد (لا بطل ولا هدّاف)'); return;
+  if(!truth || (!truth.champion && !truth.scorer && !truth.mvp && !truth.gk)){
+    toast('ما تحدّدت نتائج البطولة بعد'); return;
   }
   var keys=Object.keys(usersData||{}).filter(function(k){return !(usersData[k]&&usersData[k].removed);});
-  var champWinners=[], scorerWinners=[];
+  var champWinners=[], scorerWinners=[], mvpWinners=[], gkWinners=[];
   keys.forEach(function(k){
     var picks=tournamentPicksOf(k);
     var name=(usersData[k]&&usersData[k].name)||k;
     if(truth.champion && picks.champion===truth.champion) champWinners.push(name);
     if(truth.scorer && picks.scorer===truth.scorer) scorerWinners.push(name);
+    if(truth.mvp && picks.mvp===truth.mvp) mvpWinners.push(name);
+    if(truth.gk && picks.gk===truth.gk) gkWinners.push(name);
   });
 
   var champIso = truth.champion ? COUNTRY_ISO[truth.champion] : null;
@@ -4329,13 +4432,31 @@ function genCorrectPicksPoster(){
     +'</div>'
   ) : '';
 
+  // بلوك عام لأي جائزة فردية (أفضل لاعب / أفضل حارس)
+  function playerBlock(icon, label, who, winners, color, soft){
+    if(!who) return '';
+    return '<div style="padding:36px 30px;border-radius:22px;background:linear-gradient(150deg,'+soft+',rgba(255,255,255,.02));border:2px solid '+color+';display:flex;flex-direction:column;gap:22px;margin-bottom:26px;">'
+      +'<div style="display:flex;align-items:center;gap:20px;">'
+        +'<div style="font-size:50px;line-height:1;">'+icon+'</div>'
+        +'<div style="flex:1;">'
+          +'<div style="font-size:20px;font-weight:800;letter-spacing:.4px;color:'+color+';">'+esc(label)+'</div>'
+          +'<div style="font-size:36px;font-weight:900;color:#fff;line-height:1.15;margin-top:4px;">'+esc(who)+'</div>'
+        +'</div>'
+        +'<div style="font-size:52px;font-weight:900;line-height:1;color:'+color+';">'+arNum(winners.length)+'</div>'
+      +'</div>'
+      +namesList(winners, 'ما فيه أحد توقّعها صح 😅')
+    +'</div>';
+  }
+  var mvpBlock = playerBlock('⭐','توقّعوا أفضل لاعب صح', truth.mvp, mvpWinners, '#fcd34d','rgba(252,211,77,.13)');
+  var gkBlock  = playerBlock('🧤','توقّعوا أفضل حارس صح', truth.gk,  gkWinners,  '#7dd3fc','rgba(125,211,252,.13)');
+
   var title='<h1 class="disp" style="font-size:96px;margin-top:44px;margin-bottom:8px;line-height:1.03;">توقّعوا <span style="color:var(--gold);">صح</span></h1>'
-    +'<div style="font-size:22px;color:#fde68a;font-weight:800;margin-bottom:32px;">اللاعبون اللي ضبطوا البطل والهدّاف · +'+arNum(TOURNAMENT_CHAMPION_PTS)+' / +'+arNum(TOURNAMENT_SCORER_PTS)+' نقطة</div>';
+    +'<div style="font-size:22px;color:#fde68a;font-weight:800;margin-bottom:32px;">جوائز البطولة · البطل '+arNum(TOURNAMENT_CHAMPION_PTS)+' · الهدّاف '+arNum(TOURNAMENT_SCORER_PTS)+' · أفضل لاعب '+arNum(TOURNAMENT_MVP_PTS)+' · أفضل حارس '+arNum(TOURNAMENT_GK_PTS)+'</div>';
 
   var html='<div class="poster" style="width:1080px;min-height:1200px;">'+_seasonPosterArcs(1400)
-    +'<div class="pad" style="padding:64px 60px 60px;">'+_seasonPosterHeader('🎯 التوقّعات الذكية')+title+champBlock+scorerBlock+'</div></div>';
+    +'<div class="pad" style="padding:64px 60px 60px;">'+_seasonPosterHeader('🎯 التوقّعات الذكية')+title+champBlock+scorerBlock+mvpBlock+gkBlock+'</div></div>';
   document.getElementById('posterRoot').innerHTML=html;
-  _seasonRenderShare('wc2026-correct-picks.png','توقّعوا البطل والهدّاف صح');
+  _seasonRenderShare('gulf27-correct-picks.png','توقّعوا جوائز البطولة صح');
 }
 // Poster 3: 📈 أرقام البطولة
 function genTournamentNumbersPoster(){
@@ -4363,7 +4484,7 @@ function genTournamentNumbersPoster(){
   var html='<div class="poster" style="width:1080px;min-height:1200px;">'+_seasonPosterArcs(1300)
     +'<div class="pad" style="padding:64px 60px 60px;">'+_seasonPosterHeader('📈 الأرقام')+title+grid+'</div></div>';
   document.getElementById('posterRoot').innerHTML=html;
-  _seasonRenderShare('wc2026-tournament-numbers.png','أرقام البطولة');
+  _seasonRenderShare('gulf27-tournament-numbers.png','أرقام البطولة');
 }
 
 // ===== STATS PAGE (admin preview) =====
@@ -4688,11 +4809,19 @@ function openUserPreds(userKey){
   var picksHtml='';
   if(locked){
     if(picks.champion){
-      picksHtml+='<div class="up-picks"><bdi>🏆 '+(COUNTRY_FLAG[picks.champion]?flagImg(picks.champion,16)+' ':'')+esc(picks.champion)+'</bdi></div>';
+      picksHtml+='<div class="up-picks"><bdi>🏆 '+(COUNTRY_FLAG[picks.champion]?flagImg(picks.champion,16)+' ':'')+esc(arTeam(picks.champion))+'</bdi></div>';
     }
     if(picks.scorer){
       var st=scorerTeam(picks.scorer);
       picksHtml+='<div class="up-picks"><bdi>⚽ '+(st&&COUNTRY_FLAG[st]?flagImg(st,16)+' ':'')+esc(picks.scorer)+'</bdi></div>';
+    }
+    if(picks.mvp){
+      var mt=scorerTeam(picks.mvp);
+      picksHtml+='<div class="up-picks"><bdi>⭐ '+(mt&&COUNTRY_FLAG[mt]?flagImg(mt,16)+' ':'')+esc(picks.mvp)+'</bdi></div>';
+    }
+    if(picks.gk){
+      var gt=scorerTeam(picks.gk);
+      picksHtml+='<div class="up-picks"><bdi>🧤 '+(gt&&COUNTRY_FLAG[gt]?flagImg(gt,16)+' ':'')+esc(picks.gk)+'</bdi></div>';
     }
   }
   sum.innerHTML=statsHtml+picksHtml;
