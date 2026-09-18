@@ -1148,6 +1148,15 @@ function storyStartAr(){
   if(isNaN(d)) return '';
   return arNum(d.getDate())+' '+AR_MONTH[d.getMonth()];
 }
+// موعد انطلاق اللعبة بالعربي (يوم + ساعة)، مشتقًّا من STORY_PUBLIC_AT
+function storyStartTimeAr(){
+  var d=new Date(STORY_PUBLIC_AT);
+  if(isNaN(d)) return '';
+  var hh=d.getHours(), suf=(hh>=12?'ظهرًا':'صباحًا'); var h12=hh%12; if(h12===0) h12=12;
+  if(hh>=17) suf='مساءً'; else if(hh>=12) suf='ظهرًا';
+  var mm=d.getMinutes(), mmS=mm?':'+(mm<10?'0':'')+mm:'';
+  return arNum(d.getDate())+' '+AR_MONTH[d.getMonth()]+' الساعة '+arNum(h12+mmS)+' '+suf;
+}
 function storyPublicOpen(){
   // Goes live to every user at STORY_PUBLIC_AT. Admins always see it
   // for testing, regardless of the clock.
@@ -1344,12 +1353,25 @@ function storyTeamPicker(){
   wrap.appendChild(hidden); wrap.appendChild(input); wrap.appendChild(drop);
   return {wrap:wrap, input:input, getValue:function(){return (hidden.value||input.value||'').trim();}, reset:function(){hidden.value='';input.value='';}};
 }
+// بطاقة تعريفية باللعبة، تظهر في تبويب الترتيب قبل أن يلعب أحد
+function storyIntroCard(){
+  var c=document.createElement('div'); c.className='storycard'; c.style.marginTop='4px';
+  c.innerHTML=
+     '<div class="sc-head"><div class="sc-title">📜 قصة منتخب</div>'
+    +'<div class="sc-status">لعبة يومية</div></div>'
+    +'<div class="sc-hint"><span class="lbl">الفكرة</span>'
+    +'كل يوم فيه منتخب مخفي. تطلع لك <b>معلومة عنه</b>، وتحاول تعرفه.'
+    +' ما عرفته؟ تطلع لك <b>معلومة ثانية أسهل</b> وتحاول مرة أخرى.</div>'
+    +'<div class="sc-hint"><span class="lbl">النقاط</span>'
+    +'عرفته من المعلومة الأولى = <b>٣ نقاط</b><br>'
+    +'عرفته من الثانية = <b>نقطة واحدة</b><br>'
+    +'<span style="color:var(--muted);font-size:.84rem;">ولها ترتيب مستقل تمامًا عن ترتيب التوقّعات</span></div>'
+    +'<div class="sc-result none">⏰ تبدأ '+esc(storyStartTimeAr())+'</div>';
+  return c;
+}
 function renderStoryLeader(){
   var v=document.getElementById('storyLeader'); if(!v) return;
   v.innerHTML='';
-  var hint=document.createElement('div'); hint.style.cssText='font-size:.72rem;color:var(--muted);text-align:center;padding:4px 0 10px;';
-  hint.textContent='قصة منتخب - ٣ نقاط لمن يصيب من المعلومة الأولى، ونقطة واحدة من الثانية';
-  v.appendChild(hint);
   var keys=Object.keys(usersData||{}).filter(function(k){return !(usersData[k]&&usersData[k].removed);});
   var rows=keys.map(function(k){
     var rec=storyScores[k]||{};
@@ -1358,11 +1380,10 @@ function renderStoryLeader(){
     return {key:k,name:(usersData[k]&&usersData[k].name)||k,pts:total,plays:plays,wins:wins};
   }).filter(function(u){return u.plays>0;})
     .sort(function(a,b){return b.pts-a.pts||b.wins-a.wins;});
-  if(!rows.length){
-    var em=document.createElement('div');em.className='empty';
-    em.textContent='ما فيه أحد لعب إلى الآن - البداية '+storyStartAr();
-    v.appendChild(em);return;
-  }
+  if(!rows.length){ v.appendChild(storyIntroCard()); return; }
+  var hint=document.createElement('div'); hint.style.cssText='font-size:.72rem;color:var(--muted);text-align:center;padding:4px 0 10px;';
+  hint.textContent='قصة منتخب - ٣ نقاط لمن يصيب من المعلومة الأولى، ونقطة واحدة من الثانية';
+  v.insertBefore(hint, v.firstChild);
   // Share the story champion — only shown when there's a clear leader
   var shareBtn=document.createElement('button');
   shareBtn.textContent='📤 مشاركة بطل قصة منتخب';
