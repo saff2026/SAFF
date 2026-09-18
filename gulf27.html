@@ -101,7 +101,7 @@ input.field::placeholder{color:var(--muted);}
 .tour-card .tour-eye{font-size:.78rem;color:#bcd2e6;margin-top:-6px;}
 .tour-row{display:flex;flex-direction:column;gap:6px;}
 .tour-row label{font-size:.82rem;color:var(--muted);font-weight:700;display:flex;align-items:center;gap:8px;}
-.tour-row .pts-tag{font-size:.74rem;font-weight:800;color:#0e2e1e;background:#ffd050;border-radius:999px;padding:2px 9px;line-height:1.6;white-space:nowrap;}
+.tour-row .pts-tag{font-weight:700;white-space:nowrap;}
 .tour-row select{width:100%;background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-family:'Tajawal',sans-serif;font-size:.95rem;font-weight:600;}
 .tour-row select:focus{outline:none;border-color:#d4af37;}
 .psearch{position:relative;width:100%;}.psearch-input{width:100%;background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-family:'Tajawal',sans-serif;font-size:.92rem;font-weight:600;box-sizing:border-box;}.psearch-input:focus{outline:none;border-color:#d4af37;}.psearch-drop{position:absolute;left:0;right:0;top:calc(100% + 4px);background:var(--surface);border:1px solid var(--line);border-radius:10px;max-height:240px;overflow-y:auto;z-index:50;display:none;box-shadow:0 8px 24px rgba(0,0,0,.35);}.psearch-drop.open{display:block;}.psearch-row{padding:9px 12px;font-size:.88rem;color:var(--text);cursor:pointer;display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(255,255,255,.04);}.psearch-row:last-child{border-bottom:none;}.psearch-row:hover{background:rgba(212,175,55,.12);}.psearch-team{color:var(--muted);font-size:.78rem;font-weight:600;white-space:nowrap;}.psearch-empty{padding:10px 12px;color:var(--muted);font-size:.82rem;text-align:center;}
@@ -2089,7 +2089,7 @@ function tournamentCard(){
       var l=document.createElement('label');
       var t=document.createElement('span');t.textContent=label;l.appendChild(t);
       var tag=document.createElement('span');tag.className='pts-tag';
-      tag.textContent=ptsPhrase(pts);l.appendChild(tag);
+      tag.textContent='('+ptsPhrase(pts)+')';l.appendChild(tag);
       row.appendChild(l);
       row.appendChild(node);
       card.appendChild(row);
