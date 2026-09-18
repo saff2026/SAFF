@@ -1142,6 +1142,12 @@ function saveStoryResult(pts,won,idx){
   ROOT.child('users/'+myKey+'/story/'+t).set(data).catch(function(e){toast('فشل حفظ النتيجة في الحساب: '+((e&&e.code)||e));});
 }
 var STORY_PUBLIC_AT = 1790154000000; // الأربعاء 23 سبتمبر 2026 · 12:00 بتوقيت الرياض · 09:00 UTC
+// تاريخ أول قصة بالعربي، مشتقًّا من STORY_DAY0 حتى لا يتناقض النص مع الجدول
+function storyStartAr(){
+  var d=new Date(STORY_DAY0+'T00:00:00');
+  if(isNaN(d)) return '';
+  return arNum(d.getDate())+' '+AR_MONTH[d.getMonth()];
+}
 function storyPublicOpen(){
   // Goes live to every user at STORY_PUBLIC_AT. Admins always see it
   // for testing, regardless of the clock.
@@ -1352,7 +1358,11 @@ function renderStoryLeader(){
     return {key:k,name:(usersData[k]&&usersData[k].name)||k,pts:total,plays:plays,wins:wins};
   }).filter(function(u){return u.plays>0;})
     .sort(function(a,b){return b.pts-a.pts||b.wins-a.wins;});
-  if(!rows.length){var em=document.createElement('div');em.className='empty';em.textContent='ما حد لعب بعد. كن أول واحد 🏟️';v.appendChild(em);return;}
+  if(!rows.length){
+    var em=document.createElement('div');em.className='empty';
+    em.textContent='ما فيه أحد لعب إلى الآن - البداية '+storyStartAr();
+    v.appendChild(em);return;
+  }
   // Share the story champion — only shown when there's a clear leader
   var shareBtn=document.createElement('button');
   shareBtn.textContent='📤 مشاركة بطل قصة منتخب';
