@@ -590,12 +590,6 @@ img.flag{display:inline-block;width:1.45em;height:.95em;vertical-align:-2px;bord
   <div style="display:flex;gap:8px;margin-bottom:8px;">
     <button id="btnScenarios" style="display:none;flex:1;padding:12px 14px;background:linear-gradient(135deg,rgba(253,230,138,.18),rgba(253,230,138,.06));border:1.5px solid rgba(253,230,138,.5);color:#fde68a;font-weight:800;font-size:.9rem;border-radius:12px;cursor:pointer;">🧮 سيناريوهات الفوز</button>
   </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-    <button id="btnTopPointsPoster" style="padding:12px 8px;background:linear-gradient(135deg,rgba(230,204,120,.20),rgba(230,204,120,.06));border:1.5px solid rgba(230,204,120,.55);color:#fde68a;font-weight:800;font-size:.78rem;border-radius:12px;cursor:pointer;line-height:1.25;">👑<br>أعلى نقاط</button>
-    <button id="btnBestPredictorPoster" style="padding:12px 8px;background:linear-gradient(135deg,rgba(34,197,94,.18),rgba(34,197,94,.06));border:1.5px solid rgba(34,197,94,.5);color:#86efac;font-weight:800;font-size:.78rem;border-radius:12px;cursor:pointer;line-height:1.25;">🎯<br>أفضل توقّع</button>
-    <button id="btnCorrectPicksPoster" style="padding:12px 8px;background:linear-gradient(135deg,rgba(230,204,120,.14),rgba(34,197,94,.08));border:1.5px solid rgba(230,204,120,.5);color:#fde68a;font-weight:800;font-size:.78rem;border-radius:12px;cursor:pointer;line-height:1.25;">🎯<br>توقّعوا صح</button>
-    <button id="btnTournamentNumbersPoster" style="padding:12px 8px;background:linear-gradient(135deg,rgba(147,197,253,.18),rgba(147,197,253,.06));border:1.5px solid rgba(147,197,253,.5);color:#93c5fd;font-weight:800;font-size:.78rem;border-radius:12px;cursor:pointer;line-height:1.25;">📈<br>أرقام البطولة</button>
-  </div>
   <div id="leaderList" style="width:100%;display:flex;flex-direction:column;gap:10px;"></div>
   <div id="storyLeader" style="width:100%;display:none;flex-direction:column;gap:10px;"></div>
 </div>
@@ -3638,6 +3632,12 @@ function renderBracket(){
     html+='</div>';
   });
   html+='</div></div>';
+  // شرح علامة ✻ — تظهر فقط ما دام دور المجموعات ما خلص
+  if(!ctx.groupStageDone){
+    html+='<div class="br-hint" style="margin-top:2px">'
+      +'<span style="color:#8fb79e;font-weight:700">✻</span>'
+      +' الاسم مبدئي حسب الترتيب الحالي — المنتخب ما ضمن مركزه رياضيًا بعد</div>';
+  }
   v.innerHTML=html;
 }
 
