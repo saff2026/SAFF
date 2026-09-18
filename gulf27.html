@@ -100,7 +100,8 @@ input.field::placeholder{color:var(--muted);}
 .tour-card h3{margin:0;font-size:1.05rem;font-weight:800;color:#fde68a;letter-spacing:.2px;}
 .tour-card .tour-eye{font-size:.78rem;color:#bcd2e6;margin-top:-6px;}
 .tour-row{display:flex;flex-direction:column;gap:6px;}
-.tour-row label{font-size:.82rem;color:var(--muted);font-weight:700;}
+.tour-row label{font-size:.82rem;color:var(--muted);font-weight:700;display:flex;align-items:center;gap:8px;}
+.tour-row .pts-tag{font-size:.74rem;font-weight:800;color:#0e2e1e;background:#ffd050;border-radius:999px;padding:2px 9px;line-height:1.6;white-space:nowrap;}
 .tour-row select{width:100%;background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-family:'Tajawal',sans-serif;font-size:.95rem;font-weight:600;}
 .tour-row select:focus{outline:none;border-color:#d4af37;}
 .psearch{position:relative;width:100%;}.psearch-input{width:100%;background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-family:'Tajawal',sans-serif;font-size:.92rem;font-weight:600;box-sizing:border-box;}.psearch-input:focus{outline:none;border-color:#d4af37;}.psearch-drop{position:absolute;left:0;right:0;top:calc(100% + 4px);background:var(--surface);border:1px solid var(--line);border-radius:10px;max-height:240px;overflow-y:auto;z-index:50;display:none;box-shadow:0 8px 24px rgba(0,0,0,.35);}.psearch-drop.open{display:block;}.psearch-row{padding:9px 12px;font-size:.88rem;color:var(--text);cursor:pointer;display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(255,255,255,.04);}.psearch-row:last-child{border-bottom:none;}.psearch-row:hover{background:rgba(212,175,55,.12);}.psearch-team{color:var(--muted);font-size:.78rem;font-weight:600;white-space:nowrap;}.psearch-empty{padding:10px 12px;color:var(--muted);font-size:.82rem;text-align:center;}
@@ -1520,10 +1521,18 @@ function result(m){return resultsData[m.id]||apiResults[m.id]||null;}
 function liveScore(m){return liveData[m.id]||apiLive[m.id]||null;}
 // التوقّع مفتوح من الآن لكل المباريات، ويتقفل مع صافرة البداية.
 var OPEN_WINDOW = Infinity;
+// نصف النهائي والنهائي ما ينفتح التوقّع فيها إلا بعد ما يتأكّد الفريقان
+// المتأهّلان لها (اسم المنتخب صار حقيقيًا بدل «متصدّر المجموعة أ» وأمثاله).
+function teamsConfirmed(m){
+  if(m.stage==='group') return true;
+  var t=teamsOf(m);
+  return !!(TEAM_AR[t.home] && TEAM_AR[t.away]);
+}
 function statusOf(m){
   if(result(m))return 'finished';
   var now=Date.now(), k=kickoffMs(m);
   if(now>=k)return 'locked';
+  if(!teamsConfirmed(m))return 'soon';   // بانتظار تأكّد الفريقين
   return 'open';   // OPEN_WINDOW = Infinity ⇒ مفتوح دائمًا قبل البداية
 }
 function pointsFor(pred,r){
@@ -2038,21 +2047,22 @@ function tournamentCard(){
   var picks=tournamentPicksOf(myKey);
   var eye=document.createElement('div');eye.className='tour-eye';
   if(!locked){
-    eye.textContent='التوقّع يتقفل مع بداية أول مباراة. بطل الكأس = '+ptsPhrase(TOURNAMENT_CHAMPION_PTS)
-      +' · الهدّاف = '+ptsPhrase(TOURNAMENT_SCORER_PTS)
-      +' · أفضل لاعب = '+ptsPhrase(TOURNAMENT_MVP_PTS)
-      +' · أفضل حارس = '+ptsPhrase(TOURNAMENT_GK_PTS)+'.';
+    eye.textContent='التوقّع يتقفل مع بداية أول مباراة.';
     card.appendChild(eye);
-    function pickRow(label, node){
+    function pickRow(label, pts, node){
       var row=document.createElement('div');row.className='tour-row';
-      var l=document.createElement('label');l.textContent=label;row.appendChild(l);
+      var l=document.createElement('label');
+      var t=document.createElement('span');t.textContent=label;l.appendChild(t);
+      var tag=document.createElement('span');tag.className='pts-tag';
+      tag.textContent=ptsPhrase(pts);l.appendChild(tag);
+      row.appendChild(l);
       row.appendChild(node);
       card.appendChild(row);
     }
-    pickRow('🏆 بطل الكأس',      teamPicker('__pickChampion','ابحث عن منتخب…',picks.champion||''));
-    pickRow('⚽ هدّاف البطولة',   playerPicker('__pickScorer','ابحث عن لاعب…',picks.scorer||''));
-    pickRow('⭐ أفضل لاعب',      playerPicker('__pickMvp','ابحث عن لاعب…',picks.mvp||''));
-    pickRow('🧤 أفضل حارس',      playerPicker('__pickGk','ابحث عن حارس…',picks.gk||'',true));
+    pickRow('🏆 بطل الكأس',    TOURNAMENT_CHAMPION_PTS, teamPicker('__pickChampion','ابحث عن منتخب…',picks.champion||''));
+    pickRow('⚽ هدّاف البطولة', TOURNAMENT_SCORER_PTS,   playerPicker('__pickScorer','ابحث عن لاعب…',picks.scorer||''));
+    pickRow('⭐ أفضل لاعب',    TOURNAMENT_MVP_PTS,      playerPicker('__pickMvp','ابحث عن لاعب…',picks.mvp||''));
+    pickRow('🧤 أفضل حارس',    TOURNAMENT_GK_PTS,       playerPicker('__pickGk','ابحث عن حارس…',picks.gk||'',true));
     var btn=document.createElement('button');btn.className='tour-save';
     btn.textContent=(picks.scorer||picks.champion||picks.mvp||picks.gk)?'حدّث التوقّعات':'احفظ التوقّعات';
     btn.addEventListener('click',function(){
@@ -2142,7 +2152,7 @@ function matchCard(m){
   var roundLabel = m.stage==='group' ? ('الجولة '+(GROUP_MD[m.id]||'')) : ('مباراة '+m.n);
   var stBadge = st==='finished'?'<span class="status-badge finished">انتهت</span>'
     : st==='locked'?'<span class="status-badge live">● مباشر</span>'
-    : st==='soon'?'<span class="status-badge soon">قريبًا</span>'
+    : st==='soon'?'<span class="status-badge soon">بانتظار الفرق</span>'
     : '<span class="status-badge open">متاحة</span>';
 
   var head=document.createElement('div');head.className='match-head';
@@ -2190,7 +2200,8 @@ function matchCard(m){
     else{var no2=document.createElement('div');no2.className='locked-note';no2.textContent='ماتوقعت نتيجة هذه المباراة';el.appendChild(no2);}
   }else if(st==='soon'){
     var sn=document.createElement('div');sn.className='locked-note';
-    sn.innerHTML='🔒 التوقع يفتح قبل المباراة بـ24 ساعة'+(openKick(m)?('<br><span style="opacity:.85">يفتح '+esc(openKick(m))+'</span>'):'');
+    sn.innerHTML='🔒 يفتح التوقّع بعد ما تتأكّد الفرق المتأهّلة لهذه المباراة'
+      +'<br><span style="opacity:.85">تابع الأقواس لمعرفة المتأهّلين</span>';
     el.appendChild(sn);
   }else if(!predsLoaded){
     // Predictions snapshot hasn't landed yet — show a placeholder instead
@@ -2317,7 +2328,9 @@ function penRow(obj,homeName,awayName,onTouch){
 
 function savePred(id){
   var m=MATCH_BY_ID[id];
-  if(statusOf(m)!=='open'){toast('التوقعات مغلقة لهذه المباراة');renderMatches();return;}
+  var _st=statusOf(m);
+  if(_st==='soon'){toast('التوقّع يفتح بعد ما تتأكّد الفرق المتأهّلة');renderMatches();return;}
+  if(_st!=='open'){toast('التوقعات مغلقة لهذه المباراة');renderMatches();return;}
   if(!predsLoaded){toast('جاري تحميل توقّعك… حاول بعد لحظة');return;}
   var d=draft[id];
   var data={h:d.h,a:d.a};
