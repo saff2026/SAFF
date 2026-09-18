@@ -1547,7 +1547,38 @@ function pointsFor(pred,r){
 }
 // ===== 2x BOOST CARDS (5 per player; stored inside the prediction as x2) =====
 var MAX_BOOST=2;
-function boostsUsed(key,exceptId){var n=0;MATCHES.forEach(function(m){if(m.id===exceptId)return;var p=predsData[m.id]&&predsData[m.id][key];if(p&&p.x2)n++;});return n;}
+// البطاقات المحفوظة فعليًا في قاعدة البيانات (هي المرجع عند الحفظ)
+function boostsSaved(key,exceptId){var n=0;MATCHES.forEach(function(m){if(m.id===exceptId)return;var p=predsData[m.id]&&predsData[m.id][key];if(p&&p.x2)n++;});return n;}
+// العدّ المعروض في الواجهة: يشمل المسوّدات اللي ما انحفظت بعد، وإلا صار
+// بالإمكان تفعيل ×2 على عدة مباريات غير محفوظة ثم حفظها كلها وتجاوز الحد.
+function boostsUsed(key,exceptId){
+  var n=0;
+  MATCHES.forEach(function(m){
+    if(m.id===exceptId)return;
+    var on;
+    if(key===myKey && draft[m.id] && draftEdited[m.id]) on=!!draft[m.id].x2;
+    else { var p=predsData[m.id]&&predsData[m.id][key]; on=!!(p&&p.x2); }
+    if(on)n++;
+  });
+  return n;
+}
+// حارس أخير: لو وصلت بيانات فيها بطاقات أكثر من الحد (بيانات قديمة أو
+// كتابة مباشرة)، نعتمد الأقدم حسب موعد المباراة ونلغي الزائد داخل التطبيق.
+function capBoosts(){
+  var byUser={};
+  MATCHES.forEach(function(m){
+    var obj=predsData[m.id]; if(!obj)return;
+    Object.keys(obj).forEach(function(k){
+      if(obj[k]&&obj[k].x2){(byUser[k]=byUser[k]||[]).push(m);}
+    });
+  });
+  Object.keys(byUser).forEach(function(k){
+    var list=byUser[k];
+    if(list.length<=MAX_BOOST)return;
+    list.sort(function(a,b){return kickoffMs(a)-kickoffMs(b);});
+    list.slice(MAX_BOOST).forEach(function(m){predsData[m.id][k].x2=false;});
+  });
+}
 function scoreOf(pred,r){var p=pointsFor(pred,r);return p==null?null:p*((pred&&pred.x2)?2:1);}
 
 // ===== مساعدات توقعات البطولة =====
@@ -1826,7 +1857,7 @@ document.querySelectorAll('.me-chip').forEach(function(c){
 });
 
 function listen(){
-  ROOT.child('predictions').on('value',function(s){predsData=s.val()||{};predsLoaded=true;renderMatches();renderLeader();});
+  ROOT.child('predictions').on('value',function(s){predsData=s.val()||{};capBoosts();predsLoaded=true;renderMatches();renderLeader();});
   ROOT.child('results').on('value',function(s){resultsData=s.val()||{};autoFillKnockoutTeams();renderMatches();renderLeader();renderGroups();});
   ROOT.child('live').on('value',function(s){liveData=s.val()||{};renderMatches();});
   ROOT.child('storyResets').on('value',function(s){storyResets=s.val()||{};renderMatches();});
@@ -1919,9 +1950,13 @@ function filteredMatches(){
 }
 
 // ===== RENDER MATCHES =====
+// أزرار ×2 الظاهرة حاليًا، عشان يتحدّث العدّاد في كل البطاقات مع أي تبديل
+var __x2btns=[];
+function refreshBoostLabels(){__x2btns.forEach(function(f){try{f();}catch(e){}});}
 function renderMatches(){
   var list=document.getElementById('matchList');
   if(!list)return;
+  __x2btns=[];
   // Build the new content in a DocumentFragment so the page never momentarily
   // shrinks — that brief shrink is what was throwing iOS Safari's scroll
   // position back to the top during the 15s live-polling re-render.
@@ -2220,12 +2255,13 @@ function matchCard(m){
     function x2lbl(){var left=MAX_BOOST-boostsUsed(myKey,m.id)-(draft[m.id].x2?1:0);return draft[m.id].x2?'×2 ✓':'×2 ('+left+')';}
     function x2cls(){x2btn.className='x2-btn'+(draft[m.id].x2?' on':'');x2btn.innerHTML='<span class="x2-ic">⚡</span><span class="x2-tx">'+x2lbl()+'</span>';}
     x2cls();
+    __x2btns.push(x2cls);
     x2btn.title='ضاعف نقاطك في هذه المباراة';
     x2btn.addEventListener('click',function(){
-      if(!draft[m.id].x2){ if(boostsUsed(myKey,m.id)>=MAX_BOOST){toast("استخدمت كل بطاقات ×2 ("+MAX_BOOST+")");return;} draft[m.id].x2=true; }
+      if(!draft[m.id].x2){ if(boostsUsed(myKey,m.id)>=MAX_BOOST){toast("استخدمت كل بطاقات ×2 ("+MAX_BOOST+")");refreshBoostLabels();return;} draft[m.id].x2=true; }
       else draft[m.id].x2=false;
       draftEdited[m.id]=true;
-      x2cls();
+      refreshBoostLabels();
       // Auto-save the toggle immediately so users don't lose ×2 by forgetting
       // to press "حفظ التوقّع" after. Only fires when there's an existing
       // saved prediction — otherwise saving would commit a blank 0-0.
@@ -2338,7 +2374,16 @@ function savePred(id){
     if(!d.pw){toast('اختر الفائز بالبلنتيات');return;}
     data.pw=d.pw;
   }
-  if(d.x2) data.x2=true; // 2x boost card
+  if(d.x2){
+    // تحقّق أخير قبل الكتابة: لا تتجاوز عدد البطاقات المسموح به
+    if(boostsSaved(myKey,id)>=MAX_BOOST){
+      d.x2=false;
+      toast('استخدمت كل بطاقات ×2 ('+MAX_BOOST+')');
+      renderMatches();
+      return;
+    }
+    data.x2=true; // 2x boost card
+  }
   ROOT.child('predictions/'+id+'/'+myKey).set(data)
     .then(function(){toast('تم حفظ التوقّع ✅');draftEdited[id]=false;})
     .catch(function(e){toast('فشل الحفظ: '+((e&&e.message)||e));});
