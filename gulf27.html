@@ -987,12 +987,15 @@ var PLAYERS = [
 
 // ===== اليمن — ولد علي (القائمة الرسمية) =====
 {n:"محمد أمان",t:"Yemen",p:"G"},{n:"أسامة عبدالله حيدر",t:"Yemen",p:"G"},{n:"أسامة علي مكرف",t:"Yemen",p:"G"},
+{n:"هارون الزبيدي",t:"Yemen"},{n:"حمزة الريمي",t:"Yemen"},{n:"نادر سهل",t:"Yemen"},
 {n:"علي خالد الدقين",t:"Yemen"},{n:"رامي الوسماني",t:"Yemen"},{n:"رضوان الحبيشي",t:"Yemen"},
 {n:"عماد حمود الجديمة",t:"Yemen"},{n:"صقر خالد الدربي",t:"Yemen"},{n:"محمد صالح البتول",t:"Yemen"},
 {n:"حمزة الصرابي",t:"Yemen"},
+{n:"عبد الواسع المطري",t:"Yemen"},{n:"أنيس المعاري",t:"Yemen"},{n:"نواف عبد الله",t:"Yemen"},
+{n:"عادل عباس",t:"Yemen"},
 {n:"أسامة عنبر",t:"Yemen"},{n:"عمر منصور عمر زيد",t:"Yemen"},{n:"عبدالمجيد صبارة",t:"Yemen"},
 {n:"محمد هاشم النجار",t:"Yemen"},{n:"محمد المنصوري",t:"Yemen"},{n:"قاسم الشرفي",t:"Yemen"},
-{n:"عمر عبدالله الداحي",t:"Yemen"},{n:"ممدوح بن عجاج",t:"Yemen"},{n:"أحمد ماهر خليل",t:"Yemen"},
+{n:"ديماني ميلبو",t:"Yemen"},{n:"عمر عبدالله الداحي",t:"Yemen"},{n:"ممدوح بن عجاج",t:"Yemen"},{n:"أحمد ماهر خليل",t:"Yemen"},
 {n:"حيدر أسلم بركات",t:"Yemen"}
 ];
 
@@ -1051,6 +1054,8 @@ function storyForDate(d){
   return {idx:diff, story:STORIES[diff]};
 }
 function todayStory(){return storyForDate(new Date());}
+// نسخة أشد للبحث في القوائم: تشيل المسافات كمان عشان «عبدالله» = «عبد الله»
+function searchKey(s){return normalizeGuess(s).replace(/\s+/g,'');}
 function normalizeGuess(s){
   return (s||'').toString().trim().toLowerCase()
     .replace(/[ً-ٰٟ]/g,'')
@@ -1959,7 +1964,7 @@ function playerPicker(id, placeholder, current, onlyGK){
     drop.innerHTML='';
     q=(q||'').trim().toLowerCase();
     var starts=[],contains=[];
-    q=normalizeGuess(q);   // يتجاهل الهمزة والألف المقصورة والتاء المربوطة
+    q=searchKey(q);   // يتجاهل الهمزة والألف المقصورة والتاء المربوطة والمسافات
     var pool=PLAYERS;
     if(onlyGK){ // الحراس أولًا ثم بقية اللاعبين
       pool=PLAYERS.filter(function(p){return p.p==='G';})
@@ -1967,7 +1972,7 @@ function playerPicker(id, placeholder, current, onlyGK){
     }
     for(var i=0;i<pool.length;i++){
       var p=pool[i];
-      var nm=normalizeGuess(p.n), tm=normalizeGuess(arTeam(p.t)+' '+p.t);
+      var nm=searchKey(p.n), tm=searchKey(arTeam(p.t)+' '+p.t);
       if(!q){contains.push(p);continue;}
       if(nm.indexOf(q)===0||tm.indexOf(q)===0) starts.push(p);
       else if(nm.indexOf(q)!==-1||tm.indexOf(q)!==-1) contains.push(p);
@@ -2007,8 +2012,8 @@ function teamPicker(id, placeholder, current){
   function render(q){
     drop.innerHTML='';
     q=(q||'').trim().toLowerCase();
-    q=normalizeGuess(q);
-    var hits=q?teams.filter(function(t){return normalizeGuess(arTeam(t)+' '+t).indexOf(q)!==-1;}):teams.slice();
+    q=searchKey(q);
+    var hits=q?teams.filter(function(t){return searchKey(arTeam(t)+' '+t).indexOf(q)!==-1;}):teams.slice();
     hits=hits.slice(0,60);
     if(!hits.length){var em=document.createElement('div');em.className='psearch-empty';em.textContent=placeholder;drop.appendChild(em);return;}
     hits.forEach(function(t){
