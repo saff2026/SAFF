@@ -601,15 +601,15 @@ img.flag{display:inline-block;width:1.45em;height:.95em;vertical-align:-2px;bord
     <div class="me-chip">👤 <b id="meName4">--</b><svg class="me-out" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span class="me-out-label">تسجيل الخروج</span></div>
     <button class="icon-btn" id="btnSettings4">⚙️</button>
   </div>
-  <div class="section-title">📊 المجموعات والهدافون</div>
+  <div class="section-title">📊 مسار البطولة</div>
   <div class="sub-tabs">
-    <button class="sub-tab active" data-sub="bracket">الإقصائيات</button>
+    <button class="sub-tab active" data-sub="standings">الترتيب</button>
+    <button class="sub-tab" data-sub="bracket">الإقصائيات</button>
     <button class="sub-tab" data-sub="scorers">الهدافون</button>
-    <button class="sub-tab" data-sub="standings">الترتيب</button>
   </div>
-  <div id="bracketView" style="width:100%;display:flex;flex-direction:column;gap:8px;"></div>
+  <div id="standingsView" style="width:100%;display:flex;flex-direction:column;gap:14px;"></div>
+  <div id="bracketView" style="width:100%;display:none;flex-direction:column;gap:8px;"></div>
   <div id="scorersView" style="width:100%;display:none;flex-direction:column;gap:8px;"></div>
-  <div id="standingsView" style="width:100%;display:none;flex-direction:column;gap:14px;"></div>
 </div>
 
 <!-- RULES -->
@@ -722,7 +722,7 @@ img.flag{display:inline-block;width:1.45em;height:.95em;vertical-align:-2px;bord
 <!-- TABBAR -->
 <div class="tabbar" id="tabbar" style="display:none">
   <button class="tab active" data-tab="sMatches"><span class="ico">⚽</span>المباريات</button>
-  <button class="tab" data-tab="sGroups"><span class="ico">📊</span>المجموعات</button>
+  <button class="tab" data-tab="sGroups"><span class="ico">📊</span>البطولة</button>
   <button class="tab" data-tab="sLeader"><span class="ico">🏅</span>الترتيب</button>
   <button class="tab" data-tab="sStats" id="tabStats" style="display:none;"><span class="ico">📈</span>إحصائيات</button>
   <button class="tab" data-tab="sRules"><span class="ico">📖</span>القوانين</button>
