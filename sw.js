@@ -1,7 +1,7 @@
 // Minimal service worker for PWA installability + offline shell.
 // Caches static assets; never intercepts cross-origin requests
 // (so Firebase Realtime DB / Google Fonts work normally).
-var CACHE = 'wc2026-v20';
+var CACHE = 'wc2026-v21';
 var ASSETS = [
   './',
   './index.html',
@@ -20,6 +20,8 @@ var ASSETS = [
   './icon-volley-512.png',
   './icon-gulf-192.png',
   './icon-gulf-512.png',
+  './gulf27-trophy.png',
+  './gulf27-logo.png',
   './wc26.png',
   './saff-white.png',
   './logo-dark.png'
