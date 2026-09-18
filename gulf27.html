@@ -1195,7 +1195,7 @@ function dailyStoryCard(){
   intro.innerHTML='<span class="lbl">القواعد</span>'
     +'• خمّن منتخب اليوم — منتخب عربي أو آسيوي له حكاية<br>'
     +'• بتطلع معلومتين عن المنتخب، وفيه ٣٠ ثانية لكل واحدة منها، وتوقعين كحد أقصى مجملًا<br>'
-    +'• تعرف المنتخب من المعلومة الأولى = ٣ نقاط · من الثانية = نقطة واحدة (النقاط لها ترتيب منفصل عن ترتيب التوقعات)';
+    +'• تعرف المنتخب من المعلومة الأولى = ٣ نقاط - من الثانية = نقطة واحدة (النقاط لها ترتيب منفصل عن ترتيب التوقعات)';
   card.appendChild(intro);
   var btn=document.createElement('button'); btn.className='sc-start'; btn.textContent='ابدأ اللعبة';
   btn.addEventListener('click',function(){
@@ -1342,7 +1342,7 @@ function renderStoryLeader(){
   var v=document.getElementById('storyLeader'); if(!v) return;
   v.innerHTML='';
   var hint=document.createElement('div'); hint.style.cssText='font-size:.72rem;color:var(--muted);text-align:center;padding:4px 0 10px;';
-  hint.textContent='قصة منتخب · ٣ نقاط لمن يصيب من المعلومة الأولى، ونقطة واحدة من الثانية';
+  hint.textContent='قصة منتخب - ٣ نقاط لمن يصيب من المعلومة الأولى، ونقطة واحدة من الثانية';
   v.appendChild(hint);
   var keys=Object.keys(usersData||{}).filter(function(k){return !(usersData[k]&&usersData[k].removed);});
   var rows=keys.map(function(k){
