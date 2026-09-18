@@ -1208,7 +1208,7 @@ function dailyStoryCard(){
   // Not started yet
   var intro=document.createElement('div'); intro.className='sc-hint';
   intro.innerHTML='<span class="lbl">القواعد</span>'
-    +'• خمّن منتخب اليوم — منتخب عربي أو آسيوي له حكاية<br>'
+    +'• خمّن منتخب اليوم — أحد منتخبات خليجي ٢٧ الثمانية<br>'
     +'• بتطلع معلومتين عن المنتخب، وفيه ٣٠ ثانية لكل واحدة منها، وتوقعين كحد أقصى مجملًا<br>'
     +'• تعرف المنتخب من المعلومة الأولى = ٣ نقاط - من الثانية = نقطة واحدة (النقاط لها ترتيب منفصل عن ترتيب التوقعات)';
   card.appendChild(intro);
@@ -2033,7 +2033,11 @@ function renderMatches(){
   // بطاقة توقّع البطل والهدّاف + قصة اليوم، فوق شاشة "القادمة"
   if(currentFilter==='upcoming'){
     frag.appendChild(tournamentCard());
-    var sc=dailyStoryCard(); if(sc) frag.appendChild(sc);
+    var sc=dailyStoryCard();
+    if(sc) frag.appendChild(sc);
+    // قبل انطلاق اللعبة نعرض بطاقة تعريفية مكانها. بعد الانطلاق لا تظهر أبدًا،
+    // حتى لا ترجع في نهاية البطولة بعد أن تنتهي القصص.
+    else if(!storyPublicOpen()) frag.appendChild(storyIntroCard());
   }
   var ms=filteredMatches();
   if(!ms.length){
