@@ -3186,10 +3186,10 @@ function applyAdminUI(){
   // Stats tab is admin-only (preview while we decide whether to ship to all users).
   var tabStats=document.getElementById('tabStats');
   if(tabStats) tabStats.style.display = isAdmin ? '' : 'none';
-  // Show the "قصة منتخب" leaderboard sub-tab to admins always, and to
-  // everyone after the public-release threshold.
+  // تبويب «قصة منتخب» في صفحة الترتيب ظاهر للجميع من الآن.
+  // أما بطاقة اللعب نفسها فتبقى مرتبطة بموعد الإطلاق (dailyStoryCard).
   var storyTab=document.querySelector('.sub-tab[data-leadsub="story"]');
-  if(storyTab) storyTab.style.display = (isAdmin || storyPublicOpen()) ? '' : 'none';
+  if(storyTab) storyTab.style.display = '';
 }
 function openSettings(){
   if(isAdmin){
