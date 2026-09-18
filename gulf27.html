@@ -2051,10 +2051,6 @@ function tournamentCard(){
     pickRow('⚽ هدّاف البطولة',   playerPicker('__pickScorer','ابحث عن لاعب…',picks.scorer||''));
     pickRow('⭐ أفضل لاعب',      playerPicker('__pickMvp','ابحث عن لاعب…',picks.mvp||''));
     pickRow('🧤 أفضل حارس',      playerPicker('__pickGk','ابحث عن حارس…',picks.gk||'',true));
-    var hintP=document.createElement('div');hintP.className='tour-eye';
-    hintP.style.marginTop='-4px';
-    hintP.textContent='القوائم هي الكشوفات المعلنة للمنتخبات — وتقدر تكتب أي اسم غير موجود.';
-    card.appendChild(hintP);
     var btn=document.createElement('button');btn.className='tour-save';
     btn.textContent=(picks.scorer||picks.champion||picks.mvp||picks.gk)?'حدّث التوقّعات':'احفظ التوقّعات';
     btn.addEventListener('click',function(){
