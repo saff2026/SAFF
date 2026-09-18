@@ -2235,8 +2235,7 @@ function matchCard(m){
     else{var no2=document.createElement('div');no2.className='locked-note';no2.textContent='ماتوقعت نتيجة هذه المباراة';el.appendChild(no2);}
   }else if(st==='soon'){
     var sn=document.createElement('div');sn.className='locked-note';
-    sn.innerHTML='🔒 يفتح التوقّع بعد ما تتأكّد الفرق المتأهّلة لهذه المباراة'
-      +'<br><span style="opacity:.85">تابع الأقواس لمعرفة المتأهّلين</span>';
+    sn.innerHTML='🔒 يفتح التوقّع بعد ما تتأكّد الفرق المتأهّلة لهذه المباراة';
     el.appendChild(sn);
   }else if(!predsLoaded){
     // Predictions snapshot hasn't landed yet — show a placeholder instead
