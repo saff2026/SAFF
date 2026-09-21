@@ -245,6 +245,12 @@ img.flag{display:inline-block;width:1.45em;height:.95em;vertical-align:-2px;bord
 .team .flagimg{width:46px;height:31px;object-fit:cover;border-radius:5px;box-shadow:0 1px 5px rgba(0,0,0,.45);}
 .team .tname{font-size:.88rem;font-weight:700;}
 .vs{font-size:.8rem;color:var(--muted);font-weight:700;padding:0 4px;}
+.stale-card{width:100%;background:rgba(220,55,55,.10);border:1.5px solid rgba(220,55,55,.45);
+  border-radius:14px;padding:12px 14px;margin-bottom:12px;display:flex;flex-direction:column;gap:7px;}
+.stale-card .st-h{font-weight:800;color:#fca5a5;font-size:.92rem;}
+.stale-card .st-row{font-size:.86rem;color:var(--text);line-height:1.6;}
+.stale-card .st-row b{color:#fff;}
+.stale-card .st-note{font-size:.76rem;color:var(--muted);line-height:1.6;}
 .prize-card{width:100%;display:flex;align-items:center;gap:14px;
   background:linear-gradient(150deg,rgba(255,208,80,.16),rgba(255,208,80,.03) 60%,rgba(255,255,255,.03));
   border:1.5px solid rgba(255,208,80,.55);border-radius:16px;padding:12px 14px;margin-bottom:12px;}
@@ -3812,6 +3818,39 @@ function autoFillKnockoutTeams(){
 }
 
 // ===== LEADERBOARD =====
+// فحص إداري: توقّعات بطولة تشير إلى اسم لم يعد في القوائم المعلنة
+// (يحصل حين يُستبدل لاعب بعد أن اختاره أحد المشاركين)
+function stalePicks(){
+  var known={}; PLAYERS.forEach(function(p){known[searchKey(p.n)]=true;});
+  var out=[];
+  Object.keys(usersData||{}).forEach(function(k){
+    var u=usersData[k]; if(!u||u.removed) return;
+    var picks=tournamentPicksOf(k), nm=u.name||k;
+    [['scorer','هدّاف البطولة'],['mvp','أفضل لاعب'],['gk','أفضل حارس']].forEach(function(f){
+      var v=picks[f[0]];
+      if(v && !known[searchKey(v)]) out.push({who:nm,what:f[1],val:v});
+    });
+    if(picks.champion && !TEAM_AR[picks.champion]) out.push({who:nm,what:'بطل الكأس',val:picks.champion});
+  });
+  return out;
+}
+function stalePicksCard(){
+  if(!isAdmin) return null;
+  var rows=stalePicks(); if(!rows.length) return null;
+  var c=document.createElement('div'); c.className='stale-card';
+  var h=document.createElement('div'); h.className='st-h';
+  h.textContent='⚠️ توقّعات تشير إلى أسماء خارج القوائم ('+arNum(rows.length)+')';
+  c.appendChild(h);
+  rows.forEach(function(r){
+    var d=document.createElement('div'); d.className='st-row';
+    d.innerHTML='<b>'+esc(r.who)+'</b> — '+esc(r.what)+': '+esc(r.val);
+    c.appendChild(d);
+  });
+  var n=document.createElement('div'); n.className='st-note';
+  n.textContent='هذه الأسماء لم تعد في القوائم المعلنة، فتوقّعاتها لن تتحقّق. نبّه أصحابها ليعيدوا الاختيار. (تظهر لك وحدك كأدمن)';
+  c.appendChild(n);
+  return c;
+}
 // جائزة المركز الأول — تظهر أعلى جدول الترتيب
 function prizeCard(){
   var c=document.createElement('div'); c.className='prize-card';
@@ -3845,6 +3884,7 @@ function renderLeader(){
     scenBtn.style.display=(groupStageComplete() && koPending>0 && koPending<=3)?'block':'none';
   }
   list.innerHTML='';
+  var _stale=stalePicksCard(); if(_stale) list.appendChild(_stale);
   list.appendChild(prizeCard());
   var hint=document.createElement('div');hint.style.cssText='font-size:.72rem;color:var(--muted);text-align:center;padding:4px 0 10px;';hint.textContent='👆 اضغط على أي لاعب لعرض توقّعاته';list.appendChild(hint);
   var keys=Object.keys(usersData).filter(function(k){return !(usersData[k]&&usersData[k].removed);});
