@@ -3910,26 +3910,8 @@ function renderLeader(){
     var el=document.createElement('div');
     el.className='lb-row'+(r.key===myKey?' me':'')+(rank<=3?(' top'+rank):'');
     var medal=rank===1?'🥇':(rank===2?'🥈':(rank===3?'🥉':rank));
+    // توقّعات البطولة لا تُعرض في الصف — تظهر فقط عند الضغط على اللاعب
     var picksLine='';
-    if(locked){
-      var picksHtml='';
-      if(r.picks.champion){
-        picksHtml+='<div class="lb-sub lb-picks"><bdi>🏆 '+(COUNTRY_FLAG[r.picks.champion]?flagImg(r.picks.champion,16)+' ':'')+esc(arTeam(r.picks.champion))+'</bdi></div>';
-      }
-      if(r.picks.scorer){
-        var st=scorerTeam(r.picks.scorer);
-        picksHtml+='<div class="lb-sub lb-picks"><bdi>⚽ '+(st&&COUNTRY_FLAG[st]?flagImg(st,16)+' ':'')+esc(r.picks.scorer)+'</bdi></div>';
-      }
-      if(r.picks.mvp){
-        var mt=scorerTeam(r.picks.mvp);
-        picksHtml+='<div class="lb-sub lb-picks"><bdi>⭐ '+(mt&&COUNTRY_FLAG[mt]?flagImg(mt,16)+' ':'')+esc(r.picks.mvp)+'</bdi></div>';
-      }
-      if(r.picks.gk){
-        var gt=scorerTeam(r.picks.gk);
-        picksHtml+='<div class="lb-sub lb-picks"><bdi>🧤 '+(gt&&COUNTRY_FLAG[gt]?flagImg(gt,16)+' ':'')+esc(r.picks.gk)+'</bdi></div>';
-      }
-      picksLine=picksHtml;
-    }
     el.innerHTML='<div class="lb-rank">'+medal+'</div>'+
       '<div class="lb-name">'+esc(r.name)+(r.key===myKey?' <span class="lb-sub">(أنت)</span>':'')+
       '<div class="lb-sub">'+r.exact+' نتيجة مطابقة</div>'+picksLine+'</div>'+
