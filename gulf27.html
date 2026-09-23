@@ -1965,10 +1965,10 @@ function filteredMatches(){
     return MATCHES.filter(function(m){
       var k=kickoffMs(m); if(!isFinite(k)) return false;
       if(statusOf(m)==='finished') return false;
-      // include a match that's still in its live window even if it kicked off
-      // yesterday in the user's timezone (e.g. late-night matches that bleed
-      // past local midnight)
-      if(nowMs>=k && nowMs<k+150*60*1000) return true;
+      // أي مباراة انطلقت ولم تُسجَّل نتيجتها الرسمية تبقى هنا مهما مضى الوقت.
+      // قبل ذلك كانت تختفي بعد ١٥٠ دقيقة، ولا تظهر في «السابقة» لأنها بلا
+      // نتيجة، فتضيع من التبويبين ويصعب على الأدمن إدخال نتيجتها.
+      if(nowMs>=k) return true;
       var d=new Date(k); d.setHours(0,0,0,0);
       return d.getTime()>=today;
     }).sort(function(a,b){return kickoffMs(a)-kickoffMs(b);});
