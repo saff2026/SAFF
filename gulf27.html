@@ -1089,17 +1089,23 @@ var __storyGame=null;
 // Picklist for the answer dropdown — every WC participant the user could
 // reasonably guess. Stories' canonical team names appear in this list so
 // storyMatches() resolves exactly.
-var STORY_OPTIONS=[
-  'الأردن','الإمارات','أستراليا','إيران','البحرين','الجزائر','السعودية','السودان','السنغال',
-  'الصومال','العراق','الكويت','المغرب','اليابان','اليمن','أوزبكستان','بوركينا فاسو','تونس',
-  'جزر القمر','جيبوتي','سوريا','سنغافورة','عمان','فلسطين','قطر','كوريا الجنوبية','كوريا الشمالية',
-  'لبنان','ليبيا','مصر','موريتانيا','نيجيريا','الصين','الهند','تايلاند','فيتنام',
-  'الكاميرون','ساحل العاج','غانا','جنوب أفريقيا','تركيا','البرازيل','الأرجنتين','فرنسا','إسبانيا',
-  'ألمانيا','إنجلترا','إيطاليا','البرتغال','هولندا','بلجيكا','كرواتيا','الأوروغواي','المكسيك',
-  'الولايات المتحدة','كندا','كولومبيا','تشيلي','بيرو','اليونان','الدنمارك','السويد','النرويج',
-  'سويسرا','النمسا','بولندا','التشيك','صربيا','رومانيا','المجر','روسيا','قيرغيزستان','طاجيكستان',
-  'ماليزيا','إندونيسيا','هونغ كونغ','الفلبين','ميانمار','بنغلاديش','نيبال','أفغانستان'
-];
+// قائمة إجابات «قصة منتخب»: منتخبات البطولة الثمانية فقط.
+// تُبنى عند أول استخدام من SCHEDULE_DATA حتى لا تتناقض مع الفرق المشاركة.
+var _storyOpts=null;
+function storyOptions(){
+  if(!_storyOpts){
+    var out=[];
+    Object.keys(SCHEDULE_DATA.groups||{}).forEach(function(g){
+      (SCHEDULE_DATA.groups[g]||[]).forEach(function(t){
+        var ar=TEAM_AR[t.name]||t.name;
+        if(out.indexOf(ar)<0) out.push(ar);
+      });
+    });
+    out.sort(function(a,b){return a.localeCompare(b,'ar');});
+    _storyOpts=out;
+  }
+  return _storyOpts;
+}
 function _storyLocalKey(){return 'gulf27_story_'+(myKey||'_')+'_'+todayKey();}
 function _userStoryRec(){
   var t=todayKey();
@@ -1341,7 +1347,7 @@ function storyTeamPicker(){
   input.setAttribute('data-lpignore','true');
   input.setAttribute('inputmode','search');
   var drop=document.createElement('div'); drop.className='psearch-drop';
-  var teams=STORY_OPTIONS.slice().sort(function(a,b){return a.localeCompare(b,'ar');});
+  var teams=storyOptions().slice();
   function render(q){
     drop.innerHTML='';
     var nq=normalizeGuess(q||'');
@@ -1392,12 +1398,6 @@ function renderStoryLeader(){
   var hint=document.createElement('div'); hint.style.cssText='font-size:.72rem;color:var(--muted);text-align:center;padding:4px 0 10px;';
   hint.textContent='قصة منتخب - ٣ نقاط لمن يصيب من المعلومة الأولى، ونقطة واحدة من الثانية';
   v.insertBefore(hint, v.firstChild);
-  // Share the story champion — only shown when there's a clear leader
-  var shareBtn=document.createElement('button');
-  shareBtn.textContent='📤 مشاركة بطل قصة منتخب';
-  shareBtn.style.cssText='width:100%;padding:12px 14px;background:linear-gradient(135deg,#fde68a,#f5b301);border:none;color:#1a1a1a;font-weight:900;font-size:.95rem;border-radius:12px;cursor:pointer;margin-bottom:10px;';
-  shareBtn.addEventListener('click',genStoryChampionPoster);
-  v.appendChild(shareBtn);
   rows.forEach(function(r,i){
     var rank=i+1;
     var el=document.createElement('div');
