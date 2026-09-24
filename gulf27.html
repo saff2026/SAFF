@@ -1629,6 +1629,11 @@ function tournamentLocked(){return Date.now()>=tournamentLockMs();}
 var apiTopScorer=null;
 // الأدمن يقدر يثبّت النتيجة يدويًا من __truth__؛ وإذا ما ثبّتها نستنتج البطل من
 // نتيجة النهائي، والهدّاف من قائمة الهدافين، فتنزل نقاط البونص تلقائيًا.
+// البطولة انتهت = نتيجة المباراة النهائية انحفظت.
+function tournamentOver(){
+  for(var i=0;i<MATCHES.length;i++){ if(MATCHES[i].stage==='FINAL') return !!result(MATCHES[i]); }
+  return false;
+}
 function tournamentTruth(){
   var manual=(teamsData&&teamsData.__truth__)||{};
   var out={champion:manual.champion||null, scorer:manual.scorer||null,
@@ -1648,7 +1653,10 @@ function tournamentTruth(){
       }
     }
   }
-  if(!out.scorer && apiTopScorer) out.scorer=apiTopScorer;
+  // الهدّاف المستنتَج من قائمة الهدافين ما يصير «النتيجة الفعلية» إلا بعد
+  // انتهاء البطولة. قبل كذا هو مجرد متصدّر مؤقّت، ولو اعتبرناه نهائيًا
+  // صارت توقّعات اللاعبين تنعلّم خطأ وتنزل نقاط قبل أوانها.
+  if(!out.scorer && apiTopScorer && tournamentOver()) out.scorer=apiTopScorer;
   return out;
 }
 function tournamentPicksOf(key){var u=usersData[key]||{};return {scorer:u.scorer||null,champion:u.champion||null,mvp:u.mvp||null,gk:u.gk||null};}
@@ -2040,7 +2048,9 @@ function renderMatches(){
   if(isAdmin) frag.appendChild(adminBar());
   // بطاقة توقّع البطل والهدّاف + قصة اليوم، فوق شاشة "القادمة"
   if(currentFilter==='upcoming'){
-    frag.appendChild(tournamentCard());
+    // بطاقة توقّعات البطولة ما تظهر للاعب في الصفحة الرئيسية. توقّعاته يشوفها
+    // من الترتيب بالضغط على اسمه. تبقى للأدمن فقط لإدخال النتيجة الفعلية.
+    if(isAdmin) frag.appendChild(tournamentCard());
     var sc=dailyStoryCard();
     if(sc) frag.appendChild(sc);
     // قبل انطلاق اللعبة نعرض بطاقة تعريفية مكانها. بعد الانطلاق لا تظهر أبدًا،
