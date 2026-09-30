@@ -1710,14 +1710,47 @@ function scorerTeam(name){if(!name)return '';for(var i=0;i<PLAYERS.length;i++){i
 // step 1 (h2h pts/gd/gf among the *still-tied* subgroup) until no more
 // separation is possible, then uses step 2 (overall gd/gf, then alphabetical
 // as a deterministic stand-in for fair-play / FIFA ranking / drawing of lots).
-function _rankByOverall(teams){
-  return teams.slice().sort(function(a,b){
+// ترجيح اللعب النظيف (البطاقات) لا يُستنتَج من النتائج، فيُدخَل يدويًا عند
+// حدوثه. المفتاح مفتاح المجموعة، والقيمة ترتيب المنتخبات التي تساوت في كل
+// شيء قبله — الأول أعلى. خليجي 27: تساوت عُمان والعراق في النقاط (٤)
+// والمواجهة المباشرة (١-١) وفرق الأهداف (−١) والأهداف المسجّلة (٤)،
+// وتأهّلت عُمان إلى نصف النهائي باللعب النظيف. بدون هذا الجدول يرجع
+// الترتيب إلى الحروف الأبجدية فيظهر العراق وصيفًا، وهو خطأ.
+var FAIRPLAY_ORDER = { A: ['Oman','Iraq'] };
+// لا نخلط اللعب النظيف داخل دالة المقارنة: لو فعلنا، صارت المقارنة غير
+// متعدّية (عُمان قبل العراق بالنظيف، والعراق قبل الكويت أبجديًا، والكويت قبل
+// عُمان أبجديًا) وخرج ترتيب غير محدّد. نرتّب أبجديًا أولًا ثم نعيد ترتيب
+// المنتخبات المذكورة داخل المواضع التي تحتلّها هي نفسها.
+function _applyFairPlay(sorted, groupKey){
+  var ord = FAIRPLAY_ORDER && FAIRPLAY_ORDER[groupKey];
+  if(!ord) return sorted;
+  var i=0;
+  while(i<sorted.length){
+    var j=i;
+    // لا نبدّل إلا بين متساويين تمامًا في فرق الأهداف والأهداف المسجّلة،
+    // لأن اللعب النظيف آخر مرجّح ولا يسبق هذين.
+    while(j+1<sorted.length && sorted[j+1].gd===sorted[i].gd && sorted[j+1].gf===sorted[i].gf) j++;
+    if(j>i){
+      var slots=[], picks=[];
+      for(var k=i;k<=j;k++){ if(ord.indexOf(sorted[k].team)>=0){ slots.push(k); picks.push(sorted[k]); } }
+      if(picks.length>1){
+        picks.sort(function(a,b){ return ord.indexOf(a.team)-ord.indexOf(b.team); });
+        for(var t=0;t<slots.length;t++) sorted[slots[t]]=picks[t];
+      }
+    }
+    i=j+1;
+  }
+  return sorted;
+}
+function _rankByOverall(teams, groupKey){
+  var sorted = teams.slice().sort(function(a,b){
     if(b.gd!==a.gd) return b.gd-a.gd;
     if(b.gf!==a.gf) return b.gf-a.gf;
     return a.team.localeCompare(b.team);
   });
+  return _applyFairPlay(sorted, groupKey);
 }
-function _rankTied(teams, groupMatches, resByMatch){
+function _rankTied(teams, groupMatches, resByMatch, groupKey){
   if(teams.length<=1) return teams.slice();
   var names=teams.map(function(t){return t.team;});
   var h2h={}; teams.forEach(function(t){h2h[t.team]={pts:0,gd:0,gf:0};});
@@ -1752,13 +1785,13 @@ function _rankTied(teams, groupMatches, resByMatch){
   }
   // If step 1 didn't separate at all (1 bucket = all teams), apply step 2.
   if(buckets.length===1 && buckets[0].length===teams.length){
-    return _rankByOverall(teams);
+    return _rankByOverall(teams, groupKey);
   }
   // Otherwise recurse: each still-tied subgroup re-applies step 1 using only
   // the matches among that subgroup ("matches between the remaining teams only").
   var out=[];
   buckets.forEach(function(b){
-    _rankTied(b, groupMatches, resByMatch).forEach(function(r){out.push(r);});
+    _rankTied(b, groupMatches, resByMatch, groupKey).forEach(function(r){out.push(r);});
   });
   return out;
 }
@@ -1771,7 +1804,7 @@ function _fifaSort(groupKey, rows, resByMatch){
     while(j+1<rows.length && rows[j+1].pts===rows[i].pts) j++;
     if(j===i){ out.push(rows[i]); i++; continue; }
     var tied=rows.slice(i,j+1);
-    _rankTied(tied, groupMatches, resByMatch).forEach(function(r){out.push(r);});
+    _rankTied(tied, groupMatches, resByMatch, groupKey).forEach(function(r){out.push(r);});
     i=j+1;
   }
   return out;
@@ -3304,6 +3337,26 @@ document.getElementById('btnResetTeams').addEventListener('click',function(){
 });
 
 // ===== المجموعات + الهدافون =====
+// لمّا يتساوى منتخبان في كل الأرقام الظاهرة في الجدول، يبدو ترتيبهما عشوائيًا
+// للاعب. هذا السطر يشرح أن الحاسم كان اللعب النظيف، وما يظهر إلا إذا كان
+// التساوي فعليًا في الأرقام كلها.
+function fairPlayNote(groupKey, rows){
+  var ord = FAIRPLAY_ORDER && FAIRPLAY_ORDER[groupKey];
+  if(!ord || ord.length<2 || !rows) return '';
+  // قبل اكتمال مباريات المجموعة تكون الأرقام متساوية بالمصادفة (أصفارًا مثلًا)
+  // فلا معنى للسطر. ما يظهر إلا بعد انتهاء المجموعة واستقرار الترتيب.
+  var gm=MATCHES.filter(function(m){return m.stage==='group' && m.group===groupKey;});
+  for(var gi=0;gi<gm.length;gi++){ if(!result(gm[gi])) return ''; }
+  var picked=[];
+  for(var i=0;i<ord.length;i++){
+    for(var j=0;j<rows.length;j++){ if(rows[j].team===ord[i]){ picked.push(rows[j]); break; } }
+  }
+  if(picked.length!==ord.length) return '';
+  for(var k=1;k<picked.length;k++){
+    if(picked[k].pts!==picked[0].pts || picked[k].gd!==picked[0].gd || picked[k].gf!==picked[0].gf) return '';
+  }
+  return 'ℹ️ تساوى '+ord.map(function(t){return arTeam(t);}).join(' و')+' في النقاط وفرق الأهداف والأهداف المسجّلة والمواجهة المباشرة، فحُسم الترتيب بينهما باللعب النظيف.';
+}
 function renderStandings(){
   var v=document.getElementById('standingsView');if(!v)return;
   v.innerHTML='';
@@ -3331,6 +3384,13 @@ function renderStandings(){
     var lg=document.createElement('div');lg.className='gr-legend';
     lg.innerHTML='<span class="lg-adv"></span>ضامن التأهّل لنصف النهائي · <span class="lg-out"></span>مودّع';
     card.appendChild(lg);
+    var note=fairPlayNote(g, st[g]);
+    if(note){
+      var fp=document.createElement('div');fp.className='gr-legend';
+      fp.style.marginTop='4px'; fp.style.lineHeight='1.6';
+      fp.textContent=note;
+      card.appendChild(fp);
+    }
     v.appendChild(card);
   });
 }
