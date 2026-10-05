@@ -259,6 +259,25 @@ img.flag{display:inline-block;width:1.45em;height:.95em;vertical-align:-2px;bord
 .prize-card .pz-lbl{font-size:.72rem;font-weight:800;color:#ffd050;letter-spacing:.5px;}
 .prize-card .pz-main{font-size:1rem;font-weight:800;color:#fff;line-height:1.45;}
 .prize-card .pz-sub{font-size:.8rem;font-weight:700;color:var(--muted);line-height:1.5;}
+/* ---- توقّع التشكيلة الأساسية ---- */
+.lu-card{width:100%;background:linear-gradient(155deg,rgba(31,169,107,.16),rgba(31,169,107,.04) 55%,rgba(255,255,255,.03));border:1.5px solid rgba(31,169,107,.5);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px;}
+.lu-card h3{margin:0;font-size:1rem;font-weight:800;color:#86efac;}
+.lu-sub{font-size:.8rem;color:#cbd5e1;font-weight:600;line-height:1.6;}
+.lu-count{display:flex;align-items:center;justify-content:space-between;font-size:.84rem;font-weight:800;color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;}
+.lu-count b{color:#fde68a;font-size:1rem;}
+.lu-count.full b{color:#86efac;}
+.lu-warn{font-size:.76rem;color:#fcd34d;font-weight:700;line-height:1.55;}
+.lu-grp{font-size:.74rem;font-weight:800;color:#86efac;margin-top:2px;}
+.lu-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.lu-chip{font-family:inherit;font-size:.82rem;font-weight:700;padding:7px 11px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);color:var(--text);cursor:pointer;}
+.lu-chip.on{border-color:rgba(31,169,107,.85);background:rgba(31,169,107,.22);color:#d1fae5;}
+.lu-chip:disabled{opacity:.38;cursor:default;}
+.lu-save{padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,#1fa96b,#15803d);color:#fff;font-weight:800;font-size:.95rem;font-family:inherit;cursor:pointer;}
+.lu-save:disabled{opacity:.45;cursor:default;}
+.lu-row{display:flex;align-items:center;gap:8px;font-size:.88rem;font-weight:700;padding:7px 10px;border-radius:10px;background:var(--surface);border:1px solid var(--line);}
+.lu-row.hit{border-color:rgba(34,197,94,.5);background:rgba(34,197,94,.12);color:#86efac;}
+.lu-row.miss{border-color:rgba(220,55,55,.4);background:rgba(220,55,55,.1);color:#fca5a5;}
+.lu-score{text-align:center;font-weight:900;font-size:1rem;color:#fde68a;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;}
 .storycard{width:100%;background:linear-gradient(155deg,rgba(212,175,55,.18),rgba(212,175,55,.04) 55%,rgba(255,255,255,.03));border:1.5px solid rgba(212,175,55,.55);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px;}
 .storycard .sc-head{display:flex;align-items:center;justify-content:space-between;}
 .storycard .sc-title{font-weight:800;color:#fde68a;font-size:1rem;}
@@ -892,6 +911,16 @@ var TOURNAMENT_CHAMPION_PTS = 5;
 var TOURNAMENT_SCORER_PTS   = 3;
 var TOURNAMENT_MVP_PTS      = 3;   // أفضل لاعب في البطولة
 var TOURNAMENT_GK_PTS       = 3;   // أفضل حارس مرمى
+
+// ===== توقّع التشكيلة الأساسية =====
+// يُخزَّن توقّع كل لاعب تحت users/<key>/lineup، والتشكيلة الفعلية تحت
+// teams/__lineup__. الموضعان مسموح بهما في رسوم Firebase القائمة
+// (users/$key و teams/$mid)، فالميزة لا تحتاج أي تعديل على الرسوم ولا
+// مستمعًا جديدًا: usersData و teamsData محمَّلتان أصلًا.
+var LINEUP_MATCH_ID = 'm15';           // المباراة التي تُتوقَّع تشكيلتها
+var LINEUP_TEAM     = 'Saudi Arabia';  // المنتخب المعنيّ
+var LINEUP_SIZE     = 11;
+var LINEUP_PT_EACH  = 1;               // نقطة لكل أساسي يُصيبه
 var SCORER_TEAM_ALIAS={};
 // القوائم الرسمية المعلنة لخليجي 27 (سبتمبر 2026). p:'G' = حارس مرمى.
 // اليمن: لم تُنشر قائمته النهائية للبطولة، فاستُخدمت آخر قائمة نهائية معلنة له.
@@ -1668,6 +1697,41 @@ function tournamentPointsFor(picks,truth){
   if(picks.gk       && truth.gk       && picks.gk===truth.gk)             p+=TOURNAMENT_GK_PTS;
   return p;
 }
+// ---- توقّع التشكيلة الأساسية ----
+function lineupMatch(){ return MATCH_BY_ID[LINEUP_MATCH_ID]||null; }
+// قائمة المنتخب كما في PLAYERS. p==='G' تعني حارس مرمى، وهي المعلومة
+// الوحيدة عن المركز المتوفّرة في البيانات، فلا نخترع مراكز غيرها.
+function lineupSquad(){
+  var out=[];
+  for(var i=0;i<PLAYERS.length;i++){ if(PLAYERS[i].t===LINEUP_TEAM) out.push(PLAYERS[i]); }
+  return out;
+}
+function lineupIsGk(name){
+  for(var i=0;i<PLAYERS.length;i++){ if(PLAYERS[i].n===name) return PLAYERS[i].p==='G'; }
+  return false;
+}
+// يتقفل مع صافرة بداية المباراة، مثل توقّع نتيجتها.
+function lineupOpen(){ var m=lineupMatch(); return !!m && Date.now() < kickoffMs(m); }
+function lineupPicksOf(key){
+  var u=usersData[key]||{}, L=u.lineup;
+  return (L && L.players && L.players.length) ? L.players.slice() : [];
+}
+// التشكيلة الفعلية لا تُعتمد إلا إذا كانت كاملة، حتى لا تُحسب نقاط ناقصة
+// لو أدخل الأدمن بعض الأسماء ثم توقّف.
+function lineupTruth(){
+  var t=(teamsData && teamsData.__lineup__) || null;
+  return (t && t.players && t.players.length===LINEUP_SIZE) ? t.players.slice() : null;
+}
+function lineupHits(picks, truth){
+  if(!picks || !truth) return 0;
+  var n=0;
+  for(var i=0;i<picks.length;i++){ if(truth.indexOf(picks[i])>=0) n++; }
+  return n;
+}
+function lineupPointsFor(key){
+  var truth=lineupTruth(); if(!truth) return 0;
+  return lineupHits(lineupPicksOf(key), truth)*LINEUP_PT_EACH;
+}
 function allTeamsAlpha(){var ts=[];Object.keys(SCHEDULE_DATA.groups||{}).forEach(function(g){(SCHEDULE_DATA.groups[g]||[]).forEach(function(t){ts.push(t.name);});});return ts.sort();}
 
 // ===== الترتيب + الهدافون =====
@@ -2057,6 +2121,13 @@ function renderMatches(){
     // بطاقة توقّعات البطولة ما تظهر للاعب في الصفحة الرئيسية. توقّعاته يشوفها
     // من الترتيب بالضغط على اسمه. تبقى للأدمن فقط لإدخال النتيجة الفعلية.
     if(isAdmin) frag.appendChild(tournamentCard());
+    // بطاقة توقّع التشكيلة: تظهر للجميع ما دامت المباراة المعنيّة لم تُحسم،
+    // وتختفي بعد حفظ نتيجتها فلا تبقى معلّقة بعد انتهاء البطولة.
+    var luM=lineupMatch();
+    if(luM && !result(luM)){
+      var lu=lineupCard(); if(lu) frag.appendChild(lu);
+      if(isAdmin && !lineupOpen()){ var la=lineupAdminCard(); if(la) frag.appendChild(la); }
+    }
     var sc=dailyStoryCard();
     if(sc) frag.appendChild(sc);
     // قبل انطلاق اللعبة نعرض بطاقة تعريفية مكانها. بعد الانطلاق لا تظهر أبدًا،
@@ -2165,6 +2236,167 @@ function teamPicker(id, placeholder, current){
   return wrap;
 }
 
+// ===== بطاقة توقّع التشكيلة الأساسية =====
+// الاختيار مجموعة من ١١ اسمًا، والترتيب والمركز لا يهمّان — قياس المركز
+// الدقيق مستحيل بعدل، ولا نملك في البيانات إلا علامة الحارس.
+var __luDraft=null;        // مسوّدة الاختيار الحالية (لم تُحفظ بعد)
+var __luDraftKey=null;     // للمستخدم الذي بُنيت له، حتى لا تُخلط الحسابات
+function lineupDraft(){
+  if(__luDraft===null || __luDraftKey!==myKey){
+    __luDraft=lineupPicksOf(myKey);
+    __luDraftKey=myKey;
+  }
+  return __luDraft;
+}
+function saveLineup(){
+  var sel=lineupDraft();
+  if(sel.length!==LINEUP_SIZE){ toast('لازم تختار '+arNum(LINEUP_SIZE)+' لاعبين بالضبط'); return; }
+  if(!lineupOpen()){ toast('التوقّع اتقفل — المباراة بدأت'); return; }
+  if(!myKey){ toast('سجّل دخولك أولًا'); return; }
+  ROOT.child('users/'+myKey+'/lineup').set({players:sel.slice(), at:Date.now()})
+    .then(function(){ toast('انحفظت التشكيلة ✅'); })
+    .catch(function(e){ toast('فشل الحفظ: '+((e&&e.code)||e)); });
+}
+function saveLineupTruth(sel){
+  if(sel.length!==LINEUP_SIZE){ toast('التشكيلة الفعلية لازم '+arNum(LINEUP_SIZE)+' لاعبين'); return; }
+  ROOT.child('teams/__lineup__').set({players:sel.slice(), at:Date.now()})
+    .then(function(){ toast('انحفظت التشكيلة الفعلية ✅'); })
+    .catch(function(e){ toast('فشل الحفظ: '+((e&&e.code)||e)); });
+}
+// شبكة أزرار الاختيار. sel مصفوفة تُعدَّل مباشرةً، وonChange تُعيد الرسم.
+function lineupChips(sel, onChange){
+  var wrap=document.createDocumentFragment();
+  var squad=lineupSquad();
+  [['🧤 حرّاس المرمى',true],['👥 بقية القائمة',false]].forEach(function(g){
+    var list=squad.filter(function(pl){return (pl.p==='G')===g[1];});
+    if(!list.length) return;
+    var t=document.createElement('div');t.className='lu-grp';t.textContent=g[0];wrap.appendChild(t);
+    var box=document.createElement('div');box.className='lu-chips';
+    list.forEach(function(pl){
+      var b=document.createElement('button');
+      b.className='lu-chip'+(sel.indexOf(pl.n)>=0?' on':'');
+      b.textContent=pl.n;
+      // عند اكتمال العدد نُعطّل غير المختارين فقط، فيبقى بوسعه إلغاء اختيار.
+      if(sel.length>=LINEUP_SIZE && sel.indexOf(pl.n)<0) b.disabled=true;
+      b.addEventListener('click',function(){
+        var i=sel.indexOf(pl.n);
+        if(i>=0) sel.splice(i,1);
+        else { if(sel.length>=LINEUP_SIZE) return; sel.push(pl.n); }
+        onChange();
+      });
+      box.appendChild(b);
+    });
+    wrap.appendChild(box);
+  });
+  return wrap;
+}
+function lineupCard(){
+  var m=lineupMatch(); if(!m) return null;
+  var card=document.createElement('div');card.className='lu-card';
+  var h=document.createElement('h3');
+  h.textContent='🧑‍🤝‍🧑 توقّع تشكيلة '+arTeam(LINEUP_TEAM)+' الأساسية';
+  card.appendChild(h);
+  // سطران منفصلان لا سطر واحد طويل: المباراة أولًا ثم القاعدة، فلا يلتفّ
+  // النصّ التفافًا يخلط الموعد بالشرح.
+  var when=document.createElement('div');when.className='lu-sub';
+  when.style.fontWeight='800';
+  when.textContent=arTeam(m.home)+' × '+arTeam(m.away)+' · '+localKick(m);
+  card.appendChild(when);
+  var sub=document.createElement('div');sub.className='lu-sub';
+  sub.textContent='اختر '+arNum(LINEUP_SIZE)+' لاعبين. نقطة لكل لاعب يبدأ المباراة فعلًا'
+    +' — الترتيب والمركز ما يهمّان.';
+  card.appendChild(sub);
+
+  var truth=lineupTruth();
+  var open=lineupOpen();
+
+  // (أ) التوقّع مفتوح: شبكة الاختيار
+  if(open){
+    if(!usersLoaded){
+      // لقطة users ما وصلت. لو رسمنا الشبكة الآن طلعت فارغة، وضغطة حفظ
+      // تكتب اختيارًا فارغًا فوق تشكيلة محفوظة فعلًا.
+      var w=document.createElement('div');w.className='lu-sub';
+      w.textContent='جاري تحميل تشكيلتك…';card.appendChild(w);
+      return card;
+    }
+    var sel=lineupDraft();
+    var cnt=document.createElement('div');cnt.className='lu-count';
+    var warn=document.createElement('div');warn.className='lu-warn';
+    var save=document.createElement('button');save.className='lu-save';
+    var chipHost=document.createElement('div');
+    function refresh(){
+      cnt.className='lu-count'+(sel.length===LINEUP_SIZE?' full':'');
+      cnt.innerHTML='<span>اخترت</span><span><b>'+arNum(sel.length)+'</b> / '+arNum(LINEUP_SIZE)+'</span>';
+      var gks=sel.filter(lineupIsGk).length;
+      // تنبيه لا يمنع الحفظ: صاحب التوقّع حرّ، لكن تشكيلة بلا حارس أو
+      // بحارسين شبه مؤكّد أنها سهو.
+      warn.textContent = gks===1 ? '' :
+        (gks===0 ? '⚠️ ما اخترت أي حارس — التشكيلة عادة فيها حارس واحد.'
+                 : '⚠️ اخترت '+arNum(gks)+' حرّاس — التشكيلة عادة فيها حارس واحد.');
+      warn.style.display = warn.textContent ? '' : 'none';
+      save.disabled = sel.length!==LINEUP_SIZE;
+      save.textContent = sel.length===LINEUP_SIZE ? '💾 احفظ التشكيلة'
+                                                  : 'اختر '+arNum(LINEUP_SIZE-sel.length)+' لاعبين بعد';
+      chipHost.innerHTML='';
+      chipHost.appendChild(lineupChips(sel, refresh));
+    }
+    save.addEventListener('click',saveLineup);
+    card.appendChild(cnt); card.appendChild(warn);
+    card.appendChild(chipHost); card.appendChild(save);
+    refresh();
+    var note=document.createElement('div');note.className='lu-sub';
+    note.textContent='التوقّع يتقفل مع صافرة البداية، وتقدر تعدّله قبلها كم مرة تبغى.';
+    card.appendChild(note);
+    return card;
+  }
+
+  // (ب) اتقفل: نعرض اختيار صاحب الحساب، ونصحّحه إذا وصلت التشكيلة الفعلية
+  var picks=lineupPicksOf(myKey);
+  if(!picks.length){
+    var em=document.createElement('div');em.className='lu-sub';
+    em.textContent='ما توقّعت التشكيلة قبل بداية المباراة.';
+    card.appendChild(em);
+    return card;
+  }
+  picks.forEach(function(nm){
+    var r=document.createElement('div');
+    r.className='lu-row'+(truth ? (truth.indexOf(nm)>=0?' hit':' miss') : '');
+    r.textContent=(truth ? (truth.indexOf(nm)>=0?'✓ ':'✗ ') : '• ')+nm;
+    card.appendChild(r);
+  });
+  var sc=document.createElement('div');sc.className='lu-score';
+  if(truth){
+    var hits=lineupHits(picks,truth);
+    sc.textContent='أصبت '+arNum(hits)+' من '+arNum(LINEUP_SIZE)+' → '+ptsPhrase(hits*LINEUP_PT_EACH);
+  } else {
+    sc.textContent='بانتظار التشكيلة الرسمية…';
+  }
+  card.appendChild(sc);
+  return card;
+}
+// صندوق الأدمن لإدخال التشكيلة الفعلية بعد إعلانها.
+function lineupAdminCard(){
+  var m=lineupMatch(); if(!m) return null;
+  var card=document.createElement('div');card.className='lu-card';
+  var h=document.createElement('h3');h.textContent='🛠️ التشكيلة الأساسية الفعلية (أدمن)';card.appendChild(h);
+  var cur=lineupTruth();
+  var sel=cur?cur.slice():[];
+  var cnt=document.createElement('div');cnt.className='lu-count';
+  var save=document.createElement('button');save.className='lu-save';
+  var chipHost=document.createElement('div');
+  function refresh(){
+    cnt.className='lu-count'+(sel.length===LINEUP_SIZE?' full':'');
+    cnt.innerHTML='<span>التشكيلة الفعلية</span><span><b>'+arNum(sel.length)+'</b> / '+arNum(LINEUP_SIZE)+'</span>';
+    save.disabled=sel.length!==LINEUP_SIZE;
+    save.textContent=sel.length===LINEUP_SIZE?'💾 احفظ التشكيلة الفعلية':'اختر '+arNum(LINEUP_SIZE-sel.length)+' بعد';
+    chipHost.innerHTML='';
+    chipHost.appendChild(lineupChips(sel,refresh));
+  }
+  save.addEventListener('click',function(){saveLineupTruth(sel);});
+  card.appendChild(cnt);card.appendChild(chipHost);card.appendChild(save);
+  refresh();
+  return card;
+}
 function tournamentCard(){
   var card=document.createElement('div');card.className='tour-card';
   var h=document.createElement('h3');h.textContent='🏆 توقّعات البطولة';card.appendChild(h);
@@ -2581,6 +2813,7 @@ function genDailySummary(){
       if(Number(p.h)===Number(r.h)&&Number(p.a)===Number(r.a)) ex++;
     });
     t+=tournamentPointsFor(tournamentPicksOf(k),ttruth);
+    t+=lineupPointsFor(k);
     return {name:(usersData[k]&&usersData[k].name)||k, pts:t, exact:ex};
   }).sort(function(a,b){return b.pts-a.pts || b.exact-a.exact;}).slice(0,5);
 
@@ -3933,6 +4166,7 @@ function renderLeader(){
     });
     var picks=tournamentPicksOf(k);
     total+=tournamentPointsFor(picks,truth);
+    total+=lineupPointsFor(k);
     var u=usersData[k];
     return {key:k,name:(u&&u.name)?u.name:k,total:total,exact:exact,picks:picks};
   });
@@ -3979,7 +4213,7 @@ function computeSeasonSummary(){
       else if(sign(pred.h-pred.a)===sign(r.h-r.a)) signCorrect++;
     });
     var picks=tournamentPicksOf(k);
-    var bonus=tournamentPointsFor(picks,truth);
+    var bonus=tournamentPointsFor(picks,truth)+lineupPointsFor(k);
     return {key:k, name:u.name||k, matchPts:matchPts, total:matchPts+bonus,
             predicted:predicted, exact:exact, signCorrect:signCorrect,
             pickChamp:picks.champion||null, pickScorer:picks.scorer||null};
@@ -4264,6 +4498,7 @@ function _activeStatsPlayers(){
     });
     var picks=tournamentPicksOf(k);
     total+=tournamentPointsFor(picks,truth);
+    total+=lineupPointsFor(k);
     return {key:k, name:u.name||k, total:total, exact:exact, predicted:predicted, predPlayed:predPlayed,
       boosts:boosts, boostsHit:boostsHit, saudiPts:saudiPts, saudiCount:saudiCount,
       pickChamp:picks.champion||null, pickScorer:picks.scorer||null, perRound:perRound};
@@ -4548,6 +4783,7 @@ function openUserPreds(userKey){
   var truth=tournamentTruth(), locked=tournamentLocked();
   var picks=tournamentPicksOf(userKey);
   total += tournamentPointsFor(picks, truth);
+  total += lineupPointsFor(userKey);
   var sum=document.getElementById('upSummary');
   var statsHtml='<div class="up-stats">'+
     '<span><b>'+total+'</b> '+ptsWord(total)+'</span>'+
