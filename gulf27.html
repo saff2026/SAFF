@@ -920,7 +920,6 @@ var TOURNAMENT_GK_PTS       = 3;   // أفضل حارس مرمى
 var LINEUP_MATCH_ID = 'm15';           // المباراة التي تُتوقَّع تشكيلتها
 var LINEUP_TEAM     = 'Saudi Arabia';  // المنتخب المعنيّ
 var LINEUP_SIZE     = 11;
-var LINEUP_PT_EACH  = 1;               // نقطة لكل أساسي يُصيبه
 // التشكيلات الرسمية تُعلَن عادة قبل المباراة بنحو ساعة، فيُقفل التوقّع قبلها
 // بساعة لا مع صافرة البداية، وإلا صار بالإمكان النقل من الإعلان الرسمي.
 var LINEUP_LOCK_MIN = 60;              // دقائق القفل قبل الانطلاق
@@ -1816,10 +1815,6 @@ function lineupHits(picks, truth){
   for(var i=0;i<picks.length;i++){ if(truth.indexOf(picks[i])>=0) n++; }
   return n;
 }
-function lineupPointsFor(key){
-  var truth=lineupTruth(); if(!truth) return 0;
-  return lineupHits(lineupPicksOf(key), truth)*LINEUP_PT_EACH;
-}
 function allTeamsAlpha(){var ts=[];Object.keys(SCHEDULE_DATA.groups||{}).forEach(function(g){(SCHEDULE_DATA.groups[g]||[]).forEach(function(t){ts.push(t.name);});});return ts.sort();}
 
 // ===== الترتيب + الهدافون =====
@@ -2212,7 +2207,7 @@ function renderMatches(){
     // بطاقة توقّع التشكيلة: تظهر للجميع ما دامت المباراة المعنيّة لم تُحسم،
     // وتختفي بعد حفظ نتيجتها فلا تبقى معلّقة بعد انتهاء البطولة.
     var luM=lineupMatch();
-    if(luM && !result(luM)){
+    if(luM && (!result(luM) || lineupTruth())){
       var lu=lineupCard(); if(lu) frag.appendChild(lu);
       if(isAdmin && !lineupOpen()){ var la=lineupAdminCard(); if(la) frag.appendChild(la); }
     }
@@ -2379,6 +2374,33 @@ function lineupChips(sel, onChange){
   });
   return wrap;
 }
+// نتائج كل من توقّع التشكيلة، مرتّبة. تظهر للجميع بعد إدخال التشكيلة
+// الفعلية، ولا علاقة لها بجدول النقاط.
+function lineupBoard(){
+  var truth=lineupTruth(); if(!truth) return null;
+  var rows=[];
+  Object.keys(usersData||{}).forEach(function(k){
+    var u=usersData[k]; if(!u||u.removed) return;
+    var picks=lineupPicksOf(k); if(!picks.length) return;
+    rows.push({name:u.name||k, hits:lineupHits(picks,truth), me:k===myKey});
+  });
+  if(!rows.length) return null;
+  rows.sort(function(a,b){ return b.hits-a.hits || a.name.localeCompare(b.name,'ar'); });
+  var box=document.createElement('div');
+  var h=document.createElement('div');h.className='lu-sub';
+  h.style.cssText='font-weight:800;margin-top:4px;';
+  h.textContent='🏅 نتائج توقّع التشكيلة ('+arNum(rows.length)+' شاركوا) — للمتعة فقط، لا تدخل في النقاط';
+  box.appendChild(h);
+  rows.forEach(function(r,i){
+    var d=document.createElement('div');
+    d.className='lu-row'+(r.hits>=8?' hit':'');
+    d.style.cssText='justify-content:space-between;'+(r.me?'outline:1.5px solid rgba(245,179,1,.6);':'');
+    d.innerHTML='<span>'+arNum(i+1)+'. '+esc(r.name)+(r.me?' <b>(أنت)</b>':'')+'</span>'
+      +'<span>'+arNum(r.hits)+' / '+arNum(LINEUP_SIZE)+'</span>';
+    box.appendChild(d);
+  });
+  return box;
+}
 function lineupCard(){
   var m=lineupMatch(); if(!m) return null;
   var card=document.createElement('div');card.className='lu-card';
@@ -2392,8 +2414,8 @@ function lineupCard(){
   when.textContent=arTeam(m.home)+' × '+arTeam(m.away)+' · '+localKick(m);
   card.appendChild(when);
   var sub=document.createElement('div');sub.className='lu-sub';
-  sub.textContent='اختر '+arNum(LINEUP_SIZE)+' لاعبين. نقطة لكل لاعب يبدأ المباراة فعلًا'
-    +' — الترتيب والمركز ما يهمّان.';
+  sub.textContent='اختر '+arNum(LINEUP_SIZE)+' لاعبين. الترتيب والمركز ما يهمّان.'
+    +' نتيجتك تظهر هنا للمتعة ولا تدخل في جدول النقاط.';
   card.appendChild(sub);
 
   var truth=lineupTruth();
@@ -2462,8 +2484,9 @@ function lineupCard(){
   });
   var sc=document.createElement('div');sc.className='lu-score';
   if(truth){
+    var bd=lineupBoard(); if(bd) card.appendChild(bd);
     var hits=lineupHits(picks,truth);
-    sc.textContent='أصبت '+arNum(hits)+' من '+arNum(LINEUP_SIZE)+' → '+ptsPhrase(hits*LINEUP_PT_EACH);
+    sc.textContent='أصبت '+arNum(hits)+' من '+arNum(LINEUP_SIZE)+' · خارج حساب النقاط';
   } else {
     sc.textContent='بانتظار التشكيلة الرسمية…';
   }
@@ -2927,7 +2950,6 @@ function genDailySummary(){
       if(Number(p.h)===Number(r.h)&&Number(p.a)===Number(r.a)) ex++;
     });
     t+=tournamentPointsFor(tournamentPicksOf(k),ttruth);
-    t+=lineupPointsFor(k);
     return {name:(usersData[k]&&usersData[k].name)||k, pts:t, exact:ex};
   }).sort(function(a,b){return b.pts-a.pts || b.exact-a.exact;}).slice(0,5);
 
@@ -4281,7 +4303,6 @@ function renderLeader(){
     });
     var picks=tournamentPicksOf(k);
     total+=tournamentPointsFor(picks,truth);
-    total+=lineupPointsFor(k);
     var u=usersData[k];
     return {key:k,name:(u&&u.name)?u.name:k,total:total,exact:exact,picks:picks};
   });
@@ -4328,7 +4349,7 @@ function computeSeasonSummary(){
       else if(sign(pred.h-pred.a)===sign(r.h-r.a)) signCorrect++;
     });
     var picks=tournamentPicksOf(k);
-    var bonus=tournamentPointsFor(picks,truth)+lineupPointsFor(k);
+    var bonus=tournamentPointsFor(picks,truth);
     return {key:k, name:u.name||k, matchPts:matchPts, total:matchPts+bonus,
             predicted:predicted, exact:exact, signCorrect:signCorrect,
             pickChamp:picks.champion||null, pickScorer:picks.scorer||null};
@@ -4613,7 +4634,6 @@ function _activeStatsPlayers(){
     });
     var picks=tournamentPicksOf(k);
     total+=tournamentPointsFor(picks,truth);
-    total+=lineupPointsFor(k);
     return {key:k, name:u.name||k, total:total, exact:exact, predicted:predicted, predPlayed:predPlayed,
       boosts:boosts, boostsHit:boostsHit, saudiPts:saudiPts, saudiCount:saudiCount,
       pickChamp:picks.champion||null, pickScorer:picks.scorer||null, perRound:perRound};
@@ -4898,7 +4918,6 @@ function openUserPreds(userKey){
   var truth=tournamentTruth(), locked=tournamentLocked();
   var picks=tournamentPicksOf(userKey);
   total += tournamentPointsFor(picks, truth);
-  total += lineupPointsFor(userKey);
   var sum=document.getElementById('upSummary');
   var statsHtml='<div class="up-stats">'+
     '<span><b>'+total+'</b> '+ptsWord(total)+'</span>'+
