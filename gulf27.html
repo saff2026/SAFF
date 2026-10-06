@@ -1616,7 +1616,16 @@ function boostLockedOn(id,key){
   return !!(p&&p.x2);
 }
 // حارس أخير: لو وصلت بيانات فيها بطاقات أكثر من الحد (بيانات قديمة أو
-// كتابة مباشرة)، نعتمد الأقدم حسب موعد المباراة ونلغي الزائد داخل التطبيق.
+// كتابة مباشرة)، نحتسب أول بطاقتين فقط — الأقدم حسب موعد انطلاق المباراة —
+// ونلغي الزائد. الإلغاء يسري داخل التطبيق فورًا (فلا تُحسب نقاطه مضاعفة)،
+// وإذا كان وضع الإدارة مفتوحًا نثبّت التصحيح في قاعدة البيانات مرة واحدة
+// حتى تسري القاعدة على كل الأجهزة، ولو كانت على نسخة قديمة من التطبيق.
+var __capWritten={};   // 'mid|key' -> true: كتابات التصحيح المنفّذة، فلا تتكرر
+var __capLog=[];       // سجل البطاقات الملغاة لعرضه للأدمن خلال الجلسة
+function __capLogAdd(key,mid){
+  for(var i=0;i<__capLog.length;i++) if(__capLog[i].key===key&&__capLog[i].mid===mid) return;
+  __capLog.push({key:key,mid:mid});
+}
 function capBoosts(){
   var byUser={};
   MATCHES.forEach(function(m){
@@ -1628,9 +1637,39 @@ function capBoosts(){
   Object.keys(byUser).forEach(function(k){
     var list=byUser[k];
     if(list.length<=MAX_BOOST)return;
+    // ترتيب MATCHES محفوظ، فالتساوي في موعد الانطلاق يُحسم برقم المباراة
     list.sort(function(a,b){return kickoffMs(a)-kickoffMs(b);});
-    list.slice(MAX_BOOST).forEach(function(m){predsData[m.id][k].x2=false;});
+    list.slice(MAX_BOOST).forEach(function(m){
+      predsData[m.id][k].x2=false;      // لا تُحسب مضاعفة في أي شاشة أو ملصق
+      __capLogAdd(k,m.id);
+      var tag=m.id+'|'+k;
+      if(isAdmin && ROOT && !__capWritten[tag]){
+        __capWritten[tag]=true;
+        // update بـ null يحذف x2 ويُبقي h و a، فيمرّ من قواعد الأمان
+        ROOT.child('predictions/'+m.id+'/'+k).update({x2:null})
+          .catch(function(){ __capWritten[tag]=false; });
+      }
+    });
   });
+}
+// بطاقة للأدمن: ماذا أُلغي من بطاقات ×2 الزائدة ولمن
+function extraBoostsCard(){
+  if(!isAdmin || !__capLog.length) return null;
+  var c=document.createElement('div'); c.className='stale-card';
+  var h=document.createElement('div'); h.className='st-h';
+  h.textContent='⚡ بطاقات ×2 زائدة أُلغيت ('+arNum(__capLog.length)+')';
+  c.appendChild(h);
+  __capLog.forEach(function(r){
+    var u=usersData[r.key], nm=(u&&u.name)||r.key, m=MATCH_BY_ID[r.mid];
+    var t=m?(arTeamOrSlot(teamsOf(m).home)+' × '+arTeamOrSlot(teamsOf(m).away)):r.mid;
+    var d=document.createElement('div'); d.className='st-row';
+    d.innerHTML='<b>'+esc(nm)+'</b> — مباراة '+(m?arNum(m.n):esc(r.mid))+': '+esc(t);
+    c.appendChild(d);
+  });
+  var n=document.createElement('div'); n.className='st-note';
+  n.textContent='هذا اللاعب فعّل ×2 على أكثر من مباراتين، فاحتُسبت له أول بطاقتين فقط (الأقدم موعدًا) وأُلغي الزائد من الحساب وقاعدة البيانات. (تظهر لك وحدك كأدمن)';
+  c.appendChild(n);
+  return c;
 }
 function scoreOf(pred,r){var p=pointsFor(pred,r);return p==null?null:p*((pred&&pred.x2)?2:1);}
 
@@ -4179,6 +4218,7 @@ function renderLeader(){
   setTimeout(function(){window.scrollTo(0,_sy);},0);
   list.innerHTML='';
   var _stale=stalePicksCard(); if(_stale) list.appendChild(_stale);
+  var _xtra=extraBoostsCard(); if(_xtra) list.appendChild(_xtra);
   list.appendChild(prizeCard());
   var hint=document.createElement('div');hint.style.cssText='font-size:.72rem;color:var(--muted);text-align:center;padding:4px 0 10px;';hint.textContent='👆 اضغط على أي لاعب لعرض توقّعاته';list.appendChild(hint);
   var keys=Object.keys(usersData).filter(function(k){return !(usersData[k]&&usersData[k].removed);});
