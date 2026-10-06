@@ -921,6 +921,9 @@ var LINEUP_MATCH_ID = 'm15';           // المباراة التي تُتوقَ
 var LINEUP_TEAM     = 'Saudi Arabia';  // المنتخب المعنيّ
 var LINEUP_SIZE     = 11;
 var LINEUP_PT_EACH  = 1;               // نقطة لكل أساسي يُصيبه
+// التشكيلات الرسمية تُعلَن عادة قبل المباراة بنحو ساعة، فيُقفل التوقّع قبلها
+// بساعة لا مع صافرة البداية، وإلا صار بالإمكان النقل من الإعلان الرسمي.
+var LINEUP_LOCK_MIN = 60;              // دقائق القفل قبل الانطلاق
 var SCORER_TEAM_ALIAS={};
 // القوائم الرسمية المعلنة لخليجي 27 (سبتمبر 2026). p:'G' = حارس مرمى.
 // اليمن: لم تُنشر قائمته النهائية للبطولة، فاستُخدمت آخر قائمة نهائية معلنة له.
@@ -1710,8 +1713,8 @@ function lineupIsGk(name){
   for(var i=0;i<PLAYERS.length;i++){ if(PLAYERS[i].n===name) return PLAYERS[i].p==='G'; }
   return false;
 }
-// يتقفل مع صافرة بداية المباراة، مثل توقّع نتيجتها.
-function lineupOpen(){ var m=lineupMatch(); return !!m && Date.now() < kickoffMs(m); }
+function lineupLockMs(){ var m=lineupMatch(); return m ? kickoffMs(m)-LINEUP_LOCK_MIN*60000 : Infinity; }
+function lineupOpen(){ var m=lineupMatch(); return !!m && Date.now() < lineupLockMs(); }
 function lineupPicksOf(key){
   var u=usersData[key]||{}, L=u.lineup;
   return (L && L.players && L.players.length) ? L.players.slice() : [];
@@ -2251,7 +2254,7 @@ function lineupDraft(){
 function saveLineup(){
   var sel=lineupDraft();
   if(sel.length!==LINEUP_SIZE){ toast('لازم تختار '+arNum(LINEUP_SIZE)+' لاعبين بالضبط'); return; }
-  if(!lineupOpen()){ toast('التوقّع اتقفل — المباراة بدأت'); return; }
+  if(!lineupOpen()){ toast('التوقّع اتقفل — القفل قبل المباراة بساعة'); return; }
   if(!myKey){ toast('سجّل دخولك أولًا'); return; }
   ROOT.child('users/'+myKey+'/lineup').set({players:sel.slice(), at:Date.now()})
     .then(function(){ toast('انحفظت التشكيلة ✅'); })
@@ -2345,7 +2348,8 @@ function lineupCard(){
     card.appendChild(chipHost); card.appendChild(save);
     refresh();
     var note=document.createElement('div');note.className='lu-sub';
-    note.textContent='التوقّع يتقفل مع صافرة البداية، وتقدر تعدّله قبلها كم مرة تبغى.';
+    note.textContent='⏳ التوقّع يتقفل قبل المباراة بساعة — '+arKickAt(lineupLockMs())
+      +'. تقدر تعدّله كم مرة تبغى قبل هذا الوقت.';
     card.appendChild(note);
     return card;
   }
@@ -2354,7 +2358,7 @@ function lineupCard(){
   var picks=lineupPicksOf(myKey);
   if(!picks.length){
     var em=document.createElement('div');em.className='lu-sub';
-    em.textContent='ما توقّعت التشكيلة قبل بداية المباراة.';
+    em.textContent='ما توقّعت التشكيلة قبل قفل التوقّع.';
     card.appendChild(em);
     return card;
   }
