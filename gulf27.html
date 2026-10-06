@@ -1761,7 +1761,45 @@ function lineupIsGk(name){
   return false;
 }
 function lineupLockMs(){ var m=lineupMatch(); return m ? kickoffMs(m)-LINEUP_LOCK_MIN*60000 : Infinity; }
-function lineupOpen(){ var m=lineupMatch(); return !!m && Date.now() < lineupLockMs(); }
+// قفل يدوي يقرّره الأدمن، يسبق القفل الزمني. مخزّن في قاعدة البيانات فيسري
+// على كل الأجهزة في نفس اللحظة بلا حاجة لتحديث التطبيق.
+function lineupForceLocked(){
+  var t=(teamsData && teamsData.__lineup__) || null;
+  return !!(t && t.locked);
+}
+function lineupOpen(){
+  var m=lineupMatch();
+  return !!m && !lineupForceLocked() && Date.now() < lineupLockMs();
+}
+// update لا set: حتى لا يمسح القفل التشكيلة الفعلية ولا العكس
+function setLineupLock(on){
+  ROOT.child('teams/__lineup__').update({locked: on?true:null, lockedAt: on?Date.now():null})
+    .then(function(){ toast(on?'اتقفل توقّع التشكيلة 🔒':'انفتح توقّع التشكيلة 🔓'); })
+    .catch(function(e){ toast('فشل: '+((e&&e.code)||e)); });
+}
+// صفّ أزرار الأدمن للقفل/الفتح، أسفل بطاقة التشكيلة
+function lineupLockRow(){
+  if(!isAdmin) return null;
+  var m=lineupMatch(); if(!m) return null;
+  var timeLocked = Date.now() >= lineupLockMs();
+  // بعد حضور موعد القفل الزمني ما فيه ما يُقفل أو يُفتح
+  if(timeLocked && !lineupForceLocked()) return null;
+  var b=document.createElement('button');
+  b.className='lu-save';
+  b.style.cssText='background:rgba(255,120,120,.14);border:1px solid rgba(255,120,120,.5);color:#ffb4b4;margin-top:8px;';
+  if(lineupForceLocked()){
+    b.textContent='🔓 افتح توقّع التشكيلة من جديد';
+    b.addEventListener('click',function(){
+      if(confirm('فتح التوقّع من جديد؟ سيقدر اللاعبون يعدّلون تشكيلتهم حتى موعد القفل.')) setLineupLock(false);
+    });
+  } else {
+    b.textContent='🔒 اقفل توقّع التشكيلة الآن';
+    b.addEventListener('click',function(){
+      if(confirm('قفل التوقّع الآن؟ من لم يحفظ تشكيلته لن يقدر بعد ذلك، ولا يمكن التعديل.')) setLineupLock(true);
+    });
+  }
+  return b;
+}
 function lineupPicksOf(key){
   var u=usersData[key]||{}, L=u.lineup;
   return (L && L.players && L.players.length) ? L.players.slice() : [];
@@ -2309,7 +2347,8 @@ function saveLineup(){
 }
 function saveLineupTruth(sel){
   if(sel.length!==LINEUP_SIZE){ toast('التشكيلة الفعلية لازم '+arNum(LINEUP_SIZE)+' لاعبين'); return; }
-  ROOT.child('teams/__lineup__').set({players:sel.slice(), at:Date.now()})
+  // update لا set، حتى لا يُمسح قفل الأدمن المخزّن في نفس العقدة
+  ROOT.child('teams/__lineup__').update({players:sel.slice(), at:Date.now()})
     .then(function(){ toast('انحفظت التشكيلة الفعلية ✅'); })
     .catch(function(e){ toast('فشل الحفظ: '+((e&&e.code)||e)); });
 }
@@ -2398,15 +2437,21 @@ function lineupCard(){
     note.textContent='⏳ التوقّع يتقفل قبل المباراة بساعة — '+arKickAt(lineupLockMs())
       +'. تقدر تعدّله كم مرة تبغى قبل هذا الوقت.';
     card.appendChild(note);
+    var lr=lineupLockRow(); if(lr) card.appendChild(lr);
     return card;
   }
 
   // (ب) اتقفل: نعرض اختيار صاحب الحساب، ونصحّحه إذا وصلت التشكيلة الفعلية
+  var why=document.createElement('div');why.className='lu-sub';
+  why.textContent = lineupForceLocked() ? '🔒 التوقّع مقفل. لا يمكن الحفظ ولا التعديل.'
+                                        : '🔒 اتقفل التوقّع قبل المباراة بساعة.';
+  card.appendChild(why);
   var picks=lineupPicksOf(myKey);
   if(!picks.length){
     var em=document.createElement('div');em.className='lu-sub';
     em.textContent='ما توقّعت التشكيلة قبل قفل التوقّع.';
     card.appendChild(em);
+    var lr0=lineupLockRow(); if(lr0) card.appendChild(lr0);
     return card;
   }
   picks.forEach(function(nm){
@@ -2423,6 +2468,7 @@ function lineupCard(){
     sc.textContent='بانتظار التشكيلة الرسمية…';
   }
   card.appendChild(sc);
+  var lr2=lineupLockRow(); if(lr2) card.appendChild(lr2);
   return card;
 }
 // صندوق الأدمن لإدخال التشكيلة الفعلية بعد إعلانها.
