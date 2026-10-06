@@ -713,7 +713,7 @@ img.flag{display:inline-block;width:1.45em;height:.95em;vertical-align:-2px;bord
 
   <div class="rules">
     <b>📌 ملاحظات مهمة</b><br>
-    • <b>بطاقات ×2:</b> عندك <b>بطاقتين</b> فقط في البطولة كاملة، فعّلها على المباراة قبل ما تبدأ <b>وبتتضاعف نقاطك</b> فيها<br>
+    • <b>بطاقات ×2:</b> عندك <b>بطاقتين</b> فقط في البطولة كاملة، فعّلها على المباراة قبل ما تبدأ <b>وبتتضاعف نقاطك</b> فيها. البطاقة <b>تُستهلك عند الحفظ ولا ترجع</b>، فاختر مباراتك بعناية<br>
     • <b>التوقّع مفتوح من الآن</b> لكل مباريات البطولة، وتقدر تغيّره زي ما تبغى لين تبدأ المباراة<br>
     • <b>لو تعادلتوا في الترتيب</b>، اللي توقع نتائج صح أكثر هو اللي يكون مركزه أعلى
   </div>
@@ -1590,7 +1590,9 @@ function pointsFor(pred,r){
   if(r.pw&&pred.pw&&Number(r.h)===Number(r.a)&&Number(pred.h)===Number(pred.a)&&pred.pw===r.pw) bonus=1;
   return base+bonus;
 }
-// ===== 2x BOOST CARDS (5 per player; stored inside the prediction as x2) =====
+// ===== بطاقات ×2 (بطاقتان لكل لاعب، تُخزَّن داخل التوقّع في x2) =====
+// قاعدة أساسية: البطاقة المحفوظة في قاعدة البيانات مستهلكة نهائيًا ولا ترجع
+// للرصيد بأي طريقة — لا بالضغط على الزر، ولا بتحديث التوقّع، ولا بخطأ حفظ.
 var MAX_BOOST=2;
 // البطاقات المحفوظة فعليًا في قاعدة البيانات (هي المرجع عند الحفظ)
 function boostsSaved(key,exceptId){var n=0;MATCHES.forEach(function(m){if(m.id===exceptId)return;var p=predsData[m.id]&&predsData[m.id][key];if(p&&p.x2)n++;});return n;}
@@ -1600,12 +1602,18 @@ function boostsUsed(key,exceptId){
   var n=0;
   MATCHES.forEach(function(m){
     if(m.id===exceptId)return;
-    var on;
-    if(key===myKey && draft[m.id] && draftEdited[m.id]) on=!!draft[m.id].x2;
-    else { var p=predsData[m.id]&&predsData[m.id][key]; on=!!(p&&p.x2); }
+    var p=predsData[m.id]&&predsData[m.id][key];
+    var on=!!(p&&p.x2);           // البطاقة المحفوظة مستهلكة ولا ترجع
+    // المسوّدة تزيد العدد فقط (بطاقة مفعّلة ولم تُحفظ بعد)، ولا تُلغي محفوظة أبدًا
+    if(!on && key===myKey && draft[m.id] && draftEdited[m.id] && draft[m.id].x2) on=true;
     if(on)n++;
   });
   return n;
+}
+// هل البطاقة محفوظة فعلًا على هذه المباراة لهذا اللاعب؟ (محفوظة = مستهلكة نهائيًا)
+function boostLockedOn(id,key){
+  var p=predsData[id]&&predsData[id][key||myKey];
+  return !!(p&&p.x2);
 }
 // حارس أخير: لو وصلت بيانات فيها بطاقات أكثر من الحد (بيانات قديمة أو
 // كتابة مباشرة)، نعتمد الأقدم حسب موعد المباراة ونلغي الزائد داخل التطبيق.
@@ -2517,6 +2525,9 @@ function matchCard(m){
       draft[m.id].pw=myPred.pw||null;
       draft[m.id].x2=!!myPred.x2;
     }
+    // حارس: بطاقة ×2 المحفوظة لا ترجع أبدًا، فتبقى مفعّلة في المسوّدة
+    // حتى لو لمس المستخدم الزر أو حدث خطأ في الحفظ.
+    if(myPred && myPred.x2) draft[m.id].x2=true;
   }
 
   var el=document.createElement('div');
@@ -2595,9 +2606,19 @@ function matchCard(m){
     function x2cls(){x2btn.className='x2-btn'+(draft[m.id].x2?' on':'');x2btn.innerHTML='<span class="x2-ic">⚡</span><span class="x2-tx">'+x2lbl()+'</span>';}
     x2cls();
     __x2btns.push(x2cls);
-    x2btn.title='ضاعف نقاطك في هذه المباراة';
+    x2btn.title=boostLockedOn(m.id)?'بطاقة ×2 مستخدمة في هذه المباراة ولا يمكن إرجاعها':'ضاعف نقاطك في هذه المباراة';
     x2btn.addEventListener('click',function(){
-      if(!draft[m.id].x2){ if(boostsUsed(myKey,m.id)>=MAX_BOOST){toast("استخدمت كل بطاقات ×2 ("+MAX_BOOST+")");refreshBoostLabels();return;} draft[m.id].x2=true; }
+      // بطاقة محفوظة = مستهلكة نهائيًا: لا تُلغى ولا ترجع للرصيد
+      if(boostLockedOn(m.id)){
+        draft[m.id].x2=true; refreshBoostLabels();
+        toast('بطاقة ×2 مستخدمة في هذه المباراة ولا يمكن إرجاعها');
+        return;
+      }
+      if(!draft[m.id].x2){
+        if(boostsUsed(myKey,m.id)>=MAX_BOOST){toast("استخدمت كل بطاقات ×2 ("+MAX_BOOST+")");refreshBoostLabels();return;}
+        if(!confirm('بطاقة ×2 تُستخدم مرة واحدة ولا يمكن إرجاعها بعد الحفظ.\nتفعيلها على هذه المباراة؟')){refreshBoostLabels();return;}
+        draft[m.id].x2=true;
+      }
       else draft[m.id].x2=false;
       draftEdited[m.id]=true;
       refreshBoostLabels();
@@ -2715,7 +2736,11 @@ function savePred(id){
     if(!d.pw){toast('اختر الفائز بالبلنتيات');return;}
     data.pw=d.pw;
   }
-  if(d.x2){
+  if(boostLockedOn(id)){
+    // بطاقة ×2 محفوظة مسبقًا على هذه المباراة: تُكتب دائمًا حتى لا يُلغيها أي تحديث
+    d.x2=true;
+    data.x2=true;
+  } else if(d.x2){
     // تحقّق أخير قبل الكتابة: لا تتجاوز عدد البطاقات المسموح به
     if(boostsSaved(myKey,id)>=MAX_BOOST){
       d.x2=false;
