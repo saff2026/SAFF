@@ -2872,6 +2872,14 @@ function adminBar(){
   var sbS=document.createElement('button');sbS.className='btn-summary';sbS.style.cssText='background:rgba(255,208,80,.16);border-color:rgba(255,208,80,.55);color:#fde68a;';sbS.textContent='📈 بوستر الإحصائيات';
   sbS.addEventListener('click',genStatsSummaryPoster);
   bar.appendChild(sbS);
+  // بوستر البطل: يظهر فقط بعد اكتمال نتائج كل المباريات
+  if(MATCHES.every(function(m){return !!result(m);})){
+    var sbC=document.createElement('button');sbC.className='btn-summary';
+    sbC.style.cssText='background:rgba(255,208,80,.26);border-color:rgba(255,208,80,.8);color:#241a00;font-weight:900;';
+    sbC.textContent='🏆 بوستر البطل';
+    sbC.addEventListener('click',genChampionPoster);
+    bar.appendChild(sbC);
+  }
   var n=Object.keys(resultsData||{}).length;
   var b=document.createElement('button');b.className='btn-clear-all';
   b.textContent='🗑 امسح كل النتائج ('+n+')';
@@ -4450,6 +4458,109 @@ function _seasonPodiumBig(opts){
     +'</div>'
     +(picks?'<div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:4px;">'+picks+'</div>':'')
   +'</div>';
+}
+// ===== بوستر البطل: إعلان الفائز بالدوري بعد نهاية البطولة =====
+// يُبنى من نفس أرقام جدول الترتيب (نقاط المباريات + مكافآت توقّعات البطولة)
+// وبنفس ترتيبه، فلا يختلف الإعلان عمّا يراه اللاعبون في التطبيق.
+function _championRows(){
+  var truth=tournamentTruth();
+  var rows=Object.keys(usersData||{}).filter(function(k){
+    return !(usersData[k]&&usersData[k].removed);
+  }).map(function(k){
+    var u=usersData[k]||{}, total=0, exact=0, sign2=0, predicted=0, boosts=0;
+    MATCHES.forEach(function(m){
+      var pred=predsData[m.id]&&predsData[m.id][k]; if(!pred) return;
+      predicted++; if(pred.x2) boosts++;
+      var r=result(m); if(!r) return;
+      total += scoreOf(pred,r)||0;
+      if(Number(pred.h)===Number(r.h)&&Number(pred.a)===Number(r.a)) exact++;
+      else if(sign(pred.h-pred.a)===sign(r.h-r.a)) sign2++;
+    });
+    var picks=tournamentPicksOf(k);
+    var bonus=tournamentPointsFor(picks,truth);
+    return {key:k, name:u.name||k, matchPts:total, bonus:bonus, total:total+bonus,
+            exact:exact, sign:sign2, predicted:predicted, boosts:boosts};
+  }).filter(function(p){return p.predicted>0;});
+  rows.sort(function(a,b){return b.total-a.total || b.exact-a.exact;});
+  return rows;
+}
+function genChampionPoster(){
+  toast('جاري تجهيز البوستر…');
+  var rows=_championRows();
+  if(!rows.length){ toast('لا توجد بيانات بعد'); return; }
+  var top=rows[0];
+  // تعادل على الصدارة: نُسمّي الجميع بدل اختيار واحد اعتباطًا
+  var tied=rows.filter(function(r){return r.total===top.total;});
+  var champName=tied.map(function(r){return r.name;}).join('  و  ');
+  var nameSize = champName.length>24 ? 46 : (champName.length>14 ? 58 : 76);
+  var gap = rows.length>tied.length ? (top.total - rows[tied.length].total) : 0;
+
+  var stat=function(ic,v,l){
+    return '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;">'
+      +'<div style="font-size:34px;font-weight:900;color:#fff;line-height:1;">'+ic+' '+arNum(v)+'</div>'
+      +'<div style="font-size:19px;font-weight:700;color:#cbd5e1;">'+esc(l)+'</div></div>';
+  };
+  var champCard='<div style="padding:52px 44px 44px;border-radius:28px;'
+    +'background:linear-gradient(150deg,rgba(255,208,80,.26),rgba(255,208,80,.05) 60%,rgba(255,255,255,.03));'
+    +'border:3px solid rgba(255,208,80,.75);display:flex;flex-direction:column;gap:24px;align-items:center;text-align:center;">'
+    +'<div style="width:132px;height:132px;border-radius:50%;background:#FFD050;color:#241a00;font-size:70px;'
+      +'display:flex;align-items:center;justify-content:center;">🏆</div>'
+    +'<div>'
+      +'<div style="font-size:23px;color:var(--gold);font-weight:800;margin-bottom:10px;">'
+        +(tied.length>1?'بطلا الدوري بالتساوي':'بطل الدوري')+'</div>'
+      +'<div style="font-size:'+nameSize+'px;font-weight:900;color:#fff;line-height:1.12;">'+esc(champName)+'</div>'
+    +'</div>'
+    +'<div style="display:flex;align-items:baseline;gap:16px;justify-content:center;">'
+      +'<div style="font-size:150px;font-weight:900;color:var(--gold);line-height:.92;">'+arNum(top.total)+'</div>'
+      +'<div style="font-size:26px;color:#fff;font-weight:700;">نقطة</div>'
+    +'</div>'
+    +'<div style="display:flex;gap:46px;justify-content:center;flex-wrap:wrap;">'
+      +stat('🎯',top.exact,'نتيجة مطابقة')+stat('✓',top.exact+top.sign,'اتجاه صحيح')
+      +stat('⚡',top.boosts,'بطاقة ×٢')+stat('🏅',top.bonus,'نقاط البطولة')
+    +'</div>'
+    +(gap>0?'<div style="font-size:21px;font-weight:800;color:#fde68a;">حسمها بفارق '
+      +(gap===1?'نقطة واحدة':(gap===2?'نقطتين':arNum(gap)+' نقاط'))+' فقط</div>':'')
+  +'</div>';
+
+  var prize='<div style="margin-top:26px;padding:26px 32px;border-radius:20px;background:rgba(255,255,255,.05);'
+    +'border:1.5px solid var(--line);display:flex;align-items:center;gap:20px;">'
+    +'<div style="font-size:44px;">🎁</div>'
+    +'<div style="text-align:right;">'
+      +'<div style="font-size:19px;font-weight:800;color:var(--gold);">جائزة المركز الأول</div>'
+      +'<div style="font-size:30px;font-weight:900;color:#fff;margin-top:4px;">طقم المنتخب السعودي الأبيض</div>'
+      +'<div style="font-size:19px;font-weight:700;color:#cbd5e1;margin-top:4px;">موقَّع عليه من جميع اللاعبين ✍️</div>'
+    +'</div></div>';
+
+  var rest='';
+  var medals=['🥈','🥉'];
+  for(var i=tied.length, m=0; i<rows.length && m<2; i++, m++){
+    var r=rows[i];
+    rest+='<div style="display:flex;align-items:center;gap:20px;padding:22px 26px;border-radius:18px;'
+      +'background:rgba(255,255,255,.04);border:1.5px solid var(--line);">'
+      +'<div style="font-size:40px;">'+medals[m]+'</div>'
+      +'<div style="flex:1;font-size:36px;font-weight:900;color:#fff;">'+esc(r.name)+'</div>'
+      +'<div style="font-size:40px;font-weight:900;color:var(--gold);">'+arNum(r.total)+'</div>'
+    +'</div>';
+  }
+  if(rest) rest='<div style="display:flex;flex-direction:column;gap:14px;margin-top:26px;">'+rest+'</div>';
+
+  var truth=tournamentTruth()||{};
+  var foot='<div style="margin-top:34px;padding-top:26px;border-top:1px solid var(--line);'
+    +'display:flex;justify-content:space-between;align-items:center;font-size:21px;font-weight:700;color:#cbd5e1;">'
+    +'<span>🏟️ بطل خليجي ٢٧: <b style="color:#fff;">'+esc(truth.champion?arTeam(truth.champion):'—')+'</b></span>'
+    +'<span>👥 '+arNum(rows.length)+' لاعبًا توقّعوا</span>'
+  +'</div>';
+
+  var title='<h1 class="disp" style="font-size:92px;margin-top:40px;margin-bottom:10px;line-height:1.04;">'
+      +'انتهى <span style="color:var(--gold);">الدوري</span></h1>'
+    +'<div style="font-size:23px;color:#fde68a;font-weight:800;margin-bottom:30px;">'
+      +'خمس عشرة مباراة · والنتيجة النهائية</div>';
+
+  var html='<div class="poster" style="width:1080px;min-height:1500px;">'+_seasonPosterArcs(1600)
+    +'<div class="pad" style="padding:64px 60px 56px;">'+_seasonPosterHeader('🏆 البطل')
+    +title+champCard+prize+rest+foot+'</div></div>';
+  document.getElementById('posterRoot').innerHTML=html;
+  _seasonRenderShare('gulf27-champion.png','بطل دوري التوقّعات');
 }
 // Poster 1: 👑 أعلى نقاط الموسم
 function genTopPointsPoster(){
