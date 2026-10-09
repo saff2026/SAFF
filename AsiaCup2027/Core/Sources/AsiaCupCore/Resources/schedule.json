@@ -1,0 +1,52 @@
+{
+  "_ملاحظة": "جدول كأس آسيا السعودية ٢٠٢٧. هذا الملف ناقص عن قصد: التوقيتات لم تُنشر رسميًا بعد في المصادر المتاحة، وموقع الاتحاد الآسيوي محجوب من بيئة العمل. أيّ مباراة قيمة kickoffUTC فيها null تُعدّ ناقصة، ويرفض التطبيق اعتبار الجدول مكتملًا حتى تُملأ كل المباريات الـ٥١.",
+  "_المصدر": "قرعة ٩ مايو ٢٠٢٦ بقصر سلوى في الدرعية. يُستكمل من ملف الجدول الرسمي: assets.the-afc.com",
+  "expectedMatchCount": 51,
+  "tournamentStart": "2027-01-07",
+  "tournamentEnd": "2027-02-05",
+  "matches": [
+    {
+      "id": "m1", "number": 1, "stage": "group", "group": "A",
+      "home": "Saudi Arabia", "away": "Palestine",
+      "venue": "استاد مدينة الملك فهد الرياضية", "city": "الرياض",
+      "date": "2027-01-07", "kickoffUTC": null,
+      "_تحقّق": "مباراة الافتتاح — مؤكَّدة من عدة مصادر"
+    },
+    {
+      "id": "m2", "number": 2, "stage": "group", "group": "A",
+      "home": "Kuwait", "away": "Oman",
+      "venue": "استاد جامعة الملك سعود", "city": "الرياض",
+      "date": "2027-01-08", "kickoffUTC": null
+    },
+    {
+      "id": "m3", "number": 3, "stage": "group", "group": "B",
+      "home": "Uzbekistan", "away": "Jordan",
+      "venue": "مدينة الملك عبدالله الرياضية", "city": "جدة",
+      "date": "2027-01-08", "kickoffUTC": null
+    },
+    {
+      "id": "m4", "number": 4, "stage": "group", "group": "D",
+      "home": "Australia", "away": "Singapore",
+      "venue": "استاد أرامكو", "city": "الخبر",
+      "date": "2027-01-09", "kickoffUTC": null
+    },
+    {
+      "id": "m5", "number": 5, "stage": "group", "group": "C",
+      "home": "Iran", "away": "China",
+      "venue": "أرينا المملكة", "city": "الرياض",
+      "date": "2027-01-09", "kickoffUTC": null
+    },
+    {
+      "id": "m6", "number": 6, "stage": "group", "group": "E",
+      "home": "South Korea", "away": "Yemen",
+      "venue": "مدينة الملك عبدالله الرياضية", "city": "جدة",
+      "date": "2027-01-10", "kickoffUTC": null
+    },
+    {
+      "id": "m7", "number": 7, "stage": "group", "group": "F",
+      "home": "Japan", "away": "Indonesia",
+      "venue": "مدينة الأمير عبدالله الفيصل الرياضية", "city": "جدة",
+      "date": "2027-01-11", "kickoffUTC": null
+    }
+  ]
+}

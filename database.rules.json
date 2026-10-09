@@ -191,6 +191,84 @@
           ".validate": "!newData.exists() || (newData.hasChildren(['name','goals']) && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 60 && newData.child('goals').isNumber() && newData.child('goals').val() >= 0 && newData.child('goals').val() <= 30)"
         }
       }
+    },
+    "asia27": {
+      ".read": "auth != null",
+      "users": {
+        "$key": {
+          ".write": "auth != null && newData.exists()",
+          "name": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 30"
+          },
+          "ph": {
+            ".validate": "!data.exists() || newData.val() === data.val()"
+          }
+        }
+      },
+      "predictions": {
+        "$mid": {
+          "$key": {
+            ".write": "auth != null",
+            ".validate": "newData.hasChildren(['h','a']) && newData.child('h').isNumber() && newData.child('a').isNumber() && newData.child('h').val() >= 0 && newData.child('h').val() <= 30 && newData.child('a').val() >= 0 && newData.child('a').val() <= 30",
+            "pw": {
+              ".validate": "newData.isString() && (newData.val() === 'h' || newData.val() === 'a')"
+            },
+            "x2": {
+              ".validate": "newData.isBoolean() && newData.val() === true"
+            }
+          }
+        }
+      },
+      "results": {
+        "$mid": {
+          ".write": "auth != null",
+          ".validate": "newData.hasChildren(['h','a']) && newData.child('h').isNumber() && newData.child('a').isNumber() && newData.child('h').val() >= 0 && newData.child('a').val() >= 0",
+          "pw": {
+            ".validate": "newData.isString() && (newData.val() === 'h' || newData.val() === 'a')"
+          }
+        }
+      },
+      "teams": {
+        "$mid": {
+          ".write": "auth != null"
+        }
+      },
+      "live": {
+        "$mid": {
+          ".write": "auth != null"
+        }
+      },
+      "polls": {
+        "$pid": {
+          "$key": {
+            ".write": "auth != null",
+            ".validate": "newData.isString() && newData.val().length <= 4"
+          }
+        }
+      },
+      "storyResets": {
+        "$day": {
+          ".write": "auth != null"
+        }
+      },
+      "scorers": {
+        "$sid": {
+          ".write": "auth != null",
+          ".validate": "!newData.exists() || (newData.hasChildren(['name','goals']) && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 60 && newData.child('goals').isNumber() && newData.child('goals').val() >= 0 && newData.child('goals').val() <= 30)"
+        }
+      },
+      "discipline": {
+        "$team": {
+          ".write": "auth != null",
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 99"
+        }
+      },
+      "lots": {
+        "$scope": {
+          ".write": "auth != null",
+          ".validate": "newData.isString() && newData.val().length <= 200"
+        }
+      }
     }
   }
 }
