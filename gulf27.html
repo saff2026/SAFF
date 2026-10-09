@@ -4533,12 +4533,29 @@ function _championStats(){
   lus.sort(function(a,b){return b.n-a.n;});
   var avg=lus.length?(lus.reduce(function(s,x){return s+x.n;},0)/lus.length):0;
   var best=lus.filter(function(x){return lus.length&&x.n===lus[0].n;});
+  // أكثر نتيجة اتفق عليها اللاعبون: أعلى تكرار لنفس النتيجة في مباراة واحدة
+  var consensus=null;
+  MATCHES.forEach(function(m){
+    var r=result(m); if(!r) return;
+    var cnt={}, tot=0;
+    act.forEach(function(k){
+      var pd=predsData[m.id]&&predsData[m.id][k]; if(!pd) return;
+      var key=Number(pd.h)+'-'+Number(pd.a);
+      cnt[key]=(cnt[key]||0)+1; tot++;
+    });
+    Object.keys(cnt).forEach(function(key){
+      if(!consensus || cnt[key]>consensus.n){
+        var ha=key.split('-');
+        consensus={m:m, r:r, h:Number(ha[0]), a:Number(ha[1]), n:cnt[key], tot:tot};
+      }
+    });
+  });
   byMatch.sort(function(a,b){return b.pct-a.pct || b.n-a.n;});
   return {players:act.filter(function(k){
             return MATCHES.some(function(m){return predsData[m.id]&&predsData[m.id][k];});}).length,
           preds:preds, exact:exact, correct:correct, boosts:boosts, boostHits:boostHits,
           topExact:topExact, picks:picks, byMatch:byMatch,
-          lineup:{n:lus.length, avg:avg, best:best}};
+          lineup:{n:lus.length, avg:avg, best:best}, consensus:consensus};
 }
 function genChampionPoster(){
   toast('جاري تجهيز البوستر…');
@@ -4591,35 +4608,54 @@ function genChampionPoster(){
   // صفّ المباراة: اسم صاحب الأرض يمينًا ثم النتيجة ثم الضيف — نفس بنية
   // صندوق النتيجة في بوستر الملخّص، فيبقى رقم صاحب الأرض ملاصقًا لاسمه
   // ولا يلتبس اتجاه النتيجة.
-  var mline=function(e){
-    var t=teamsOf(e.m), stg=(e.m.stage==='SF'?'نصف النهائي':(e.m.stage==='FINAL'?'النهائي':''));
+  // sc هي النتيجة المعروضة (الفعلية أو المتوقّعة)، وratio النسبة على اليسار
+  var mline=function(m,sc,ratio,muted){
+    var t=teamsOf(m), stg=(m.stage==='SF'?'نصف النهائي':(m.stage==='FINAL'?'النهائي':''));
+    var box = muted ? 'color:#fff;background:rgba(255,255,255,.14);border:1.5px solid var(--line);'
+                    : 'color:#0A2C20;background:var(--gold);';
     return '<div style="padding:16px 22px;border-radius:16px;background:rgba(255,255,255,.05);'
       +'border:1.5px solid var(--line);margin-bottom:12px;">'
       +(stg?'<div style="font-size:19px;color:var(--mute);font-weight:700;margin-bottom:8px;">'+esc(stg)+'</div>':'')
       +'<div style="display:flex;align-items:center;gap:14px;">'
         +'<div style="flex:1;text-align:right;font-size:27px;font-weight:800;color:#fff;">'+esc(arTeamOrSlot(t.home))+'</div>'
-        +'<div style="display:flex;align-items:center;gap:9px;font-size:27px;font-weight:900;color:#0A2C20;'
-          +'background:var(--gold);border-radius:9px;padding:5px 18px;">'
-          +'<span>'+arNum(e.r.h)+'</span><span style="opacity:.5;">–</span><span>'+arNum(e.r.a)+'</span></div>'
+        +'<div style="display:flex;align-items:center;gap:9px;font-size:27px;font-weight:900;'+box
+          +'border-radius:9px;padding:5px 18px;">'
+          +'<span>'+arNum(sc.h)+'</span><span style="opacity:.5;">–</span><span>'+arNum(sc.a)+'</span></div>'
         +'<div style="flex:1;text-align:left;font-size:27px;font-weight:800;color:#fff;">'+esc(arTeamOrSlot(t.away))+'</div>'
-        +'<div style="font-size:25px;font-weight:900;color:var(--gold);white-space:nowrap;">'
-          +arNum(e.ok)+' / '+arNum(e.n)+'</div>'
+        +'<div style="font-size:25px;font-weight:900;color:var(--gold);white-space:nowrap;">'+ratio+'</div>'
       +'</div></div>';
   };
+  var mlineRes=function(e){ return mline(e.m, e.r, arNum(e.ok)+' / '+arNum(e.n)); };
   var perfect=st.byMatch.filter(function(e){return e.pct===1;}).slice(0,2);
   var hard=st.byMatch[st.byMatch.length-1];
   var easy='';
   if(perfect.length){
     easy=sec('🎯 أسهل '+(perfect.length>1?'مباراتين':'مباراة'))
-      +perfect.map(mline).join('')
+      +perfect.map(mlineRes).join('')
       +'<div style="font-size:23px;font-weight:700;color:#86efac;">أصابهما الجميع بلا استثناء</div>';
   }
   var hardS='';
   if(hard){
-    hardS=sec('🤯 أصعب مباراة')+mline(hard)
+    hardS=sec('🤯 أصعب مباراة')+mlineRes(hard)
       +'<div style="font-size:23px;font-weight:700;color:#fca5a5;">'
       +(hard.ok===1?'لاعب واحد فقط أصابها':arNum(hard.ok)+' لاعبين فقط أصابوها')
       +(hard.ex===0?'، وما طابقها أحد':'')+'</div>';
+  }
+
+  // ===== أكثر نتيجة اتفقوا عليها =====
+  var cons='';
+  if(st.consensus){
+    var c=st.consensus, right=(c.h===Number(c.r.h)&&c.a===Number(c.r.a));
+    cons=sec('🤝 أكثر نتيجة اتفقوا عليها')
+      +mline(c.m, {h:c.h,a:c.a}, arNum(c.n)+' / '+arNum(c.tot), true)
+      +'<div style="font-size:23px;font-weight:700;color:'+(right?'#86efac':'#fca5a5')+';">'
+      +arNum(c.n)+' من '+arNum(c.tot)+' توقّعوا هذه النتيجة بالضبط'
+      +(right?' — وهي ما انتهت به فعلًا'
+             // نفس بنية صندوق النتيجة: رقم صاحب الأرض على اليمين، فلا يلتبس الاتجاه
+             :' — وانتهت <span style="display:inline-flex;align-items:center;gap:7px;'
+               +'vertical-align:middle;font-weight:900;"><span>'+arNum(c.r.h)
+               +'</span><span style="opacity:.6;">–</span><span>'+arNum(c.r.a)+'</span></span>')
+      +'</div>';
   }
 
   // ===== بطاقات ×2 =====
@@ -4656,7 +4692,7 @@ function genChampionPoster(){
     +'ختام <span style="color:var(--gold);">دوري التوقّعات</span></h1>';
   var html='<div class="poster" style="width:1080px;min-height:1500px;">'+_seasonPosterArcs(2300)
     +'<div class="pad" style="padding:60px 58px 56px;">'+_seasonPosterHeader('🏆 خليجي ٢٧')
-    +title+podium+rest+nums+easy+hardS+bo+tour+lp+'</div></div>';
+    +title+podium+rest+nums+easy+hardS+cons+bo+tour+lp+'</div></div>';
   document.getElementById('posterRoot').innerHTML=html;
   _seasonRenderShare('gulf27-champion.png','ختام دوري التوقّعات');
 }
