@@ -4533,29 +4533,17 @@ function _championStats(){
   lus.sort(function(a,b){return b.n-a.n;});
   var avg=lus.length?(lus.reduce(function(s,x){return s+x.n;},0)/lus.length):0;
   var best=lus.filter(function(x){return lus.length&&x.n===lus[0].n;});
-  // أكثر نتيجة اتفق عليها اللاعبون: أعلى تكرار لنفس النتيجة في مباراة واحدة
-  var consensus=null;
-  MATCHES.forEach(function(m){
-    var r=result(m); if(!r) return;
-    var cnt={}, tot=0;
-    act.forEach(function(k){
-      var pd=predsData[m.id]&&predsData[m.id][k]; if(!pd) return;
-      var key=Number(pd.h)+'-'+Number(pd.a);
-      cnt[key]=(cnt[key]||0)+1; tot++;
-    });
-    Object.keys(cnt).forEach(function(key){
-      if(!consensus || cnt[key]>consensus.n){
-        var ha=key.split('-');
-        consensus={m:m, r:r, h:Number(ha[0]), a:Number(ha[1]), n:cnt[key], tot:tot};
-      }
-    });
-  });
+  // أكثر مباراة طابق اللاعبون نتيجتها بالضبط
+  var topMatch=byMatch.slice().sort(function(a,b){
+    return b.ex-a.ex || (b.ex/b.n)-(a.ex/a.n);
+  })[0] || null;
+  if(topMatch && !topMatch.ex) topMatch=null;
   byMatch.sort(function(a,b){return b.pct-a.pct || b.n-a.n;});
   return {players:act.filter(function(k){
             return MATCHES.some(function(m){return predsData[m.id]&&predsData[m.id][k];});}).length,
           preds:preds, exact:exact, correct:correct, boosts:boosts, boostHits:boostHits,
           topExact:topExact, picks:picks, byMatch:byMatch,
-          lineup:{n:lus.length, avg:avg, best:best}, consensus:consensus};
+          lineup:{n:lus.length, avg:avg, best:best}, topMatch:topMatch};
 }
 function genChampionPoster(){
   toast('جاري تجهيز البوستر…');
@@ -4608,11 +4596,10 @@ function genChampionPoster(){
   // صفّ المباراة: اسم صاحب الأرض يمينًا ثم النتيجة ثم الضيف — نفس بنية
   // صندوق النتيجة في بوستر الملخّص، فيبقى رقم صاحب الأرض ملاصقًا لاسمه
   // ولا يلتبس اتجاه النتيجة.
-  // sc هي النتيجة المعروضة (الفعلية أو المتوقّعة)، وratio النسبة على اليسار
-  var mline=function(m,sc,ratio,muted){
+  // sc النتيجة المعروضة وratio النسبة على اليسار
+  var mline=function(m,sc,ratio){
     var t=teamsOf(m), stg=(m.stage==='SF'?'نصف النهائي':(m.stage==='FINAL'?'النهائي':''));
-    var box = muted ? 'color:#fff;background:rgba(255,255,255,.14);border:1.5px solid var(--line);'
-                    : 'color:#0A2C20;background:var(--gold);';
+    var box = 'color:#0A2C20;background:var(--gold);';
     return '<div style="padding:16px 22px;border-radius:16px;background:rgba(255,255,255,.05);'
       +'border:1.5px solid var(--line);margin-bottom:12px;">'
       +(stg?'<div style="font-size:19px;color:var(--mute);font-weight:700;margin-bottom:8px;">'+esc(stg)+'</div>':'')
@@ -4630,7 +4617,7 @@ function genChampionPoster(){
   var hard=st.byMatch[st.byMatch.length-1];
   var easy='';
   if(perfect.length){
-    easy=sec('🎯 أسهل '+(perfect.length>1?'مباراتين':'مباراة'))
+    easy=sec('✅ أسهل '+(perfect.length>1?'مباراتين':'مباراة'))
       +perfect.map(mlineRes).join('')
       +'<div style="font-size:23px;font-weight:700;color:#86efac;">أصابهما الجميع بلا استثناء</div>';
   }
@@ -4642,20 +4629,14 @@ function genChampionPoster(){
       +(hard.ex===0?'، وما طابقها أحد':'')+'</div>';
   }
 
-  // ===== أكثر نتيجة اتفقوا عليها =====
+  // ===== أكثر مباراة طابقوا نتيجتها =====
   var cons='';
-  if(st.consensus){
-    var c=st.consensus, right=(c.h===Number(c.r.h)&&c.a===Number(c.r.a));
-    cons=sec('🤝 أكثر نتيجة اتفقوا عليها')
-      +mline(c.m, {h:c.h,a:c.a}, arNum(c.n)+' / '+arNum(c.tot), true)
-      +'<div style="font-size:23px;font-weight:700;color:'+(right?'#86efac':'#fca5a5')+';">'
-      +arNum(c.n)+' من '+arNum(c.tot)+' توقّعوا هذه النتيجة بالضبط'
-      +(right?' — وهي ما انتهت به فعلًا'
-             // نفس بنية صندوق النتيجة: رقم صاحب الأرض على اليمين، فلا يلتبس الاتجاه
-             :' — وانتهت <span style="display:inline-flex;align-items:center;gap:7px;'
-               +'vertical-align:middle;font-weight:900;"><span>'+arNum(c.r.h)
-               +'</span><span style="opacity:.6;">–</span><span>'+arNum(c.r.a)+'</span></span>')
-      +'</div>';
+  if(st.topMatch){
+    var c=st.topMatch;
+    cons=sec('🎯 أكثر مباراة طابقوا نتيجتها')
+      +mlineRes({m:c.m, r:c.r, ok:c.ex, n:c.n})
+      +'<div style="font-size:23px;font-weight:700;color:#86efac;">'
+      +arNum(c.ex)+' من '+arNum(c.n)+' طابقوا نتيجتها بالضبط — أعلى رقم في البطولة</div>';
   }
 
   // ===== بطاقات ×2 =====
