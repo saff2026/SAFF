@@ -238,6 +238,52 @@ final class ScheduleTests: XCTestCase {
         XCTAssertEqual(Set(report.matches.map(\.city)), ["الرياض", "جدة", "الخبر"])
     }
 
+    func testKhobarVenueIsAramcoStadium() {
+        // الملف الرسمي بعد القرعة يسمّيه «Aramco Stadium»، لا «Al Khobar»
+        // كما كان في النسخة التي قبل القرعة.
+        let report = try! Schedule.load()
+        let khobar = report.matches.filter { $0.city == "الخبر" }
+        XCTAssertEqual(khobar.count, 7)
+        XCTAssertEqual(Set(khobar.map(\.venue)), ["استاد أرامكو"])
+    }
+
+    func testMatchCountsPerCityMatchTheOfficialSchedule() {
+        let report = try! Schedule.load()
+        let byCity = Dictionary(grouping: report.matches, by: \.city).mapValues(\.count)
+        XCTAssertEqual(byCity["الرياض"], 31)
+        XCTAssertEqual(byCity["جدة"], 13)
+        XCTAssertEqual(byCity["الخبر"], 7)
+    }
+
+    func testSemiFinalsAreInKhobarThenJeddah() {
+        // تحقّق مستقلّ: تقارير إخبارية ذكرت نصف النهائي في الخبر ١ فبراير
+        // وجدة ٢ فبراير، وهو ما يقوله الملف الرسمي.
+        let report = try! Schedule.load()
+        let semis = report.matches.filter { $0.stage == .semiFinal }
+            .sorted { $0.number < $1.number }
+        XCTAssertEqual(semis.count, 2)
+        XCTAssertEqual(semis[0].number, 49)
+        XCTAssertEqual(semis[0].city, "الخبر")
+        XCTAssertEqual(semis[1].number, 50)
+        XCTAssertEqual(semis[1].city, "جدة")
+    }
+
+    func testNoTeamPlaysTwiceOnTheSameDay() {
+        // سلامة منطقية: لا يلعب منتخب مباراتين في يوم واحد.
+        let report = try! Schedule.load()
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        var seen: Set<String> = []
+        for match in report.matches where match.stage == .group {
+            let day = calendar.startOfDay(for: match.kickoff).timeIntervalSince1970
+            for team in [match.home, match.away] {
+                let key = "\(team)@\(day)"
+                XCTAssertFalse(seen.contains(key), "\(team) يلعب مرتين في يوم واحد")
+                seen.insert(key)
+            }
+        }
+    }
+
     func testMatchesRunFromSeventhJanuaryToFifthFebruary() {
         let report = try! Schedule.load()
         let calendar = Calendar(identifier: .gregorian)
