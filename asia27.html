@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>دوري توقّعات كأس آسيا ٢٠٢٧</title>
+<meta name="theme-color" content="#0a1724">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="كأس آسيا ٢٧">
+<link rel="manifest" href="manifest-asia.json">
+<link rel="apple-touch-icon" href="icon-saff-192.png">
+<link rel="icon" type="image/png" href="icon-saff-192.png">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<style>
+/* هُوية كأس آسيا: أزرق AFC وذهبي — تمييزًا بصريًّا عن أخضر خليجي ٢٧ */
+:root{
+  --bg:#0a1724; --surface:#15293c; --card:#0f2132;
+  --accent1:#2e8bc0; --accent2:#5fb8e8; --accent3:#061320;
+  --gold:#e3b23c; --gold-soft:#f5d98b;
+  --text:#e9f1f7; --muted:#8aa6bd;
+  --line:rgba(255,255,255,.08);
+  --ok:#34d399; --bad:#fca5a5;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{scroll-behavior:smooth;}
+*{scrollbar-width:thin;scrollbar-color:rgba(46,139,192,.55) transparent;}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:rgba(46,139,192,.45);border-radius:10px;}
+::-webkit-scrollbar-track{background:transparent;}
+body{font-family:'Tajawal',system-ui,sans-serif;background:var(--bg);color:var(--text);
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:18px 14px 94px;}
+
+.screen{display:none;width:100%;max-width:480px;flex-direction:column;align-items:center;gap:14px;}
+.screen.active{display:flex;}
+
+/* ---- الترويسة وتسجيل الدخول ---- */
+.brand{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:2px;}
+.brand-badge{width:76px;height:76px;border-radius:22px;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(145deg,var(--accent1),#0b3c5d);border:2px solid var(--gold);
+  box-shadow:0 8px 26px rgba(0,0,0,.45);font-size:2.1rem;}
+.brand-t{font-size:1.45rem;font-weight:900;color:#fff;text-align:center;line-height:1.25;}
+.brand-s{font-size:.84rem;color:var(--muted);text-align:center;line-height:1.7;}
+.brand-s b{color:var(--gold-soft);}
+
+.box{width:100%;background:var(--card);border:1px solid var(--line);border-radius:18px;
+  padding:20px 18px;display:flex;flex-direction:column;gap:12px;}
+.box-title{font-size:.95rem;font-weight:800;color:var(--text);}
+input.field,select.field{width:100%;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;
+  padding:13px 15px;color:var(--text);font-family:inherit;font-size:1rem;outline:none;}
+input.field:focus,select.field:focus{border-color:var(--accent2);}
+input.field::placeholder{color:var(--muted);}
+.btn{width:100%;padding:14px;border-radius:13px;border:none;font-family:inherit;font-size:1rem;
+  font-weight:800;cursor:pointer;transition:opacity .2s,transform .1s;}
+.btn:active:not(:disabled){transform:scale(.97);opacity:.9;}
+.btn:disabled{background:#16293a!important;color:var(--muted)!important;cursor:default;}
+.btn-main{background:linear-gradient(135deg,var(--accent2),var(--accent1));color:#06202f;}
+.btn-gold{background:linear-gradient(135deg,var(--gold-soft),var(--gold));color:#2a1e00;}
+.btn-ghost{background:rgba(255,255,255,.07);color:var(--text);border:1px solid var(--line);}
+.err{font-size:.82rem;color:var(--bad);text-align:center;min-height:18px;line-height:1.6;}
+
+/* ---- شريط التنقّل ---- */
+.tabbar{position:fixed;bottom:0;left:0;right:0;background:linear-gradient(180deg,#14304a,#050f18);
+  border-top:2px solid var(--gold);box-shadow:0 -10px 30px rgba(0,0,0,.55);
+  display:flex;justify-content:center;gap:2px;padding:8px 8px calc(8px + env(safe-area-inset-bottom));z-index:50;}
+.tab{flex:1;max-width:96px;background:none;border:none;color:rgba(255,255,255,.72);font-family:inherit;
+  font-size:.7rem;font-weight:800;cursor:pointer;padding:7px 2px;border-radius:12px;
+  display:flex;flex-direction:column;align-items:center;gap:3px;}
+.tab .ico{font-size:1.15rem;line-height:1;}
+.tab.active{color:#fff;background:rgba(227,178,60,.26);}
+
+.topbar{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.me-chip{font-size:.85rem;color:var(--text);background:var(--surface);border:1px solid var(--line);
+  border-radius:20px;padding:7px 14px;display:flex;align-items:center;gap:7px;cursor:pointer;}
+.me-chip b{color:#fff;}
+.me-chip:hover{border-color:var(--accent1);}
+.icon-btn{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--surface);
+  color:var(--muted);font-size:1.1rem;cursor:pointer;flex-shrink:0;}
+.icon-btn:hover{color:var(--text);border-color:var(--accent1);}
+.icon-btn.on{border-color:var(--gold);color:var(--gold-soft);}
+
+.section-title{width:100%;font-size:1rem;font-weight:900;color:var(--text);display:flex;
+  align-items:center;justify-content:space-between;gap:8px;}
+.hint{width:100%;font-size:.76rem;color:var(--muted);line-height:1.75;}
+.notice{width:100%;background:rgba(227,178,60,.09);border:1px solid rgba(227,178,60,.38);
+  border-radius:13px;padding:11px 13px;font-size:.78rem;color:var(--gold-soft);line-height:1.7;}
+.notice.warn{background:rgba(220,55,55,.10);border-color:rgba(220,55,55,.42);color:var(--bad);}
+
+/* ---- الشرائح ---- */
+.chips{width:100%;display:flex;flex-wrap:nowrap;gap:8px;overflow-x:auto;padding-bottom:8px;
+  -webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;}
+.chips::-webkit-scrollbar{height:4px;}
+.chip{flex:0 0 auto;scroll-snap-align:center;background:var(--surface);border:1px solid var(--line);
+  color:var(--muted);font-family:inherit;font-size:.8rem;font-weight:800;padding:7px 14px;
+  border-radius:20px;cursor:pointer;white-space:nowrap;}
+.chip.active{background:var(--accent1);border-color:var(--accent1);color:#fff;}
+
+.sub-tabs{display:flex;gap:6px;width:100%;background:rgba(255,255,255,.04);border:1px solid var(--line);
+  border-radius:12px;padding:4px;}
+.sub-tab{flex:1;background:none;border:none;color:var(--muted);font-family:inherit;font-weight:800;
+  font-size:.86rem;padding:9px 6px;border-radius:9px;cursor:pointer;}
+.sub-tab.active{background:var(--accent1);color:#fff;}
+
+/* ---- بطاقة المباراة ---- */
+.match{width:100%;background:var(--card);border:1px solid var(--line);border-radius:16px;
+  padding:14px;display:flex;flex-direction:column;gap:12px;}
+.match.finished{opacity:.62;}
+.match.locked{border-color:rgba(255,255,255,.14);}
+.match-head{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;font-size:.7rem;
+  color:var(--muted);gap:8px;}
+.hc-l{justify-self:start;}.hc-c{justify-self:center;text-align:center;}.hc-r{justify-self:end;}
+.grp-badge{background:rgba(46,139,192,.3);color:#fff;border-radius:8px;padding:2px 9px;font-weight:800;white-space:nowrap;}
+.status-badge{font-weight:900;white-space:nowrap;font-size:.62rem;letter-spacing:.4px;padding:3px 9px;border-radius:8px;}
+.status-badge.open{background:rgba(52,211,153,.2);color:#6ee7b7;}
+.status-badge.locked{background:rgba(255,255,255,.1);color:var(--muted);}
+.status-badge.soon{background:rgba(255,255,255,.08);color:var(--muted);}
+.status-badge.finished{background:rgba(255,255,255,.1);color:var(--muted);}
+.match-meta{width:100%;font-size:.69rem;color:var(--muted);text-align:center;line-height:1.6;}
+.match-meta .prov{color:var(--gold-soft);}
+.teams{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.team{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;min-width:0;}
+.team .flagimg{width:46px;height:31px;object-fit:cover;border-radius:5px;box-shadow:0 1px 5px rgba(0,0,0,.45);}
+.team .ph{width:46px;height:31px;border:1px dashed rgba(255,255,255,.2);border-radius:5px;}
+.team .tname{font-size:.86rem;font-weight:800;line-height:1.3;}
+.team .tslot{font-size:.72rem;font-weight:700;color:var(--muted);line-height:1.4;}
+.vs{font-size:.78rem;color:var(--muted);font-weight:800;padding:0 4px;}
+
+/* ---- مُدخل النتيجة ---- */
+.stepper{display:flex;align-items:center;justify-content:center;gap:9px;}
+.stp{width:38px;height:38px;border-radius:11px;border:1px solid var(--line);background:var(--surface);
+  color:var(--text);font-size:1.25rem;font-weight:800;cursor:pointer;font-family:inherit;line-height:1;}
+.stp:active{transform:scale(.93);}
+.stp:disabled{opacity:.35;cursor:default;}
+.stv{min-width:46px;text-align:center;font-size:1.5rem;font-weight:900;color:#fff;}
+.pred-row{display:flex;align-items:center;justify-content:center;gap:14px;}
+.pen-row{display:flex;flex-direction:column;gap:7px;background:rgba(227,178,60,.08);
+  border:1px solid rgba(227,178,60,.35);border-radius:12px;padding:10px;}
+.pen-lbl{font-size:.76rem;font-weight:800;color:var(--gold-soft);text-align:center;}
+.pen-opts{display:flex;gap:7px;}
+.pen-opt{flex:1;padding:9px 6px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);
+  color:var(--text);font-family:inherit;font-size:.82rem;font-weight:800;cursor:pointer;}
+.pen-opt.on{border-color:var(--gold);background:rgba(227,178,60,.22);color:var(--gold-soft);}
+.act-row{display:flex;gap:8px;}
+.x2-btn{flex:0 0 auto;display:flex;align-items:center;gap:5px;padding:12px 13px;border-radius:12px;
+  border:1.5px solid var(--line);background:var(--surface);color:var(--text);font-family:inherit;
+  font-size:.84rem;font-weight:900;cursor:pointer;white-space:nowrap;}
+.x2-btn.on{border-color:var(--gold);background:linear-gradient(135deg,rgba(227,178,60,.3),rgba(227,178,60,.12));color:var(--gold-soft);}
+.x2-btn:disabled{opacity:.45;cursor:default;}
+.save-btn{flex:1;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--accent2),var(--accent1));
+  color:#06202f;font-family:inherit;font-size:.92rem;font-weight:900;cursor:pointer;}
+.save-btn:disabled{background:#16293a;color:var(--muted);cursor:default;}
+.locked-box{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--surface);
+  border:1px solid var(--line);border-radius:12px;padding:11px 13px;font-size:.86rem;}
+.locked-box .lb{color:var(--muted);font-weight:800;font-size:.76rem;}
+.locked-box .lv{font-weight:900;color:#fff;font-size:1rem;}
+.pts-pill{font-size:.78rem;font-weight:900;padding:4px 10px;border-radius:999px;}
+.pts-pill.p5{background:rgba(52,211,153,.22);color:#6ee7b7;}
+.pts-pill.p3{background:rgba(46,139,192,.24);color:#9bd4f0;}
+.pts-pill.p0{background:rgba(255,255,255,.08);color:var(--muted);}
+.x2-tag{font-size:.68rem;font-weight:900;color:#2a1e00;background:var(--gold);border-radius:6px;padding:2px 6px;}
+
+/* ---- توقّعات البطولة ---- */
+.tour-card{width:100%;background:linear-gradient(155deg,rgba(227,178,60,.16),rgba(227,178,60,.03) 55%,rgba(255,255,255,.03));
+  border:1.5px solid rgba(227,178,60,.5);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;}
+.tour-card h3{font-size:1.05rem;font-weight:900;color:var(--gold-soft);}
+.tour-row{display:flex;flex-direction:column;gap:6px;}
+.tour-row label{font-size:.82rem;color:var(--muted);font-weight:800;display:flex;justify-content:space-between;gap:8px;}
+.tour-row .pts-tag{color:var(--gold-soft);white-space:nowrap;}
+
+/* ---- جداول ---- */
+.gr-card{width:100%;background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:12px;display:flex;flex-direction:column;gap:8px;}
+.gr-card h4{font-size:.98rem;font-weight:900;color:var(--gold-soft);}
+.gr-tbl{width:100%;border-collapse:collapse;font-size:.84rem;}
+.gr-tbl th{font-size:.68rem;font-weight:800;color:var(--muted);text-align:center;padding:6px 3px;border-bottom:1px solid var(--line);}
+.gr-tbl th:nth-child(2){text-align:right;}
+.gr-tbl td{padding:8px 3px;text-align:center;border-bottom:1px solid rgba(255,255,255,.04);font-weight:700;}
+.gr-tbl tr:last-child td{border-bottom:none;}
+.gr-tbl td.gr-team{text-align:right;}
+.gr-team{display:flex;align-items:center;gap:6px;font-weight:800;}
+.gr-team img.flag{width:26px;height:17px;object-fit:cover;border-radius:3px;flex-shrink:0;}
+.gr-tbl tr.adv td{background:rgba(52,211,153,.09);}
+.gr-tbl tr.adv td:first-child{box-shadow:inset 3px 0 0 var(--ok);}
+.gr-tbl tr.third td{background:rgba(227,178,60,.09);}
+.gr-tbl tr.third td:first-child{box-shadow:inset 3px 0 0 var(--gold);}
+.gr-tbl tr.out td{color:var(--muted);}
+.gr-tbl tr.out td:first-child{box-shadow:inset 3px 0 0 #4b5563;}
+.legend{display:flex;gap:13px;font-size:.72rem;color:var(--muted);flex-wrap:wrap;padding-top:3px;}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-inline-end:5px;vertical-align:middle;}
+
+/* ---- الترتيب العام ---- */
+.ld-row{width:100%;display:flex;align-items:center;gap:11px;background:var(--card);
+  border:1px solid var(--line);border-radius:13px;padding:11px 13px;}
+.ld-row.me{border-color:var(--accent1);background:rgba(46,139,192,.1);}
+.ld-rank{min-width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:.88rem;background:rgba(255,255,255,.07);color:var(--muted);flex-shrink:0;}
+.ld-row:nth-child(1) .ld-rank{background:linear-gradient(135deg,#f5d98b,#c99700);color:#2a1e00;}
+.ld-row:nth-child(2) .ld-rank{background:linear-gradient(135deg,#e2e8f0,#9aa5b1);color:#1a2430;}
+.ld-row:nth-child(3) .ld-rank{background:linear-gradient(135deg,#e3b58a,#a9682f);color:#2a1400;}
+.ld-name{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0;}
+.ld-name .nm{font-weight:800;font-size.95rem;color:#fff;font-size:.95rem;}
+.ld-name .sub{font-size:.71rem;color:var(--muted);font-weight:700;}
+.ld-pts{font-weight:900;font-size:1.25rem;color:var(--gold-soft);flex-shrink:0;}
+.ld-pts small{font-size:.66rem;color:var(--muted);font-weight:800;display:block;text-align:center;}
+
+/* ---- الشجرة ---- */
+.br-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:4px 0 12px;}
+.br-grid{display:flex;direction:rtl;gap:10px;min-width:100%;align-items:stretch;}
+.br-col{display:flex;flex-direction:column;flex:1 1 0;min-width:150px;}
+.br-col-h{text-align:center;padding:7px 0;font-weight:900;color:var(--gold-soft);font-size:.76rem;
+  background:rgba(255,255,255,.04);border-radius:8px;margin-bottom:8px;}
+.br-col-body{flex:1;display:flex;flex-direction:column;justify-content:space-around;gap:9px;min-height:320px;}
+.br-card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 9px;
+  display:flex;flex-direction:column;gap:4px;}
+.br-meta{font-size:.6rem;color:var(--muted);font-weight:800;display:flex;justify-content:space-between;gap:6px;}
+.br-meta .no{color:var(--gold-soft);}
+.br-team{display:flex;align-items:center;gap:6px;padding:2px 0;min-width:0;}
+.br-team img.flag{width:28px;height:19px;object-fit:cover;border-radius:3px;flex-shrink:0;}
+.br-team .ph{width:28px;height:19px;flex-shrink:0;border:1px dashed rgba(255,255,255,.18);border-radius:3px;}
+.br-team .nm{flex:1;font-weight:800;font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+.br-team .sc{font-weight:900;min-width:13px;text-align:center;font-size:.8rem;}
+.br-team.tba .nm{color:var(--muted);font-weight:700;font-size:.68rem;white-space:normal;}
+.br-team.win .nm,.br-team.win .sc{color:var(--gold-soft);}
+.br-team.lose .nm,.br-team.lose .sc{color:var(--muted);}
+
+/* ---- أفضل الثوالث ---- */
+.tp-row{width:100%;display:flex;align-items:center;gap:10px;background:var(--card);
+  border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:.86rem;}
+.tp-row.in{border-color:rgba(52,211,153,.45);background:rgba(52,211,153,.08);}
+.tp-rank{min-width:26px;font-weight:900;color:var(--muted);text-align:center;flex-shrink:0;}
+.tp-row.in .tp-rank{color:var(--ok);}
+.tp-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.tp-team{display:flex;align-items:center;gap:7px;font-weight:800;min-width:0;}
+.tp-team img.flag{width:26px;height:17px;object-fit:cover;border-radius:3px;flex-shrink:0;}
+.tp-team .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tp-sub{font-size:.71rem;color:var(--muted);font-weight:700;}
+.tp-stats{flex-shrink:0;text-align:left;display:flex;flex-direction:column;gap:2px;}
+.tp-pts{font-weight:900;color:var(--gold-soft);font-size:.95rem;}
+
+/* ---- القوانين ---- */
+.rule-card{width:100%;background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:14px;display:flex;flex-direction:column;gap:9px;}
+.rule-card h4{font-size:.95rem;font-weight:900;color:var(--gold-soft);}
+.rule-line{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;font-size:.86rem;
+  line-height:1.65;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.rule-line:last-child{border-bottom:none;}
+.rule-line .v{font-weight:900;color:var(--gold-soft);white-space:nowrap;}
+.rule-p{font-size:.84rem;line-height:1.85;color:var(--text);}
+.rule-p b{color:var(--gold-soft);}
+
+/* ---- الإدارة ---- */
+.admin-card{width:100%;background:rgba(220,55,55,.07);border:1.5px solid rgba(220,55,55,.35);
+  border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px;}
+.admin-card h4{font-size:.92rem;font-weight:900;color:var(--bad);}
+.adm-grid{display:flex;align-items:center;justify-content:center;gap:10px;}
+
+/* ---- عامّ ---- */
+.toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%) translateY(14px);
+  background:#0b2133;border:1px solid var(--accent1);color:var(--text);padding:12px 20px;border-radius:13px;
+  font-size:.88rem;font-weight:800;opacity:0;pointer-events:none;transition:.25s;z-index:100;
+  box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:90vw;text-align:center;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.empty{width:100%;text-align:center;color:var(--muted);font-size:.86rem;padding:26px 10px;line-height:1.8;}
+.spin{width:30px;height:30px;border:3px solid rgba(255,255,255,.14);border-top-color:var(--accent2);
+  border-radius:50%;animation:sp .8s linear infinite;margin:26px auto;}
+@keyframes sp{to{transform:rotate(360deg)}}
+img.flag{display:inline-block;border-radius:2px;box-shadow:0 0 0 1px rgba(255,255,255,.08);object-fit:cover;}
+.flagem{display:inline-block;line-height:1;filter:drop-shadow(0 1px 3px rgba(0,0,0,.45));}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
+</style>
+</head>
+<body>
+
+<!-- ======================= شاشة الدخول ======================= -->
+<div class="screen active" id="s-login">
+  <div class="brand">
+    <div class="brand-badge">🏆</div>
+    <div class="brand-t">دوري توقّعات<br>كأس آسيا ٢٠٢٧</div>
+    <div class="brand-s">السعودية، <b>٧ يناير — ٥ فبراير ٢٠٢٧</b><br>٢٤ منتخبًا، ٥١ مباراة، ٨ ملاعب</div>
+  </div>
+
+  <div class="box">
+    <div class="box-title">ادخل باسمك ورقمك السرّي</div>
+    <input class="field" id="in-name" placeholder="اسمك" autocomplete="off" autocapitalize="off">
+    <input class="field" id="in-pin" placeholder="رقم سرّي (٤ أرقام أو أكثر)" inputmode="numeric" autocomplete="off">
+    <div class="err" id="login-err"></div>
+    <button class="btn btn-main" id="btn-login">دخول</button>
+    <div class="hint">أوّل مرة تدخل بهذا الاسم يصير لك، ولا يستطيع غيرك استخدامه. وبنفس الاسم والرقم تدخل من أيّ جهاز.</div>
+  </div>
+
+  <div class="notice" id="login-note"></div>
+</div>
+
+<!-- ======================= المباريات ======================= -->
+<div class="screen" id="s-matches">
+  <div class="topbar">
+    <div class="me-chip" id="me-chip"><b id="me-name">—</b><span style="color:var(--muted);font-size:.72rem">خروج</span></div>
+    <button class="icon-btn" id="btn-settings" title="الإعدادات">⚙️</button>
+  </div>
+  <div id="boost-bar"></div>
+  <div class="chips" id="match-chips"></div>
+  <div id="matches-list" style="width:100%;display:flex;flex-direction:column;gap:12px"></div>
+</div>
+
+<!-- ======================= الترتيب ======================= -->
+<div class="screen" id="s-leader">
+  <div class="section-title">🏅 الترتيب العام</div>
+  <div id="leader-list" style="width:100%;display:flex;flex-direction:column;gap:9px"></div>
+  <div class="hint" id="leader-hint"></div>
+</div>
+
+<!-- ======================= المجموعات ======================= -->
+<div class="screen" id="s-groups">
+  <div class="sub-tabs">
+    <button class="sub-tab active" data-gsub="tables">الجداول</button>
+    <button class="sub-tab" data-gsub="third">أفضل الثوالث</button>
+  </div>
+  <div id="groups-body" style="width:100%;display:flex;flex-direction:column;gap:12px"></div>
+</div>
+
+<!-- ======================= الشجرة ======================= -->
+<div class="screen" id="s-bracket">
+  <div class="section-title">🗺️ طريق النهائي</div>
+  <div class="br-wrap"><div class="br-grid" id="bracket-grid"></div></div>
+  <div class="hint" id="bracket-hint"></div>
+</div>
+
+<!-- ======================= القوانين ======================= -->
+<div class="screen" id="s-rules">
+  <div class="section-title">📖 القوانين</div>
+  <div id="rules-body" style="width:100%;display:flex;flex-direction:column;gap:12px"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<nav class="tabbar">
+  <button class="tab active" data-screen="s-matches"><span class="ico">⚽</span>المباريات</button>
+  <button class="tab" data-screen="s-leader"><span class="ico">🏅</span>الترتيب</button>
+  <button class="tab" data-screen="s-groups"><span class="ico">📊</span>المجموعات</button>
+  <button class="tab" data-screen="s-bracket"><span class="ico">🗺️</span>الطريق</button>
+  <button class="tab" data-screen="s-rules"><span class="ico">📖</span>القوانين</button>
+</nav>
+
+<!-- وضع التجربة: يُستخدم فقط مع ?demo=1 ولا يكتب شيئًا على الشبكة -->
+<script src="AsiaCup2027/web/demo-backend.js"></script>
+<script src="AsiaCup2027/web/rules.js"></script>
+<script src="AsiaCup2027/web/schedule-data.js"></script>
+<script src="AsiaCup2027/web/app.js"></script>
+</body>
+</html>

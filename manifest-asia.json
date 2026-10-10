@@ -1,0 +1,17 @@
+{
+  "name": "دوري توقّعات كأس آسيا ٢٠٢٧",
+  "short_name": "كأس آسيا ٢٧",
+  "description": "توقّع نتائج مباريات كأس آسيا ٢٠٢٧ في السعودية ونافس أصدقاءك",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "asia27.html",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a1724",
+  "theme_color": "#0a1724",
+  "icons": [
+    { "src": "icon-saff-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-saff-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
