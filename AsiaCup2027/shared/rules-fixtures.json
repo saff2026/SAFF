@@ -1,0 +1,230 @@
+{
+  "_الغرض": "حالات اختبار قواعد الاحتساب، مكتوبة مرة واحدة ويقرأها اختبار Swift واختبار JavaScript معًا. أيّ اختلاف بين النسختين يُفشل الاختبار، فتبقى النسختان متطابقتين بالضبط.",
+  "_المصدر": "منقولة من pointsFor و scoreOf و tournamentPointsFor و capBoosts في تطبيق خليجي ٢٧ الذي عمل فعليًا مع ٢٩ لاعبًا حتى نهاية البطولة.",
+  "maxBoostsPerPlayer": 5,
+
+  "matchPoints": [
+    {"why": "نتيجة مطابقة تمامًا", "pred": [2,1], "res": [2,1], "points": 5},
+    {"why": "اتجاه صحيح فقط: فوز للطرف الأول بنتيجة مختلفة", "pred": [2,1], "res": [3,0], "points": 3},
+    {"why": "اتجاه خاطئ", "pred": [2,1], "res": [0,1], "points": 0},
+    {"why": "تعادل مطابق", "pred": [1,1], "res": [1,1], "points": 5},
+    {"why": "توقّع تعادلًا وانتهت تعادلًا برقم مختلف", "pred": [0,0], "res": [2,2], "points": 3},
+    {"why": "توقّع تعادلًا وفاز طرف", "pred": [1,1], "res": [2,1], "points": 0},
+    {"why": "توقّع فوزًا وانتهت تعادلًا", "pred": [2,0], "res": [1,1], "points": 0},
+    {"why": "فوز الطرف الثاني مطابق", "pred": [0,3], "res": [0,3], "points": 5},
+    {"why": "فوز الطرف الثاني باتجاه صحيح", "pred": [0,3], "res": [1,2], "points": 3},
+    {"why": "صفر-صفر مطابق", "pred": [0,0], "res": [0,0], "points": 5},
+
+    {"why": "بونص الترجيح على تعادل مطابق: ٥+١", "pred": [2,2], "predPW": "h", "res": [2,2], "resPW": "h", "points": 6},
+    {"why": "بونص الترجيح على تعادل غير مطابق: ٣+١", "pred": [1,1], "predPW": "a", "res": [2,2], "resPW": "a", "points": 4},
+    {"why": "أخطأ الفائز بالترجيح فلا بونص", "pred": [1,1], "predPW": "h", "res": [1,1], "resPW": "a", "points": 5},
+    {"why": "لم يتوقّع تعادلًا فلا بونص مهما اختار", "pred": [2,1], "predPW": "h", "res": [1,1], "resPW": "h", "points": 0},
+    {"why": "المباراة لم تذهب للترجيح فلا بونص", "pred": [1,1], "predPW": "h", "res": [1,1], "points": 5},
+    {"why": "لم يختر فائزًا بالترجيح فلا بونص", "pred": [1,1], "res": [1,1], "resPW": "h", "points": 5},
+    {"why": "صفر-صفر مع ترجيح صحيح: ٥+١", "pred": [0,0], "predPW": "a", "res": [0,0], "resPW": "a", "points": 6}
+  ],
+
+  "matchScoreWithBoost": [
+    {"why": "بطاقة على نتيجة مطابقة", "pred": [2,1], "boost": true, "res": [2,1], "score": 10},
+    {"why": "بطاقة على اتجاه صحيح", "pred": [2,1], "boost": true, "res": [3,0], "score": 6},
+    {"why": "بطاقة على مطابق مع بونص الترجيح: أعلى نتيجة ممكنة", "pred": [2,2], "predPW": "h", "boost": true, "res": [2,2], "resPW": "h", "score": 12},
+    {"why": "بطاقة على صفر تبقى صفرًا والبطاقة تُستهلك", "pred": [3,0], "boost": true, "res": [0,2], "score": 0},
+    {"why": "بلا بطاقة لا مضاعفة", "pred": [2,1], "boost": false, "res": [2,1], "score": 5}
+  ],
+
+  "tournamentPoints": [
+    {"why": "الأربعة صحيحة: ٥+٣+٣+٣",
+     "picks": {"champion": "Saudi Arabia", "topScorer": "س", "bestPlayer": "ب", "bestGoalkeeper": "ح"},
+     "truth": {"champion": "Saudi Arabia", "topScorer": "س", "bestPlayer": "ب", "bestGoalkeeper": "ح"},
+     "points": 14},
+    {"why": "البطل فقط",
+     "picks": {"champion": "Japan", "topScorer": "أ"},
+     "truth": {"champion": "Japan", "topScorer": "ب"},
+     "points": 5},
+    {"why": "الهدّاف فقط",
+     "picks": {"topScorer": "أ"}, "truth": {"topScorer": "أ"}, "points": 3},
+    {"why": "أفضل لاعب وأفضل حارس",
+     "picks": {"bestPlayer": "ب", "bestGoalkeeper": "ح"},
+     "truth": {"bestPlayer": "ب", "bestGoalkeeper": "ح"}, "points": 6},
+    {"why": "النتيجة الفعلية لم تُثبَّت بعد فلا نقاط",
+     "picks": {"champion": "Iran", "topScorer": "أ", "bestPlayer": "ب", "bestGoalkeeper": "ح"},
+     "truth": {}, "points": 0},
+    {"why": "اللاعب لم يتوقّع شيئًا",
+     "picks": {}, "truth": {"champion": "Qatar", "topScorer": "أ"}, "points": 0},
+    {"why": "توقّع خاطئ في كل البنود",
+     "picks": {"champion": "Japan", "topScorer": "أ"},
+     "truth": {"champion": "Iran", "topScorer": "ب"}, "points": 0}
+  ],
+
+  "boostCap": [
+    {"why": "ستّ بطاقات: تبقى الخمس الأقدم موعدًا وتُلغى السادسة",
+     "kickoffOrder": ["m1","m2","m3","m4","m5","m6"],
+     "boosted": ["m1","m2","m3","m4","m5","m6"],
+     "kept": ["m1","m2","m3","m4","m5"], "cancelled": ["m6"]},
+    {"why": "خمس بطاقات داخل الحد فلا إلغاء",
+     "kickoffOrder": ["m1","m2","m3","m4","m5","m6"],
+     "boosted": ["m1","m2","m3","m4","m5"],
+     "kept": ["m1","m2","m3","m4","m5"], "cancelled": []},
+    {"why": "الترتيب بموعد الانطلاق لا برقم الاسم",
+     "kickoffOrder": ["m6","m5","m4","m3","m2","m1"],
+     "boosted": ["m1","m2","m3","m4","m5","m6"],
+     "kept": ["m6","m5","m4","m3","m2"], "cancelled": ["m1"]},
+    {"why": "ثماني بطاقات: تُلغى الثلاث الأحدث",
+     "kickoffOrder": ["m1","m2","m3","m4","m5","m6","m7","m8"],
+     "boosted": ["m1","m2","m3","m4","m5","m6","m7","m8"],
+     "kept": ["m1","m2","m3","m4","m5"], "cancelled": ["m6","m7","m8"]},
+    {"why": "بطاقة واحدة",
+     "kickoffOrder": ["m1","m2","m3"], "boosted": ["m3"],
+     "kept": ["m3"], "cancelled": []}
+  ],
+
+  "groupTable": [
+    {
+      "why": "الحالة الحقيقية من خليجي ٢٧: تساوت عُمان والعراق في النقاط (٤) والمواجهة المباشرة (١-١) وفرق الأهداف (−١) والأهداف المسجّلة (٤). بدون ترجيح يدوي يرجع الترتيب أبجديًا فيظهر العراق وصيفًا، وهو خطأ.",
+      "teams": ["Saudi Arabia", "Iraq", "Kuwait", "Oman"],
+      "fixtures": [
+        ["g1", "Saudi Arabia", "Kuwait"], ["g2", "Iraq", "Oman"],
+        ["g3", "Kuwait", "Iraq"],        ["g4", "Oman", "Saudi Arabia"],
+        ["g5", "Saudi Arabia", "Iraq"],  ["g6", "Oman", "Kuwait"]
+      ],
+      "results": {"g1": [2,0], "g2": [1,1], "g3": [0,2], "g4": [2,1], "g5": [4,1], "g6": [1,3]},
+      "order": ["Saudi Arabia", "Iraq", "Oman", "Kuwait"],
+      "rows": {
+        "Iraq": {"played": 3, "points": 4, "goalsFor": 4, "goalsAgainst": 5, "goalDifference": -1},
+        "Oman": {"played": 3, "points": 4, "goalsFor": 4, "goalsAgainst": 5, "goalDifference": -1}
+      }
+    },
+    {
+      "why": "نفس الحالة مع ترجيح يدوي يضع عُمان أولًا — كما حدث فعلًا باللعب النظيف",
+      "teams": ["Saudi Arabia", "Iraq", "Kuwait", "Oman"],
+      "fixtures": [
+        ["g1", "Saudi Arabia", "Kuwait"], ["g2", "Iraq", "Oman"],
+        ["g3", "Kuwait", "Iraq"],        ["g4", "Oman", "Saudi Arabia"],
+        ["g5", "Saudi Arabia", "Iraq"],  ["g6", "Oman", "Kuwait"]
+      ],
+      "results": {"g1": [2,0], "g2": [1,1], "g3": [0,2], "g4": [2,1], "g5": [4,1], "g6": [1,3]},
+      "lotsOrder": ["Oman", "Iraq"],
+      "order": ["Saudi Arabia", "Oman", "Iraq", "Kuwait"]
+    },
+    {
+      "why": "نفس الحالة ونقاط الإنذارات تحسمها: الأقلّ أفضل، وهي تسبق القرعة",
+      "teams": ["Saudi Arabia", "Iraq", "Kuwait", "Oman"],
+      "fixtures": [
+        ["g1", "Saudi Arabia", "Kuwait"], ["g2", "Iraq", "Oman"],
+        ["g3", "Kuwait", "Iraq"],        ["g4", "Oman", "Saudi Arabia"],
+        ["g5", "Saudi Arabia", "Iraq"],  ["g6", "Oman", "Kuwait"]
+      ],
+      "results": {"g1": [2,0], "g2": [1,1], "g3": [0,2], "g4": [2,1], "g5": [4,1], "g6": [1,3]},
+      "disciplinary": {"Oman": 3, "Iraq": 7},
+      "order": ["Saudi Arabia", "Oman", "Iraq", "Kuwait"]
+    },
+    {
+      "why": "المواجهة المباشرة تسبق فرق الأهداف: العراق وعُمان على ٣ نقاط، وفرق أهداف عُمان +٣ مقابل −٣، لكن العراق فاز في مواجهتهما ١-٠ فيتقدّم",
+      "teams": ["Saudi Arabia", "Iraq", "Kuwait", "Oman"],
+      "fixtures": [
+        ["g1", "Saudi Arabia", "Kuwait"], ["g2", "Iraq", "Oman"],
+        ["g3", "Kuwait", "Iraq"],        ["g4", "Oman", "Saudi Arabia"],
+        ["g5", "Saudi Arabia", "Iraq"],  ["g6", "Oman", "Kuwait"]
+      ],
+      "results": {"g1": [1,0], "g2": [1,0], "g3": [2,0], "g4": [5,0], "g5": [2,0], "g6": [0,1]},
+      "rows": {
+        "Iraq": {"points": 3, "goalDifference": -3},
+        "Oman": {"points": 3, "goalDifference": 3}
+      },
+      "iraqBeforeOman": true
+    },
+    {
+      "why": "ترتيب بسيط بلا تساوٍ",
+      "teams": ["Saudi Arabia", "Iraq", "Kuwait", "Oman"],
+      "fixtures": [
+        ["g1", "Saudi Arabia", "Kuwait"], ["g2", "Iraq", "Oman"],
+        ["g3", "Kuwait", "Iraq"],        ["g4", "Oman", "Saudi Arabia"],
+        ["g5", "Saudi Arabia", "Iraq"],  ["g6", "Oman", "Kuwait"]
+      ],
+      "results": {"g1": [2,0], "g2": [1,0], "g3": [0,1], "g4": [0,3], "g5": [1,0], "g6": [2,1]},
+      "order": ["Saudi Arabia", "Iraq", "Oman", "Kuwait"],
+      "rows": {
+        "Saudi Arabia": {"played": 3, "won": 3, "points": 9, "goalsFor": 6, "goalsAgainst": 0, "goalDifference": 6},
+        "Kuwait": {"played": 3, "lost": 3, "points": 0}
+      }
+    },
+    {
+      "why": "تعادلان فقط: نقطة لكل منتخب",
+      "teams": ["Saudi Arabia", "Iraq", "Kuwait", "Oman"],
+      "fixtures": [
+        ["g1", "Saudi Arabia", "Kuwait"], ["g2", "Iraq", "Oman"],
+        ["g3", "Kuwait", "Iraq"],        ["g4", "Oman", "Saudi Arabia"],
+        ["g5", "Saudi Arabia", "Iraq"],  ["g6", "Oman", "Kuwait"]
+      ],
+      "results": {"g1": [1,1], "g2": [0,0]},
+      "allRows": {"played": 1, "drawn": 1, "points": 1}
+    },
+    {
+      "why": "بلا نتائج: الجميع أصفار",
+      "teams": ["Saudi Arabia", "Iraq", "Kuwait", "Oman"],
+      "fixtures": [
+        ["g1", "Saudi Arabia", "Kuwait"], ["g2", "Iraq", "Oman"],
+        ["g3", "Kuwait", "Iraq"],        ["g4", "Oman", "Saudi Arabia"],
+        ["g5", "Saudi Arabia", "Iraq"],  ["g6", "Oman", "Kuwait"]
+      ],
+      "results": {},
+      "allRows": {"played": 0, "points": 0, "goalDifference": 0}
+    }
+  ],
+
+  "thirdPlace": [
+    {"why": "النقاط تسبق فرق الأهداف: A3 فرق أهدافه +٩ وهو ثالثًا",
+     "rows": [
+       {"team": "A3", "group": "A", "points": 3, "goalsFor": 9, "goalsAgainst": 0},
+       {"team": "B3", "group": "B", "points": 4, "goalsFor": 1, "goalsAgainst": 1},
+       {"team": "C3", "group": "C", "points": 1, "goalsFor": 5, "goalsAgainst": 5},
+       {"team": "D3", "group": "D", "points": 6, "goalsFor": 2, "goalsAgainst": 1},
+       {"team": "E3", "group": "E", "points": 0, "goalsFor": 0, "goalsAgainst": 9},
+       {"team": "F3", "group": "F", "points": 2, "goalsFor": 3, "goalsAgainst": 3}
+     ],
+     "order": ["D3", "B3", "A3", "F3", "C3", "E3"],
+     "qualified": ["D3", "B3", "A3", "F3"]},
+    {"why": "فرق الأهداف يحسم تساوي النقاط",
+     "rows": [
+       {"team": "A3", "group": "A", "points": 4, "goalsFor": 3, "goalsAgainst": 3},
+       {"team": "B3", "group": "B", "points": 4, "goalsFor": 5, "goalsAgainst": 2},
+       {"team": "C3", "group": "C", "points": 4, "goalsFor": 1, "goalsAgainst": 4}
+     ],
+     "order": ["B3", "A3", "C3"]},
+    {"why": "الأهداف المسجّلة تحسم تساوي النقاط وفرق الأهداف",
+     "rows": [
+       {"team": "A3", "group": "A", "points": 4, "goalsFor": 2, "goalsAgainst": 2},
+       {"team": "B3", "group": "B", "points": 4, "goalsFor": 4, "goalsAgainst": 4},
+       {"team": "C3", "group": "C", "points": 4, "goalsFor": 3, "goalsAgainst": 3}
+     ],
+     "order": ["B3", "C3", "A3"]},
+    {"why": "نقاط الإنذارات تحسم، والأقلّ أفضل",
+     "rows": [
+       {"team": "A3", "group": "A", "points": 4, "goalsFor": 3, "goalsAgainst": 3, "disciplinary": 8},
+       {"team": "B3", "group": "B", "points": 4, "goalsFor": 3, "goalsAgainst": 3, "disciplinary": 2},
+       {"team": "C3", "group": "C", "points": 4, "goalsFor": 3, "goalsAgainst": 3, "disciplinary": 5}
+     ],
+     "order": ["B3", "C3", "A3"]},
+    {"why": "تساوٍ تام: الترتيب محدَّد بمفتاح المجموعة لا عشوائي",
+     "rows": [
+       {"team": "F3", "group": "F", "points": 4, "goalsFor": 3, "goalsAgainst": 3},
+       {"team": "B3", "group": "B", "points": 4, "goalsFor": 3, "goalsAgainst": 3},
+       {"team": "D3", "group": "D", "points": 4, "goalsFor": 3, "goalsAgainst": 3}
+     ],
+     "order": ["B3", "D3", "F3"]},
+    {"why": "القرعة تحسم التساوي التام",
+     "rows": [
+       {"team": "B3", "group": "B", "points": 4, "goalsFor": 3, "goalsAgainst": 3},
+       {"team": "D3", "group": "D", "points": 4, "goalsFor": 3, "goalsAgainst": 3}
+     ],
+     "lotsOrder": ["D3", "B3"],
+     "order": ["D3", "B3"]},
+    {"why": "القرعة آخر مرجّح ولا تسبق النقاط",
+     "rows": [
+       {"team": "A3", "group": "A", "points": 6, "goalsFor": 5, "goalsAgainst": 1},
+       {"team": "B3", "group": "B", "points": 1, "goalsFor": 1, "goalsAgainst": 5}
+     ],
+     "lotsOrder": ["B3", "A3"],
+     "order": ["A3", "B3"]}
+  ]
+}
