@@ -69,8 +69,15 @@ public enum Bracket {
     /// القيمة: `[رقم مباراة دور الـ١٦: مفتاح المجموعة]` — أي أنّ ثالث هذه
     /// المجموعة يلعب في تلك المباراة.
     ///
-    /// ⚠️ فارغ حتى الآن **عن قصد**. يُملأ من ملف الجدول الرسمي للاتحاد
-    /// الآسيوي. لا تضع فيه قيمًا مستنتَجة.
+    /// ⚠️ فارغ حتى الآن **عن قصد**، ولا يجوز استنتاجه.
+    ///
+    /// قد يُظنّ أن `round16Structure` تكفي لاستنتاجه: فمباراة ٣٨ تأخذ ثالث
+    /// إحدى A/C/D، ومباراة ٣٩ من B/E/F، ومباراة ٤٠ من C/D/E، ومباراة ٤٤
+    /// من A/B/F. لكنّ الحساب يُبطل هذا الظنّ: جرّبنا التركيبات الخمس عشرة
+    /// كلّها، فوجدنا لكلّ واحدة منها **حلّين على الأقل** يحقّقان القيود
+    /// (وأربعة حلول لتركيبة B/C/D/F). فلا تركيبة واحدة محدَّدة بالقيود.
+    ///
+    /// إذن الجدول الرسمي هو المرجع الوحيد، ولم يُنشر بعد.
     public static var officialThirdPlaceAllocation: [String: [Int: String]] = [:]
 
     /// هل الجدول الرسمي محمَّل؟ يجب أن يكون فيه ١٥ تركيبة.
@@ -80,6 +87,44 @@ public enum Bracket {
 
     /// عدد التركيبات الممكنة: اختيار ٤ مجموعات من ٦ = ١٥.
     public static let expectedCombinationCount = 15
+
+    /// بنية دور الـ١٦ كما في مخطّط الاتحاد الآسيوي الرسمي.
+    ///
+    /// رقم المباراة ← خانتاها. وهي **مؤكَّدة من الملف الرسمي**، بخلاف جدول
+    /// توزيع الثوالث أدناه الذي لم يُنشر بعد.
+    public static let round16Structure: [Int: (home: Slot, away: Slot)] = [
+        37: (.groupRunnerUp("A"), .groupRunnerUp("C")),
+        38: (.groupWinner("B"),   .thirdPlace(from: ["A", "C", "D"])),
+        39: (.groupWinner("D"),   .thirdPlace(from: ["B", "E", "F"])),
+        40: (.groupWinner("A"),   .thirdPlace(from: ["C", "D", "E"])),
+        41: (.groupWinner("F"),   .groupRunnerUp("E")),
+        42: (.groupRunnerUp("B"), .groupRunnerUp("F")),
+        43: (.groupWinner("E"),   .groupRunnerUp("D")),
+        44: (.groupWinner("C"),   .thirdPlace(from: ["A", "B", "F"]))
+    ]
+
+    /// بنية ربع النهائي ونصفه والنهائي، من المخطّط الرسمي.
+    public static let laterRoundsStructure: [Int: (home: Slot, away: Slot)] = [
+        45: (.winnerOf(matchNumber: 37), .winnerOf(matchNumber: 39)),
+        46: (.winnerOf(matchNumber: 38), .winnerOf(matchNumber: 41)),
+        47: (.winnerOf(matchNumber: 44), .winnerOf(matchNumber: 43)),
+        48: (.winnerOf(matchNumber: 40), .winnerOf(matchNumber: 42)),
+        49: (.winnerOf(matchNumber: 45), .winnerOf(matchNumber: 46)),
+        50: (.winnerOf(matchNumber: 47), .winnerOf(matchNumber: 48)),
+        51: (.winnerOf(matchNumber: 49), .winnerOf(matchNumber: 50))
+    ]
+
+    /// مباريات دور الـ١٦ التي يلعب فيها صاحب مركز ثالث، ومجموعاته المحتملة.
+    ///
+    /// مستخرجة من `round16Structure`، فلا تتكرّر البيانات في موضعين.
+    public static var thirdPlaceSlots: [Int: [String]] {
+        var out: [Int: [String]] = [:]
+        for (number, pair) in round16Structure {
+            if case .thirdPlace(let groups) = pair.away { out[number] = groups }
+            if case .thirdPlace(let groups) = pair.home { out[number] = groups }
+        }
+        return out
+    }
 
     /// يحدّد أيّ صاحب مركز ثالث يلعب في أيّ مباراة من دور الـ١٦.
     ///

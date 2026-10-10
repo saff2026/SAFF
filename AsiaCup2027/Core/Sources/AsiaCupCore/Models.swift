@@ -56,12 +56,21 @@ public struct Match: Codable, Identifiable, Sendable, Equatable {
     public let away: String
     public let venue: String
     public let city: String
-    /// موعد انطلاق المباراة بتوقيت UTC. هذا الموعد هو ما يقفل التوقّعات.
+    /// الموعد الذي يُقفل عنده التوقّع بتوقيت UTC.
+    ///
+    /// إذا أعلن الاتحاد الآسيوي توقيت الانطلاق فهو توقيت الانطلاق نفسه.
+    /// وإن لم يُعلَن بعد فهذا **قفل مبدئي آمن** في ساعة مبكّرة من يوم
+    /// المباراة، و`isKickoffProvisional` تساوي `true`. انظر `Schedule`.
     public let kickoff: Date
+
+    /// هل `kickoff` قفل مبدئي لا توقيت انطلاق رسمي؟
+    ///
+    /// الواجهة تعرض حينها «التوقيت الرسمي لم يُعلَن» بدل ساعة تبدو مؤكَّدة.
+    public let isKickoffProvisional: Bool
 
     public init(id: String, number: Int, stage: Stage, group: String?,
                 home: String, away: String, venue: String, city: String,
-                kickoff: Date) {
+                kickoff: Date, isKickoffProvisional: Bool = false) {
         self.id = id
         self.number = number
         self.stage = stage
@@ -71,6 +80,7 @@ public struct Match: Codable, Identifiable, Sendable, Equatable {
         self.venue = venue
         self.city = city
         self.kickoff = kickoff
+        self.isKickoffProvisional = isKickoffProvisional
     }
 }
 

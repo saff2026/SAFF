@@ -3,57 +3,82 @@ import Foundation
 // ============================================================================
 //  تحميل الجدول والتحقّق من اكتماله
 // ----------------------------------------------------------------------------
-//  الجدول يُقرأ من ملف `schedule.json`، لا يُكتب في الكود، حتى يسهل تحديثه
-//  من الملف الرسمي دون لمس المنطق.
+//  الجدول يُقرأ من `schedule.json`، لا يُكتب في الكود، حتى يسهل تحديثه من
+//  المصدر الرسمي دون لمس المنطق.
 //
-//  المبدأ الحاكم هنا: **الجدول الناقص لا يُخفى**. التطبيق يعرف بالضبط كم
-//  مباراة ينتظر (٥١)، وأيّ مباراة ما زالت بلا موعد انطلاق. وموعد الانطلاق
-//  تحديدًا حرج، لأنه هو ما يقفل التوقّعات: مباراة بلا موعد = ثغرة تسمح
-//  بالتوقّع بعد أن تبدأ المباراة.
+//  مسألة التوقيتات، وهي الأهمّ هنا:
+//  الاتحاد الآسيوي نشر الجدول بالتواريخ والملاعب، لكنه **لم ينشر توقيتات
+//  الانطلاق بعد**. وموعد الانطلاق هو ما يقفل التوقّعات، فتركه فارغًا يفتح
+//  ثغرة: يبقى التوقّع مفتوحًا بعد أن تبدأ المباراة فيتوقّع اللاعب وهو يشاهد.
+//
+//  ولا نخترع توقيتًا يبدو مؤكَّدًا. الحلّ: **قفل مبدئي آمن** في ساعة مبكّرة
+//  من يوم المباراة — أبكر من أيّ انطلاق محتمل — فينغلق التوقّع قبل أن تبدأ
+//  أيّ مباراة يقينًا. ونُعلم اللاعب أن التوقيت مبدئي بـ
+//  `Match.isKickoffProvisional`، ويُستبدل بالدقيق حين يُعلَن.
+//
+//  الجانب الذي نخطئ فيه مقصود: أن يُقفل التوقّع مبكّرًا أهون بكثير من أن
+//  يبقى مفتوحًا بعد صافرة البداية.
 // ============================================================================
 
 /// تقرير عن حالة الجدول.
 public struct ScheduleReport: Sendable {
-    /// المباريات المحمَّلة التي لها موعد انطلاق صالح.
+    /// المباريات المحمَّلة، مرتَّبة بموعد القفل.
     public let matches: [Match]
     /// العدد المتوقَّع (٥١ لكأس آسيا ٢٠٢٧).
     public let expectedCount: Int
-    /// مباريات مُدخلة لكنها بلا موعد انطلاق — لا يجوز فتح التوقّع عليها.
-    public let missingKickoff: [String]
-    /// عدد المباريات التي لم تُدخل بعد إطلاقًا.
+    /// مباريات لا تاريخ لها إطلاقًا — لا تُحمَّل، ولا يجوز التوقّع عليها.
+    public let unusable: [String]
+    /// مباريات قفلها مبدئي لأن توقيتها الرسمي لم يُعلَن.
+    public var provisional: [String] {
+        matches.filter { $0.isKickoffProvisional }.map { $0.id }
+    }
+    /// مباريات لم تُدخل بعد إطلاقًا.
     public var notEnteredCount: Int {
-        max(0, expectedCount - matches.count - missingKickoff.count)
+        max(0, expectedCount - matches.count - unusable.count)
     }
-    /// هل الجدول مكتمل وصالح لتشغيل البطولة؟
-    public var isComplete: Bool {
-        matches.count == expectedCount && missingKickoff.isEmpty
+    /// هل كل المباريات موجودة وصالحة للتوقّع؟ (ولو بقفل مبدئي)
+    public var isUsable: Bool {
+        matches.count == expectedCount && unusable.isEmpty
     }
-    /// رسالة عربية تصف الحالة، تُعرض في وضع الإدارة.
+    /// هل الجدول نهائي بتوقيتات رسمية لكل مباراة؟
+    public var isFinal: Bool { isUsable && provisional.isEmpty }
+
+    /// وصف عربي للحالة، يُعرض في وضع الإدارة.
     public var arabicSummary: String {
-        if isComplete {
-            return "الجدول مكتمل: \(Arabic.numerals(expectedCount)) مباراة."
+        if isFinal {
+            return "✅ الجدول نهائي: \(Arabic.numerals(expectedCount)) مباراة بتوقيتات رسمية."
         }
         var parts: [String] = []
-        parts.append("مُدخَل \(Arabic.numerals(matches.count)) من \(Arabic.numerals(expectedCount)) مباراة")
-        if !missingKickoff.isEmpty {
-            parts.append("و\(Arabic.numerals(missingKickoff.count)) مباراة بلا موعد انطلاق")
+        if matches.count != expectedCount || !unusable.isEmpty {
+            parts.append("مُدخَل \(Arabic.numerals(matches.count)) من \(Arabic.numerals(expectedCount)) مباراة")
+        }
+        if !unusable.isEmpty {
+            parts.append("و\(Arabic.numerals(unusable.count)) مباراة بلا تاريخ فلا يجوز التوقّع عليها")
         }
         if notEnteredCount > 0 {
             parts.append("و\(Arabic.numerals(notEnteredCount)) مباراة لم تُدخل بعد")
         }
-        return "⚠️ الجدول ناقص — " + parts.joined(separator: "، ") + "."
+        if !provisional.isEmpty {
+            parts.append("و\(Arabic.numerals(provisional.count)) مباراة قفلها مبدئي لأن الاتحاد الآسيوي لم يُعلن توقيتها")
+        }
+        return "⚠️ " + parts.joined(separator: "، ") + "."
     }
 }
 
 public enum Schedule {
 
-    /// عدد مباريات كأس آسيا ٢٠٢٧: ٦ مجموعات × ٦ مباريات = ٣٦، زائد
-    /// ٨ مباريات دور الـ١٦، و٤ ربع النهائي، و٢ نصف النهائي، والنهائي = ٥١.
+    /// ٦ مجموعات × ٦ = ٣٦، زائد ٨ دور الـ١٦، و٤ ربع، و٢ نصف، والنهائي = ٥١.
     public static let expectedMatchCount = 51
 
-    /// بنية ملف JSON.
+    /// ساعة القفل المبدئي بتوقيت UTC حين لا يكون التوقيت الرسمي معلومًا.
+    ///
+    /// ٠٩:٠٠ بتوقيت غرينتش = ١٢:٠٠ ظهرًا بتوقيت السعودية. ولا تنطلق مباراة
+    /// في كأس آسيا قبل الظهر، فالقفل يسبق الانطلاق يقينًا.
+    public static let provisionalLockHourUTC = 9
+
     struct File: Decodable {
         let expectedMatchCount: Int
+        let provisionalLockUTCHour: Int?
         let matches: [Entry]
 
         struct Entry: Decodable {
@@ -65,12 +90,11 @@ public enum Schedule {
             let away: String
             let venue: String
             let city: String
-            let date: String
+            let date: String?
             let kickoffUTC: String?
         }
     }
 
-    /// أخطاء التحميل.
     public enum LoadError: Error, CustomStringConvertible {
         case resourceMissing
         case unreadable(String)
@@ -85,37 +109,56 @@ public enum Schedule {
         }
     }
 
-    /// يحمّل الجدول من بيانات JSON خامّة.
-    ///
-    /// مفصولة عن قراءة الملف حتى تكون قابلة للاختبار ببيانات مُصطنعة.
+    /// يحمّل الجدول من بيانات JSON خامّة. مفصولة عن قراءة الملف لتكون
+    /// قابلة للاختبار ببيانات مُصطنعة.
     public static func parse(_ data: Data) throws -> ScheduleReport {
-        let decoder = JSONDecoder()
         let file: File
         do {
-            file = try decoder.decode(File.self, from: data)
+            file = try JSONDecoder().decode(File.self, from: data)
         } catch {
             throw LoadError.unreadable(String(describing: error))
         }
 
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime]
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime]
+
+        var calendar = Calendar(identifier: .gregorian)
+        guard let utc = TimeZone(identifier: "UTC") else {
+            throw LoadError.unreadable("تعذّر إنشاء المنطقة الزمنية UTC")
+        }
+        calendar.timeZone = utc
+        let lockHour = file.provisionalLockUTCHour ?? provisionalLockHourUTC
 
         var matches: [Match] = []
-        var missing: [String] = []
+        var unusable: [String] = []
 
         for entry in file.matches {
             guard let stage = Stage(rawValue: entry.stage) else {
-                missing.append(entry.id)
+                unusable.append(entry.id)
                 continue
             }
-            // بلا موعد انطلاق ⇒ لا تُحمَّل كمباراة قابلة للتوقّع.
-            guard let iso = entry.kickoffUTC, let kickoff = formatter.date(from: iso) else {
-                missing.append(entry.id)
+
+            var kickoff: Date?
+            var provisional = false
+
+            if let text = entry.kickoffUTC, let exact = iso.date(from: text) {
+                kickoff = exact
+            } else if let day = entry.date, let parsed = parseDay(day, calendar: calendar) {
+                // قفل مبدئي آمن في ساعة مبكّرة من يوم المباراة.
+                kickoff = calendar.date(byAdding: .hour, value: lockHour, to: parsed)
+                provisional = true
+            }
+
+            guard let lock = kickoff else {
+                // لا توقيت ولا تاريخ ⇒ لا سبيل لقفل التوقّع، فلا تُحمَّل.
+                unusable.append(entry.id)
                 continue
             }
+
             matches.append(Match(id: entry.id, number: entry.number, stage: stage,
                                  group: entry.group, home: entry.home, away: entry.away,
-                                 venue: entry.venue, city: entry.city, kickoff: kickoff))
+                                 venue: entry.venue, city: entry.city,
+                                 kickoff: lock, isKickoffProvisional: provisional))
         }
 
         matches.sort { lhs, rhs in
@@ -125,7 +168,20 @@ public enum Schedule {
 
         return ScheduleReport(matches: matches,
                               expectedCount: file.expectedMatchCount,
-                              missingKickoff: missing.sorted())
+                              unusable: unusable.sorted())
+    }
+
+    /// يحوّل "2027-01-07" إلى منتصف ليل ذلك اليوم بتوقيت UTC.
+    static func parseDay(_ text: String, calendar: Calendar) -> Date? {
+        let parts = text.split(separator: "-")
+        guard parts.count == 3,
+              let year = Int(parts[0]), let month = Int(parts[1]), let day = Int(parts[2])
+        else { return nil }
+        var components = DateComponents()
+        components.year = year
+        components.month = month
+        components.day = day
+        return calendar.date(from: components)
     }
 
     /// يحمّل الجدول من ملف الحزمة.
@@ -133,7 +189,6 @@ public enum Schedule {
         guard let url = Bundle.module.url(forResource: "schedule", withExtension: "json") else {
             throw LoadError.resourceMissing
         }
-        let data = try Data(contentsOf: url)
-        return try parse(data)
+        return try parse(try Data(contentsOf: url))
     }
 }

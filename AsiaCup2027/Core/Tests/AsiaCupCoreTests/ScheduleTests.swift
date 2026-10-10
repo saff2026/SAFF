@@ -10,28 +10,75 @@ final class ScheduleTests: XCTestCase {
         XCTAssertEqual(6 * 6 + 8 + 4 + 2 + 1, Schedule.expectedMatchCount)
     }
 
-    func testMatchWithoutKickoffIsReportedAsMissing() {
-        // أخطر حالة: مباراة بلا موعد انطلاق تعني ثغرة تسمح بالتوقّع بعد
-        // بدايتها. يجب ألّا تُحمَّل، وأن تُذكر صريحة في التقرير.
+    func testMatchWithDateButNoOfficialTimeGetsASafeProvisionalLock() {
+        // الحالة الواقعية: الاتحاد الآسيوي نشر التاريخ ولم ينشر التوقيت.
+        // يجب أن تُحمَّل المباراة بقفل مبدئي في ساعة مبكّرة من يومها، لا أن
+        // تبقى بلا قفل فيتوقّع اللاعب بعد بدء المباراة.
         let json = """
         {
-          "expectedMatchCount": 2,
+          "expectedMatchCount": 1, "provisionalLockUTCHour": 9,
           "matches": [
             {"id":"m1","number":1,"stage":"group","group":"A",
              "home":"Saudi Arabia","away":"Palestine","venue":"v","city":"الرياض",
-             "date":"2027-01-07","kickoffUTC":"2027-01-07T17:00:00Z"},
-            {"id":"m2","number":2,"stage":"group","group":"A",
-             "home":"Kuwait","away":"Oman","venue":"v","city":"الرياض",
-             "date":"2027-01-08","kickoffUTC":null}
+             "date":"2027-01-07","kickoffUTC":null}
           ]
         }
         """
         let report = try! Schedule.parse(Data(json.utf8))
         XCTAssertEqual(report.matches.count, 1)
-        XCTAssertEqual(report.matches.first?.id, "m1")
-        XCTAssertEqual(report.missingKickoff, ["m2"])
-        XCTAssertFalse(report.isComplete)
-        XCTAssertTrue(report.arabicSummary.contains("ناقص"))
+        let match = report.matches[0]
+        XCTAssertTrue(match.isKickoffProvisional)
+        XCTAssertEqual(report.provisional, ["m1"])
+        // قابل للاستخدام (له قفل) لكنه ليس نهائيًا (التوقيت غير رسمي)
+        XCTAssertTrue(report.isUsable)
+        XCTAssertFalse(report.isFinal)
+
+        // القفل في ٢٠٢٧-٠١-٠٧ الساعة ٠٩:٠٠ بتوقيت غرينتش بالضبط
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime]
+        XCTAssertEqual(match.kickoff, iso.date(from: "2027-01-07T09:00:00Z"))
+    }
+
+    func testProvisionalLockIsBeforeAnyPlausibleKickoff() {
+        // ٠٩:٠٠ غرينتش = ١٢:٠٠ ظهرًا بتوقيت السعودية. أبكر انطلاق في
+        // بطولات كأس آسيا كان نحو الواحدة بعد الظهر، فالقفل يسبقه يقينًا.
+        XCTAssertEqual(Schedule.provisionalLockHourUTC, 9)
+        XCTAssertLessThan(Schedule.provisionalLockHourUTC + 3, 13,
+                          "القفل المبدئي يجب أن يسبق أبكر انطلاق محتمل")
+    }
+
+    func testMatchWithNeitherTimeNorDateIsRefused() {
+        // بلا تاريخ ولا توقيت: لا سبيل لقفل التوقّع، فلا تُحمَّل إطلاقًا.
+        let json = """
+        {
+          "expectedMatchCount": 1,
+          "matches": [
+            {"id":"m1","number":1,"stage":"group","group":"A",
+             "home":"A","away":"B","venue":"v","city":"الرياض",
+             "date":null,"kickoffUTC":null}
+          ]
+        }
+        """
+        let report = try! Schedule.parse(Data(json.utf8))
+        XCTAssertTrue(report.matches.isEmpty)
+        XCTAssertEqual(report.unusable, ["m1"])
+        XCTAssertFalse(report.isUsable)
+    }
+
+    func testOfficialTimeWinsOverProvisional() {
+        let json = """
+        {
+          "expectedMatchCount": 1,
+          "matches": [
+            {"id":"m1","number":1,"stage":"group","group":"A",
+             "home":"A","away":"B","venue":"v","city":"الرياض",
+             "date":"2027-01-07","kickoffUTC":"2027-01-07T17:00:00Z"}
+          ]
+        }
+        """
+        let report = try! Schedule.parse(Data(json.utf8))
+        XCTAssertFalse(report.matches[0].isKickoffProvisional)
+        XCTAssertTrue(report.isFinal)
     }
 
     func testCompleteScheduleIsReportedComplete() {
@@ -46,9 +93,9 @@ final class ScheduleTests: XCTestCase {
         }
         """
         let report = try! Schedule.parse(Data(json.utf8))
-        XCTAssertTrue(report.isComplete)
-        XCTAssertTrue(report.missingKickoff.isEmpty)
-        XCTAssertFalse(report.arabicSummary.contains("ناقص"))
+        XCTAssertTrue(report.isFinal)
+        XCTAssertTrue(report.provisional.isEmpty)
+        XCTAssertTrue(report.arabicSummary.contains("نهائي"))
     }
 
     func testNotEnteredMatchesAreCounted() {
@@ -64,7 +111,7 @@ final class ScheduleTests: XCTestCase {
         """
         let report = try! Schedule.parse(Data(json.utf8))
         XCTAssertEqual(report.notEnteredCount, 50)
-        XCTAssertFalse(report.isComplete)
+        XCTAssertFalse(report.isUsable)
     }
 
     func testUnknownStageIsRejectedNotGuessed() {
@@ -80,7 +127,7 @@ final class ScheduleTests: XCTestCase {
         """
         let report = try! Schedule.parse(Data(json.utf8))
         XCTAssertTrue(report.matches.isEmpty)
-        XCTAssertEqual(report.missingKickoff, ["m1"])
+        XCTAssertEqual(report.unusable, ["m1"])
     }
 
     func testMatchesAreSortedByKickoff() {
@@ -101,13 +148,172 @@ final class ScheduleTests: XCTestCase {
         XCTAssertEqual(report.matches.map(\.id), ["m1", "m2"])
     }
 
-    func testBundledScheduleParsesAndIsHonestAboutBeingIncomplete() {
-        // الملف المرفق في الحزمة ناقص عن قصد حتى يُستكمل من المصدر الرسمي.
-        // هذا الاختبار يضمن أنه (أ) يُقرأ بلا خطأ، و(ب) لا يدّعي الاكتمال.
+    // ---- الجدول الرسمي المرفق: ٥١ مباراة من ملف الاتحاد الآسيوي ----
+
+    func testBundledScheduleHasAllFiftyOneMatches() {
         let report = try! Schedule.load()
         XCTAssertEqual(report.expectedCount, 51)
-        XCTAssertFalse(report.isComplete,
-                       "الجدول المرفق ناقص؛ لو صار مكتملًا فحدّث هذا الاختبار")
+        XCTAssertEqual(report.matches.count, 51)
+        XCTAssertTrue(report.unusable.isEmpty)
+        XCTAssertTrue(report.isUsable, "كل المباريات لها قفل صالح")
+    }
+
+    func testBundledScheduleIsHonestThatTimesAreNotOfficialYet() {
+        // الاتحاد الآسيوي لم ينشر التوقيتات، فكل المباريات بقفل مبدئي،
+        // والجدول ليس نهائيًا. لو صار نهائيًا فحدّث هذا الاختبار.
+        let report = try! Schedule.load()
+        XCTAssertEqual(report.provisional.count, 51)
+        XCTAssertFalse(report.isFinal)
+        XCTAssertTrue(report.arabicSummary.contains("مبدئي"))
+    }
+
+    func testStageCountsMatchTheTournamentFormat() {
+        let report = try! Schedule.load()
+        let byStage = Dictionary(grouping: report.matches, by: \.stage)
+            .mapValues(\.count)
+        XCTAssertEqual(byStage[.group], 36, "٦ مجموعات × ٦ مباريات")
+        XCTAssertEqual(byStage[.round16], 8)
+        XCTAssertEqual(byStage[.quarterFinal], 4)
+        XCTAssertEqual(byStage[.semiFinal], 2)
+        XCTAssertEqual(byStage[.final], 1)
+    }
+
+    func testMatchNumbersAndIDsAreCompleteAndUnique() {
+        let report = try! Schedule.load()
+        XCTAssertEqual(Set(report.matches.map(\.number)), Set(1...51))
+        XCTAssertEqual(Set(report.matches.map(\.id)).count, 51)
+    }
+
+    func testOpeningMatchIsSaudiArabiaVersusPalestineInRiyadh() {
+        let report = try! Schedule.load()
+        let opener = report.matches.first { $0.number == 1 }!
+        XCTAssertEqual(opener.home, "Saudi Arabia")
+        XCTAssertEqual(opener.away, "Palestine")
+        XCTAssertEqual(opener.city, "الرياض")
+        XCTAssertEqual(opener.group, "A")
+        XCTAssertEqual(opener.stage, .group)
+    }
+
+    func testFinalIsMatchFiftyOneInRiyadh() {
+        let report = try! Schedule.load()
+        let final = report.matches.first { $0.number == 51 }!
+        XCTAssertEqual(final.stage, .final)
+        XCTAssertEqual(final.city, "الرياض")
+        // النهائي بين الفائزين من نصف النهائي (م٤٩ و م٥٠)
+        XCTAssertEqual(final.home, "W49")
+        XCTAssertEqual(final.away, "W50")
+    }
+
+    func testGroupStageIsACompleteRoundRobin() {
+        // كل منتخب يلاقي الثلاثة الآخرين في مجموعته مرة واحدة بالضبط.
+        let report = try! Schedule.load()
+        var opponents: [String: [String]] = [:]
+        for match in report.matches where match.stage == .group {
+            opponents[match.home, default: []].append(match.away)
+            opponents[match.away, default: []].append(match.home)
+        }
+        XCTAssertEqual(opponents.count, 24, "٢٤ منتخبًا")
+        for (team, faced) in opponents {
+            XCTAssertEqual(faced.count, 3, "\(team) يجب أن يلعب ٣ مباريات")
+            XCTAssertEqual(Set(faced).count, 3, "\(team) لا يلاقي أحدًا مرتين")
+            guard let group = Teams.group(of: team) else {
+                XCTFail("\(team) بلا مجموعة"); continue
+            }
+            let expected = Set((Teams.byGroup[group] ?? []).map(\.key)).subtracting([team])
+            XCTAssertEqual(Set(faced), expected, "\(team) يلاقي مجموعته فقط")
+        }
+    }
+
+    func testEveryGroupHasExactlySixMatches() {
+        let report = try! Schedule.load()
+        for key in Groups.allKeys {
+            let count = report.matches.filter { $0.stage == .group && $0.group == key }.count
+            XCTAssertEqual(count, 6, "المجموعة \(key)")
+        }
+    }
+
+    func testVenuesAreTheEightOfficialStadiumsInThreeCities() {
+        let report = try! Schedule.load()
+        XCTAssertEqual(Set(report.matches.map(\.venue)).count, 8, "ثمانية ملاعب")
+        XCTAssertEqual(Set(report.matches.map(\.city)), ["الرياض", "جدة", "الخبر"])
+    }
+
+    func testMatchesRunFromSeventhJanuaryToFifthFebruary() {
+        let report = try! Schedule.load()
+        let calendar = Calendar(identifier: .gregorian)
+        let sorted = report.matches.sorted { $0.kickoff < $1.kickoff }
+        let first = calendar.dateComponents(in: TimeZone(identifier: "UTC")!,
+                                            from: sorted.first!.kickoff)
+        let last = calendar.dateComponents(in: TimeZone(identifier: "UTC")!,
+                                           from: sorted.last!.kickoff)
+        XCTAssertEqual([first.year, first.month, first.day], [2027, 1, 7])
+        XCTAssertEqual([last.year, last.month, last.day], [2027, 2, 5])
+    }
+
+    func testEveryGroupMatchUsesRealTeamNames() {
+        let report = try! Schedule.load()
+        for match in report.matches where match.stage == .group {
+            XCTAssertTrue(Teams.isRealTeam(match.home), "\(match.home) ليس منتخبًا معروفًا")
+            XCTAssertTrue(Teams.isRealTeam(match.away), "\(match.away) ليس منتخبًا معروفًا")
+        }
+    }
+
+    func testEveryKnockoutMatchUsesSlotCodesNotTeams() {
+        // الإقصائيات لا تُعرف أطرافها مسبقًا، فيجب أن تحمل رموز خانات.
+        let report = try! Schedule.load()
+        for match in report.matches where match.stage.isKnockout {
+            XCTAssertFalse(Teams.isRealTeam(match.home), "م\(match.number)")
+            XCTAssertFalse(Teams.isRealTeam(match.away), "م\(match.number)")
+        }
+    }
+
+    // ---- شجرة الإقصائيات من المخطّط الرسمي ----
+
+    func testRound16StructureCoversMatches37To44() {
+        XCTAssertEqual(Set(Bracket.round16Structure.keys), Set(37...44))
+    }
+
+    func testFourRound16MatchesHostAThirdPlacedTeam() {
+        let slots = Bracket.thirdPlaceSlots
+        XCTAssertEqual(Set(slots.keys), [38, 39, 40, 44])
+        XCTAssertEqual(slots[38].map(Set.init), Set(["A", "C", "D"]))
+        XCTAssertEqual(slots[39].map(Set.init), Set(["B", "E", "F"]))
+        XCTAssertEqual(slots[40].map(Set.init), Set(["C", "D", "E"]))
+        XCTAssertEqual(slots[44].map(Set.init), Set(["A", "B", "F"]))
+    }
+
+    func testNoGroupWinnerCanFaceItsOwnGroupsThirdPlacedTeam() {
+        // ضمانة منطقية: متصدّر المجموعة لا يلاقي ثالث مجموعته نفسها.
+        for (number, pair) in Bracket.round16Structure {
+            guard case .groupWinner(let winnerGroup) = pair.home,
+                  case .thirdPlace(let groups) = pair.away else { continue }
+            XCTAssertFalse(groups.contains(winnerGroup),
+                           "م\(number): متصدّر \(winnerGroup) لا يجوز أن يلاقي ثالث \(winnerGroup)")
+        }
+    }
+
+    func testLaterRoundsFeedForwardCorrectly() {
+        // ربع النهائي يتغذّى من دور الـ١٦، ونصفه من الربع، والنهائي من النصف.
+        let later = Bracket.laterRoundsStructure
+        XCTAssertEqual(Set(later.keys), Set(45...51))
+        for (number, pair) in later {
+            for slot in [pair.home, pair.away] {
+                guard case .winnerOf(let source) = slot else {
+                    XCTFail("م\(number) يجب أن تتغذّى من فائز مباراة"); continue
+                }
+                XCTAssertLessThan(source, number, "م\(number) تتغذّى من مباراة سابقة")
+            }
+        }
+        // كل مباراة من ٣٧ إلى ٥٠ تغذّي مباراة واحدة بعدها بالضبط
+        var feeds: [Int: Int] = [:]
+        for pair in later.values {
+            for slot in [pair.home, pair.away] {
+                if case .winnerOf(let source) = slot { feeds[source, default: 0] += 1 }
+            }
+        }
+        for source in 37...50 {
+            XCTAssertEqual(feeds[source], 1, "م\(source) يجب أن تغذّي مباراة واحدة")
+        }
     }
 
     // ---- المنتخبات والمجموعات ----
