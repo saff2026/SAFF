@@ -441,13 +441,24 @@ var TOUR_FIELDS = [
 
 function tournamentCard() {
   var me = usersData[myKey] || {};
-  var card = document.createElement('div');
-  card.className = 'tour-card';
   var locked = tournamentLocked();
   var truth = truthOf();
+  var filled = TOUR_FIELDS.filter(function (f) { return !!me[f.k]; }).length;
 
-  var h = document.createElement('h3');
-  h.textContent = '🏆 توقّعات البطولة';
+  // البطاقة طويلة وتدفع المباريات للأسفل. فتُفتح لمن لم يملأها بعد حتى
+  // ينتبه لها، وتنطوي لمن ملأها — ويبقى عنوانها ظاهرًا ليفتحها متى شاء.
+  var card = document.createElement('details');
+  card.className = 'tour-card';
+  card.open = filled === 0 && !locked;
+
+  var h = document.createElement('summary');
+  h.className = 'tour-sum';
+  h.innerHTML = '<span>🏆 توقّعات البطولة</span>' +
+    '<span class="tour-badge">' +
+      (locked ? 'مُقفلة' : filled === 0 ? 'لم تتوقّع بعد'
+        : filled === TOUR_FIELDS.length ? 'اكتملت ✓'
+        : 'اخترت ' + arNum(filled) + ' من ' + arNum(TOUR_FIELDS.length)) +
+    '</span>';
   card.appendChild(h);
 
   if (locked) {
@@ -531,7 +542,7 @@ function othersBlock(m) {
 
   var res = resultOf(m);
   var wrap = document.createElement('details');
-  wrap.style.cssText = 'width:100%;background:var(--surface);border:1px solid var(--line);' +
+  wrap.style.cssText = 'width:100%;background:var(--card);border:1px solid var(--line);' +
     'border-radius:12px;padding:10px 12px;';
   var sum = document.createElement('summary');
   sum.style.cssText = 'cursor:pointer;font-size:.82rem;font-weight:800;color:var(--muted)';
@@ -546,12 +557,12 @@ function othersBlock(m) {
     var p = all[k];
     var line = document.createElement('div');
     line.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:8px;' +
-      'padding:6px 0;font-size:.84rem;border-top:1px solid rgba(255,255,255,.05)';
+      'padding:7px 0;font-size:.84rem;border-top:1px solid var(--line-2)';
     var pts = res ? R.score(p, res) : null;
     var raw = res ? R.points(p, res) : null;
     var cls = raw === null ? 'p0' : (raw >= 5 ? 'p5' : raw >= 3 ? 'p3' : 'p0');
     line.innerHTML = '<span style="font-weight:700">' + esc(u.name || k) + '</span>' +
-      '<span style="font-weight:800;color:#fff">' + arNum(p.h) + ' — ' + arNum(p.a) +
+      '<span style="font-weight:800;color:var(--ink)">' + arNum(p.h) + ' — ' + arNum(p.a) +
       (p.x2 ? ' <span class="x2-tag">×٢</span>' : '') + '</span>' +
       (pts === null ? '' : '<span class="pts-pill ' + cls + '">' + R.arPoints(pts) + '</span>');
     wrap.appendChild(line);
