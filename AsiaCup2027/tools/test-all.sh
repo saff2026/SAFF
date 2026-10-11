@@ -29,8 +29,24 @@ else
 fi
 
 echo
+echo "══ ٣) هل asia27.html مطابق لمصادره؟ ══"
+if ! python3 tools/build-web.py --check; then fail=1; fi
+
+echo
+echo "══ ٤) هل بيانات الجدول مطابقة لمصدرها؟ ══"
+before=$(sha256sum web/schedule-data.js | cut -d" " -f1)
+python3 tools/regen-schedule-data.py >/dev/null
+after=$(sha256sum web/schedule-data.js | cut -d" " -f1)
+if [ "$before" = "$after" ]; then
+  echo "✅ schedule-data.js مطابق لـ schedule.json"
+else
+  echo "❌ schedule-data.js كان متقادمًا — أُعيد توليده الآن، راجع الفرق والتزمه"
+  fail=1
+fi
+
+echo
 if [ "$fail" -eq 0 ]; then
-  echo "✅ النسختان متطابقتان على نفس ملفّ الحالات."
+  echo "✅ النسختان متطابقتان، والملفّات المولَّدة محدَّثة."
 else
   echo "❌ فشل أحد الاختبارين — راجع المخرجات أعلاه."
 fi
