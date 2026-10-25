@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>سوابق تأجيل الأندية</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Noto+Kufi+Arabic:wght@600;800&display=swap">
+<style>
+/* Layout: a match-report ledger — a filterable stack of case sheets, each with crests, a fact grid and its sources */
+:root{
+  --bg:#f3f5f2; --surface:#ffffff; --fg:#17201b; --muted:#5b665f; --line:#d9dfd9;
+  --accent:#1f6b45; --accent-soft:#e3efe7; --warn:#9a5b00; --warn-soft:#fbefd9;
+  --display:"Noto Kufi Arabic","IBM Plex Sans Arabic",Tahoma,sans-serif;
+  --body:"IBM Plex Sans Arabic",Tahoma,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101512; --surface:#18201b; --fg:#e7ece8; --muted:#9aa69e; --line:#2b352f;
+  --accent:#6cc795; --accent-soft:#1d3327; --warn:#f0b75a; --warn-soft:#3a2c14; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101512; --surface:#18201b; --fg:#e7ece8; --muted:#9aa69e; --line:#2b352f;
+  --accent:#6cc795; --accent-soft:#1d3327; --warn:#f0b75a; --warn-soft:#3a2c14; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.75;direction:rtl}
+.wrap{max-width:1040px;margin:0 auto;padding-block:32px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.4}
+h1{font-size:clamp(1.6rem,4vw,2.3rem);font-weight:800}
+h2{font-size:1.25rem;font-weight:800}
+h3{font-size:1.05rem;font-weight:600}
+p{margin:0}
+.lede{color:var(--muted);max-width:68ch}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;color:var(--muted);font-size:.85rem}
+.legend b{color:var(--warn);font-weight:600}
+.filters{display:flex;flex-wrap:wrap;gap:8px}
+.filters button{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:4px 14px;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.filters button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.count{color:var(--muted);font-size:.85rem}
+.cases{display:flex;flex-direction:column;gap:16px}
+.case{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.head{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.crests{display:flex;gap:6px;flex-wrap:wrap;flex:0 0 auto}
+.crest{width:46px;height:52px;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:1.05rem;
+  clip-path:polygon(50% 0,100% 12%,100% 62%,50% 100%,0 62%,0 12%);box-shadow:inset 0 0 0 3px rgba(0,0,0,.18)}
+.title{flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:2px}
+.meta{color:var(--muted);font-size:.88rem}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:.78rem;padding:1px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-weight:600}
+.tag.when{background:var(--warn-soft);color:var(--warn)}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 22px;margin:0}
+.facts div{min-width:0}
+.facts dt{font-size:.78rem;color:var(--muted);letter-spacing:.02em}
+.facts dd{margin:0}
+.note{font-size:.85rem;color:var(--warn)}
+.src{border-top:1px dashed var(--line);padding-top:10px;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.85rem}
+.src span{color:var(--muted)}
+a{color:var(--accent);text-underline-offset:3px}
+.tablebox{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:.9rem}
+th,td{text-align:right;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--display);font-weight:600;font-size:.85rem;color:var(--muted)}
+tr:last-child td{border-bottom:0}
+.num{font-variant-numeric:tabular-nums}
+footer{color:var(--muted);font-size:.85rem}
+@media (prefers-reduced-motion:no-preference){.case{transition:border-color .15s}.case:hover{border-color:var(--accent)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:10px">
+    <h1>أندية تأجلت مبارياتها ولم تستطع اللعب</h1>
+  </header>
+
+  <section style="display:flex;flex-direction:column;gap:12px" aria-labelledby="f-h">
+    <h2 id="f-h">تصفية حسب الحل الذي اتُّخذ</h2>
+    <div class="filters" id="filters" role="group" aria-label="تصفية الحالات"></div>
+    <p class="count" id="count"></p>
+  </section>
+
+  <section class="cases" id="cases" aria-live="polite"></section>
+
+  <footer>آخر تحديث: 25 أكتوبر 2026. الروابط تفتح مواقع المصادر الأصلية في نافذة جديدة.</footer>
+</div>
+
+<script>
+const SOL = {
+  resched:{n:"تأجيل ثم إعادة جدولة", when:"غياب قصير ومدته معروفة", pro:"عادل للنادي", con:"يضغط جدول النادي في آخر الموسم"},
+  pause:{n:"إيقاف جولات للدوري كله", when:"الظرف يضرب عدة أندية", pro:"لا يتأخر نادٍ عن الباقين", con:"يؤخر الموسم كله"},
+  move:{n:"نقل المباريات إلى ملعب آخر", when:"النادي يستطيع السفر لكن لا يستطيع اللعب في مدينته", pro:"لا تتراكم المؤجلات", con:"يفقد النادي ميزة اللعب على أرضه"},
+  forfeitBack:{n:"خسارة إدارية ثم إلغاؤها", when:"خلاف على سبب الغياب", pro:"يفرّق بين التقصير والظرف القاهر", con:"قرارات متضاربة تطول شهوراً"},
+  penalty:{n:"إعادة جدولة مع عقوبة", when:"النادي يغيب بسبب تقصير منه، مثل الديون أو الإلغاء دون إذن", pro:"يعطي النادي فرصة مع ردعه عن التكرار", con:"لا يعالج سبب المشكلة"},
+  relegate:{n:"هبوط إداري ثم شطب", when:"ديون كبيرة تُكتشف قبل الموسم أو في الصيف", pro:"يُحسم الأمر قبل أن يبدأ الموسم", con:"قد ينتهي بسقوط النادي إلى الهواة"},
+  hibernate:{n:"تجميد المشاركة موسماً مع حفظ المكان", when:"ظرف خارجي يمنع النادي من اللعب طوال الموسم", pro:"النادي لا يخسر مكانه ولا يُعاقب", con:"يلعب الدوري بعدد أقل ذلك الموسم"},
+  money:{n:"دعم مالي ليكمل الموسم", when:"أزمة مالية في منتصف الموسم", pro:"يحافظ على عدالة المنافسة", con:"يحتاج مالاً وموافقة بقية الأندية"},
+  expel:{n:"مهلة محددة ثم الطرد", when:"أزمة مالية أو إدارية مدتها غير معروفة", pro:"الدوري لا يتعطل", con:"قاسٍ جداً على النادي"},
+  without:{n:"إكمال الدوري بدون النادي", when:"النادي لا يستطيع المشاركة من الأصل", pro:"الجدول واضح من البداية", con:"يتغير عدد الأندية والهابطين"},
+  forfeit:{n:"احتساب 3-0 مع الإعفاء من الهبوط", when:"انسحاب في منتصف الموسم بسبب كارثة", pro:"يحمي النادي من الهبوط", con:"نقاط مجانية لمن لم يلعب أمامه بعد"},
+  abroad:{n:"اللعب في دوري دولة أخرى", when:"حرب طويلة في البلد", pro:"النادي يبقى يلعب", con:"يحتاج موافقة الاتحاد القاري والدوري المستضيف"},
+  pile:{n:"تراكم المؤجلات بلا حد", when:"(لا يُنصح به)", pro:"لا شيء يُذكر", con:"ترتيب مضلل وضغط مباريات كبير"}
+};
+
+const C = (n,a,bg,fg)=>({n,a,bg,fg});
+const CASES = [
+ {flag:"🇬🇬",league:"الدوري الإنجليزي، الدرجة الثامنة (إستميان، الجنوب الشرقي)",season:"2020-2021",clubs:[C("غيرنزي","غ","#00843D","#ffffff")],
+  when:"قبل الموسم",cause:"قيود السفر بسبب كورونا.",
+  affected:"الموسم كله.",
+  decision:"جُمّدت مشاركته موسماً مع حفظ مكانه.",
+  outcome:"رجع الموسم التالي في نفس الدرجة.",sol:["hibernate"],
+  src:[["ITV News","https://www.itv.com/news/channel/2020-09-15/guernsey-fc-withdraw-from-forthcoming-league-season-due-to-travel-restrictions"],["Guernsey FC","https://guernseyfc.com/about/"],["Football Wiki","https://football.fandom.com/wiki/2020%E2%80%9321_Isthmian_League_South_East_Division"]]},
+
+ {flag:"🏴",league:"الدوري الإنجليزي، الدرجة السابعة (الجنوبي الممتاز، الجنوب)",season:"2020-2021",clubs:[C("ميرثر تاون","م","#ffffff","#111111")],
+  when:"قبل الموسم",cause:"منع الجماهير في ويلز بسبب كورونا، فانقطع دخل النادي.",
+  affected:"الموسم كله.",
+  decision:"جُمّدت مشاركته موسماً مع حفظ مكانه.",
+  outcome:"رجع الموسم التالي في نفس الدرجة.",sol:["hibernate"],
+  src:[["Y Clwb Pêl-droed","https://clwbpeldroed.org/2020/09/21/merthyr-town-mothball-southern-league/"],["Voice Wales","https://www.voice.wales/the-future-of-a-welsh-legend-can-merthyr-town-fc-survive-the-pandemic/"],["Football Trade Directory","https://www.footballtradedirectory.com/merthyr-town-ask-to-suspend-their-season"],["Wikiwand","https://www.wikiwand.com/en/2020%E2%80%9321_Southern_Football_League"]]},
+
+ {flag:"🏴",league:"الدوري الإنجليزي، الدرجة الثالثة",season:"2019-2020",clubs:[C("بيري","ب","#ffffff","#0C2340")],
+  when:"من الجولة الأولى",cause:"أزمة مالية.",
+  affected:"أول 5 مباريات.",
+  decision:"مهلة لإثبات قدرته المالية، ثم طُرد.",
+  outcome:"أكمل الدوري بـ 23 نادياً، وخُفّض الهبوط من 4 إلى 3.",sol:["expel","without"],
+  src:[["Sky Sports","https://www.skysports.com/football/news/11774/11795575/bury-expelled-from-football-league"],["Euronews","https://www.euronews.com/2019/08/03/burys-first-two-league-one-fixtures-suspended-over-debts"],["Jersey Evening Post","https://jerseyeveningpost.com/uksport/2019/07/18/bury-hit-with-big-points-deduction-after-agreeing-financial-future/"],["Goal","https://www.goal.com/en/news/bury-fc-expelled-from-football-league-after-collapse-of-takeover-/1j225r7236weh1cfo3p6hx0ia5"],["PressReader","https://www.pressreader.com/uk/manchester-evening-news/20190927/282059098727690"]]},
+
+ {flag:"🏴",league:"الدوري الإنجليزي، الدرجة الخامسة",season:"2020-2021",clubs:[C("ماكلسفيلد","م","#0057B8","#ffffff")],
+  when:"قبل الموسم",cause:"حكم قضائي بتصفية النادي.",
+  affected:"الموسم كله.",
+  decision:"طُرد من الدوري.",
+  outcome:"أكمل الدوري بـ 23 نادياً، وخُفّض الهبوط من 4 إلى 3.",sol:["expel","without"],
+  src:[["National League","https://thenationalleague.org.uk/national-league-statement-macclesfield-town-64028"],["Inside World Football","https://insideworldfootball.com/?p=122925"]]},
+
+ {flag:"🇪🇹",league:"الدوري الإثيوبي",season:"2020-2021",clubs:[C("مقلي 70 إندرتا","م","#C8102E","#FFD200"),C("سهول شري","س","#006B3F","#ffffff"),C("والوالو أديغرات","و","#1B4F9C","#ffffff")],
+  when:"قبل الموسم",cause:"الحرب في الإقليم.",
+  affected:"الموسم كله.",
+  decision:"بدأ الدوري بدونها بـ 13 نادياً.",
+  outcome:"رجعت بعد انتهاء الحرب في 2022.",sol:["without"],
+  src:[["Ethiopian Business Review","https://ethiopianbusinessreview.net/remodeling-football-business/"],["Citizen Digital","https://citizen.digital/article/tigray-footballers-play-for-victory-and-ethiopian-unity-n343281"]]},
+
+ {flag:"🇹🇷",league:"الدوري التركي",season:"2022-2023",clubs:[C("هاتاي سبور","هـ","#7A1F2B","#ffffff"),C("غازي عنتاب","غ","#E30613","#111111")],
+  when:"وسط الموسم",cause:"زلزال فبراير 2023.",
+  affected:"انسحبا بعد نحو 20 مباراة من 36.",
+  decision:"بقيت نتائجهما السابقة، واحتُسبت المباريات المتبقية 3-0 لخصومهما.",
+  outcome:"أُعفيا من الهبوط ورجعا الموسم التالي.",sol:["forfeit"],
+  src:[["Cyprus Mail","https://cyprus-mail.com/2023/02/10/hatayspor-withdraw-from-turkish-league-after-earthquake/"],["Inside World Football","https://www.insideworldfootball.com/2023/02/10/turkish-earthquake-crushes-hope-hatayspor-finishing-season/"],["Hürriyet Daily News","https://www.hurriyetdailynews.com/turkish-super-lig-resumes-after-earthquake-break-181318"],["Northern Tribune","https://northerntribune.ca/hatayspor-withdraw-turkey-earthquake/"],["Anadolu Ajansı","https://www.aa.com.tr/tr/spor/tffnin-gaziantep-fk-ve-hataysporun-ligden-cekilmesiyle-ilgili-karari-degismeyecek/2863208"],["سكاي نيوز عربية","https://www.skynewsarabia.com/sport/1595891-%D8%A8%D8%B3%D8%A8%D8%A8-%D8%A7%D9%84%D8%B2%D9%84%D8%B2%D8%A7%D9%84-%D9%86%D8%A7%D8%AF%D9%8A-%D8%AA%D8%B1%D9%83%D9%8A-%D9%8A%D8%B9%D9%84%D9%86-%D8%A7%D9%84%D8%A7%D9%86%D8%B3%D8%AD%D8%A7%D8%A8-%D8%A8%D8%B7%D9%88%D9%84%D8%A9-%D8%A7%D9%84%D8%AF%D9%88%D8%B1%D9%8A"]]},
+
+ {flag:"🇫🇷",league:"الدوري الفرنسي، الدرجة السادسة (الإقليمية الأولى)",season:"2026-2027",clubs:[C("بوردو","ب","#001B50","#ffffff")],
+  when:"من الجولة الأولى",cause:"أُخرج من المسابقات الوطنية بسبب الديون، واستأنف القرار.",
+  affected:"أول 4 جولات.",
+  decision:"أُجّلت مبارياته حتى حُسم مكانه، ثم بدأ من الجولة الخامسة، وجُدولت المؤجلات حتى يناير 2027.",
+  outcome:"يلعب الآن في الدرجة السادسة.",sol:["relegate","resched"],
+  src:[["Bouger à Bordeaux","https://www.bougerabordeaux.com/actu/news/girondins-bordeaux-quatre-matchs-en-retard-calendrier-octobre-janvier-2027/"],["WebGirondins – تأجيل أول مباراة","https://www.webgirondins.com/actualite-girondins-r1-la-lfna-reporte-le-premier-match-des-girondins-134268"],["WebGirondins – مواعيد المؤجلات","https://www.webgirondins.com/actualite-girondins-girondins-les-dates-des-quatre-matchs-en-retard-sont-connues-134870"],["433 Foot","https://www.433foot.fr/regional-1-ou-et-quand-suivre-les-4-matchs-en-retard-des-girondins-de-bordeaux/"],["franceinfo – الاستئناف","https://www.franceinfo.fr/sports/foot/les-girondins-de-bordeaux-font-appel-aupres-du-comite-national-olympique-et-sportif-francais-apres-leur-exclusion-des-competitions-nationales_8117816.html"],["France 3 – إنزاله في 2024","https://france3-regions.franceinfo.fr/nouvelle-aquitaine/gironde/bordeaux/girondins-de-bordeaux-la-dncg-confirme-la-relegation-du-club-en-national-2-3017087.html"]]},
+
+ {flag:"🏴",league:"الدوري الإنجليزي، الدرجة السادسة (الجنوب)",season:"2026-2027",clubs:[C("إبسفليت","إ","#D71920","#ffffff")],
+  when:"من الجولة الأولى",cause:"ديون ضرائب.",
+  affected:"أول 6 مباريات.",
+  decision:"أُوقف حتى سدّد ديونه، ثم سُمح له باللعب مع خصم 6 نقاط مع وقف التنفيذ ومنعه من تسجيل لاعبين.",
+  outcome:"بدأ في سبتمبر، والمؤجلات ستُعاد جدولتها.",sol:["penalty","resched"],
+  src:[["Kent Online – الإيقاف","https://www.kentonline.co.uk/gravesend/sport/this-has-come-as-a-shock-ebbsfleet-s-first-three-games-p-343609/"],["Kent Online – رفع الإيقاف","https://www.kentonline.co.uk/gravesend/sport/fleet-get-the-green-light-and-suspended-points-deduction-344613/"],["Non-League Football Paper","https://www.thenonleaguefootballpaper.com/latest-news/step-2/national-league-north-and-south/national-league-south/ebbsfleet-united/622462/national-league-hold-up-ebbsfleet-united-suspension-with-further-fixtures-postponed"],["Kent Sports News","https://www.kentsportsnews.com/ebbsfleet-cleared-to-start-season-02-09-2026/"],["Sussex Express","https://www.sussexexpress.co.uk/sport/football/ebbsfleet-suspension-extended-horsham-fcs-bank-holiday-clash-is-off-8943804"]]},
+
+ {flag:"🇧🇷",league:"الدوري البرازيلي",season:"2024",clubs:[C("غريميو","غ","#0D80BF","#111111"),C("إنترناسيونال","إ","#E5050F","#ffffff"),C("جوفنتودي","ج","#009B3A","#ffffff")],
+  when:"بداية الموسم",cause:"فيضانات.",
+  affected:"مباريات شهر تقريباً.",
+  decision:"أُوقفت جولتان للدوري كله، ولعب غريميو مبارياته على أرضه في ملعب بولاية أخرى.",
+  outcome:"أكملوا الموسم.",sol:["pause","move"],
+  src:[["Inside World Football","https://www.insideworldfootball.com/2024/05/16/cbf-suspends-league-fixtures-clubs-struggle-function-aftermath-flooding/"],["ESPN","https://africa.espn.com/football/story/_/id/40195017/brazil-resume-championship-matches-june-flooding"],["The Brazilian Report","https://brazilian.report/society/2024/05/07/rio-grande-do-sul-floods-football-uncertainty/"]]},
+
+ {flag:"🇺🇸",league:"الدوري الأمريكي",season:"2021",clubs:[C("تورنتو","ت","#B81137","#ffffff"),C("مونتريال","م","#0033A1","#ffffff"),C("فانكوفر","ف","#00245D","#9DC2EA")],
+  when:"من بداية الموسم",cause:"إغلاق الحدود بسبب كورونا.",
+  affected:"كل مبارياتهم على أرضهم حتى يوليو.",
+  decision:"نُقلت مبارياتهم إلى ملاعب في أمريكا.",
+  outcome:"رجعوا إلى ملاعبهم في يوليو 2021.",sol:["move"],
+  src:[["CBC","https://www.cbc.ca/sports/soccer/mls/major-league-soccer-canadian-teams-2021-schedule-1.5962737"],["World Soccer Talk","https://worldsoccertalk.com/2021/07/29/mls-canadian-clubs-will-finish-home-matches-in-canada/"],["CFJC Today","https://cfjctoday.com/?p=865511"]]},
+
+ {flag:"🇦🇺",league:"الدوري الأسترالي",season:"2021-2022",clubs:[C("بيرث غلوري","ب","#4B2884","#F58025")],
+  when:"من بداية الموسم",cause:"ولايته أغلقت حدودها بسبب كورونا.",
+  affected:"عدة مباريات.",
+  decision:"لعب خارج مدينته، وأُجّلت بعض مبارياته.",
+  outcome:"لُعبت المؤجلات في 2022.",sol:["move","resched"],
+  src:[["ABC","https://www.abc.net.au/news/2021-12-20/perth-glory-a-league-seasons-fixture-update/100715336"],["Perth Glory","https://perthglory.com.au/news/a-leagues-postpone-glory-mens-matches-for-remainder-of-2021/"],["ESPN","https://www.espn.com.au/football/australian-a-league/story/4316439/perth-glory-melbourne-city-match-postponed-as-covid-causes-more-a-league-fixture-upheaval"]]},
+];
+
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+const fmt = s => esc(s).replace(/\(؟\)/g,'<b class="note">(؟)</b>');
+
+function card(c){
+  const names = c.clubs.map(k=>esc(k.n)).join("، ");
+  const tags = `<span class="tag when">${esc(c.when)}</span>` + c.sol.map(s=>`<span class="tag">${esc(SOL[s].n)}</span>`).join("");
+  const src = c.src.map(([l,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(l)}</a>`).join("");
+  return `<article class="case">
+    <div class="head">
+      <div class="title">
+        <h3>${names}</h3>
+        <p class="meta">${esc(c.league)} · <span class="num">${esc(c.season)}</span></p>
+        <div class="tags">${tags}</div>
+      </div>
+    </div>
+    <dl class="facts">
+      <div><dt>سبب عدم اللعب</dt><dd>${fmt(c.cause)}</dd></div>
+      <div><dt>المباريات المتأثرة</dt><dd>${fmt(c.affected)}</dd></div>
+      <div><dt>ما قررته الجهة المنظمة</dt><dd>${fmt(c.decision)}</dd></div>
+      <div><dt>ماذا حدث للنادي في النهاية</dt><dd>${fmt(c.outcome)}</dd></div>
+    </dl>
+    <div class="src"><span>المصادر:</span>${src}</div>
+  </article>`;
+}
+
+let active = "all";
+function render(){
+  const list = active==="all" ? CASES : CASES.filter(c=>c.sol.includes(active));
+  document.getElementById("cases").innerHTML = list.map(card).join("");
+  document.getElementById("count").textContent = `الحالات المعروضة: ${list.length} من ${CASES.length}`;
+  document.querySelectorAll("#filters button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.k===active ? "true":"false"));
+}
+const PRIORITY = ["hibernate","without","forfeit"];
+const used = [...PRIORITY, ...Object.keys(SOL).filter(k=>!PRIORITY.includes(k))].filter(k=>CASES.some(c=>c.sol.includes(k)));
+document.getElementById("filters").innerHTML =
+  `<button type="button" data-k="all">الكل</button>` + used.map(k=>`<button type="button" data-k="${k}">${esc(SOL[k].n)}</button>`).join("");
+document.getElementById("filters").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  active = b.dataset.k; render();
+});
+render();
+</script>
+</body>
+</html>
