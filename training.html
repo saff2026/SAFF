@@ -268,9 +268,10 @@ img.avatar{object-fit:cover;}
 
 /* ============ النتيجة ============ */
 .score{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:18px 16px;}
-.score .tm{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:15px;font-weight:600;text-align:center;min-width:0;}
+.score .tm{flex:1 1 0;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:15px;font-weight:600;text-align:center;min-width:0;}
 .score .tm .dot{width:14px;height:14px;}
-.score .nums{display:flex;align-items:center;gap:10px;font-size:44px;font-weight:700;direction:rtl;line-height:1;}
+.score>div:nth-child(2){flex:none;text-align:center;}
+.score .nums{display:flex;align-items:center;justify-content:center;gap:10px;font-size:44px;font-weight:700;direction:rtl;line-height:1;}
 .score .nums i{font-style:normal;color:var(--label3);font-size:30px;font-weight:500;}
 .score .meta{font-size:12px;color:var(--label2);text-align:center;}
 
@@ -820,7 +821,6 @@ function renderHome(el){
     var last=ds[0], m=mvpOf(last);
     h+=gh('التمرين السابق',lnk('التفاصيل','openSessionDetail(\''+last.id+'\')'));
     h+='<div class="card cell tap" style="display:block;padding:0" onclick="openSessionDetail(\''+last.id+'\')">'+scoreCard(last,niceDate(last.date))+'</div>';
-    if(m) h+='<div class="card" style="margin-top:10px"><div class="mvp" onclick="openPlayer(\''+m+'\')"><div class="medal">'+icF('star')+'</div><div class="grow"><div class="k">أفضل لاعب في التمرين</div><div class="n">'+esc(pname(m))+'</div></div>'+rBadge(last.ratings[m])+'</div></div>';
   }
 
   var top=function(key,lbl,unit,color,icon,filled){
@@ -1621,7 +1621,7 @@ function sessionDetailInner(id){
   h+=done?'<div class="card">'+scoreCard(s,s.size+' ضد '+s.size+' · <span class="ltr">'+s.formation+'</span>')+goalsHTML(s,false)+'</div>':'<div class="card">'+upcomingCard(s)+'</div>';
   if(m) h+='<div class="card" style="margin-top:12px"><div class="mvp" onclick="openPlayer(\''+m+'\')"><div class="medal">'+icF('star')+'</div><div class="grow"><div class="k">أفضل لاعب في التمرين</div><div class="n">'+esc(pname(m))+'</div></div>'+rBadge(s.ratings[m])+'</div></div>';
   h+=gh('التشكيلة')+'<div class="card pad">'+pitchHTML(s,false)+subsHTML(s,false)+'</div>';
-  h+=rotationHTML(s,false);
+  if(!done) h+=rotationHTML(s,false);
   (done?['A','B']:[]).forEach(function(t){
     var ids=teamPlayers(s,t).filter(function(x){return x;});
     h+=gh('<span class="dot '+t+'" style="width:13px;height:13px;margin-left:6px"></span>'+esc(s.teams[t].name));
