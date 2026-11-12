@@ -191,6 +191,10 @@
           ".validate": "!newData.exists() || (newData.hasChildren(['name','goals']) && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 60 && newData.child('goals').isNumber() && newData.child('goals').val() >= 0 && newData.child('goals').val() <= 30)"
         }
       }
+    },
+    "training": {
+      ".read": "auth != null",
+      ".write": "auth != null"
     }
   }
 }
