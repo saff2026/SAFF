@@ -585,7 +585,7 @@ function normalize(d){
   Object.keys(d.sessions||{}).forEach(function(k){
     var s=d.sessions[k]; if(!s)return; s.id=k;
     s.teams=s.teams||{}; ['A','B'].forEach(function(t){ s.teams[t]=s.teams[t]||{}; s.teams[t].slots=s.teams[t].slots||{}; s.teams[t].subs=s.teams[t].subs||{}; if(!s.teams[t].name)s.teams[t].name= t==='A'?'الأخضر':'الأبيض'; });
-    s.att=s.att||{}; s.goals=s.goals||{}; s.ratings=s.ratings||{}; s.checkin=s.checkin||{}; s.lateSet=s.lateSet||{}; if(!/^\d\d:\d\d$/.test(s.time||''))s.time='20:00';
+    s.att=s.att||{}; s.goals=s.goals||{}; s.ratings=s.ratings||{}; s.checkin=s.checkin||{}; s.votes=s.votes||{}; s.lateSet=s.lateSet||{}; if(!/^\d\d:\d\d$/.test(s.time||''))s.time='20:00';
     out.sessions[k]=s;
   });
   Object.keys(d.weeks||{}).forEach(function(k){ if(d.weeks[k]) out.weeks[k]=d.weeks[k]; });
@@ -611,6 +611,11 @@ function writeErr(e){
 // put('players/abc', {...})  — null يحذف
 function put(path,val){
   if(!isCoach){toast('⚠️ هذا الإجراء لمجلس الإدارة فقط');return;}
+  if(mode==='cloud'){ db.ref(ROOT+'/'+path).set(val===undefined?null:val).catch(writeErr); }
+  else { setPath(LOCAL,path,val); saveLocal(); S=normalize(clone(LOCAL)); render(); }
+}
+// كتابة متاحة للاعبين: صوتهم فقط
+function putVote(path,val){
   if(mode==='cloud'){ db.ref(ROOT+'/'+path).set(val===undefined?null:val).catch(writeErr); }
   else { setPath(LOCAL,path,val); saveLocal(); S=normalize(clone(LOCAL)); render(); }
 }
@@ -724,8 +729,35 @@ function autoMvp(s){
   participants(s).forEach(function(id){var r=s.ratings[id]; if(typeof r!=='number')return; var v=r*10+(gl.g[id]||0)*0.5+(gl.a[id]||0)*0.25; if(v>bv){bv=v;best=id;}});
   return best;
 }
+function myId(){var v=lsGet('saff_tr_me');return v&&P(v)?v:null;}
+function openVote(sid){ openModal(''); voteInner(sid); modalRefresh=function(){ if(!S.sessions[sid]){closeModal();return;} voteInner(sid); }; }
+function voteInner(sid){
+  var s=S.sessions[sid]; if(!s)return;
+  var parts=participants(s).filter(function(id){return P(id);}).sort(function(a,b){return pname(a).localeCompare(pname(b),'ar');});
+  var me=myId(); if(me&&parts.indexOf(me)<0) me=null;
+  var h=mh('أفضل لاعب في التمرين');
+  if(!voteOpen(s)){ setModal(h+'<div class="card"><div class="empty"><div class="ei">'+icF('star')+'</div><b>التصويت مغلق</b>'+(s.status==='done'?'انتهى التصويت.':'يفتح بعد ساعتين من بداية التمرين.')+'</div></div>'); return; }
+  if(!me){
+    h+='<div class="foot" style="text-align:center;margin:0 0 12px">مين أنت؟ اختر اسمك مرة وحدة، والجوال يتذكّره.</div>';
+    h+='<div class="card">'+parts.map(function(id){return '<div class="cell tap ind vme" data-id="'+id+'" onclick="lsSet(\'saff_tr_me\',\''+id+'\');voteInner(\''+sid+'\')">'+avatar(id)+'<div class="body"><div class="t">'+esc(pname(id))+'</div></div>'+chev()+'</div>';}).join('')+'</div>';
+    setModal(h); return;
+  }
+  var mine=s.votes[me], n=Object.keys(voteTally(s)).length?Object.keys(s.votes).length:0;
+  h+='<div class="card" style="margin-bottom:12px"><div class="cell ind">'+avatar(me)+'<div class="body"><div class="t">'+esc(pname(me))+'</div><div class="s">'+(mine?'صوتك: '+esc(pname(mine))+' — تقدر تغيّر صوتك':'اختر أفضل لاعب في التمرين')+'</div></div><button class="btn sm gray" onclick="lsDel(\'saff_tr_me\');voteInner(\''+sid+'\')">لست أنا</button></div></div>';
+  h+='<div class="card">'+parts.filter(function(id){return id!==me;}).map(function(id){var on=mine===id;
+    return '<div class="cell tap ind vopt" data-id="'+id+'" onclick="castVote(\''+sid+'\',\''+id+'\')">'+avatar(id)+'<div class="body"><div class="t">'+esc(pname(id))+'</div><div class="s">'+POS[P(id).pos].ar+'</div></div>'+(on?'<span style="color:#D4A93C;display:inline-flex">'+icF('star','s')+'</span>':'')+'</div>';}).join('')+'</div>';
+  h+='<div class="foot" style="text-align:center">صوّت <span class="num">'+Object.keys(s.votes).length+'</span> لاعب حتى الآن. النتيجة تظهر بعد انتهاء التمرين.</div>';
+  setModal(h);
+}
+function castVote(sid,pid){var s=S.sessions[sid],me=myId(); if(!s||!me||!voteOpen(s))return; if(pid===me){toast('⚠️ ما تقدر تصوّت لنفسك');return;} putVote('sessions/'+sid+'/votes/'+me,pid); toast('تم تصويتك لـ '+pname(pid));}
 function goalCount(s){var g={},a={};vals(s.goals).forEach(function(x){if(x.s)g[x.s]=(g[x.s]||0)+1;if(x.a)a[x.a]=(a[x.a]||0)+1;});return {g:g,a:a};}
-function mvpOf(s){return s.mvp||autoMvp(s);}
+// تصويت اللاعبين على أفضل لاعب
+var VOTE_AFTER=2*3600*1000;
+function voteOpen(s){return !!s&&s.status!=='done'&&Date.now()>=startTs(s)+VOTE_AFTER;}
+function voteTally(s){var t={};Object.keys(s.votes||{}).forEach(function(v){var c=s.votes[v];if(c&&P(c)&&c!==v)t[c]=(t[c]||0)+1;});return t;}
+function voteWinner(s){var t=voteTally(s),ids=Object.keys(t);if(!ids.length)return null;var gl=goalCount(s);
+  ids.sort(function(a,b){return (t[b]-t[a])||((s.ratings[b]||0)-(s.ratings[a]||0))||((gl.g[b]||0)-(gl.g[a]||0));});return ids[0];}
+function mvpOf(s){return s.mvp||voteWinner(s)||autoMvp(s);}
 
 /* ------------------------- dates & weeks ------------------------- */
 function today(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
@@ -947,6 +979,7 @@ window.addEventListener('scroll',function(){document.getElementById('nav').class
 function renderHome(el){
   var ps=playersArr(), ds=doneSessions(), st=computeStats(), os=openSession(), h='';
 
+  if(os&&voteOpen(os)) h+='<div class="card" style="margin-top:6px"><div class="cell tap ind" id="voteCard" onclick="openVote(\''+os.id+'\')">'+tile('#D4A93C','star',true)+'<div class="body"><div class="t">صوّت لأفضل لاعب في التمرين</div><div class="s">'+(myId()&&os.votes[myId()]?'صوتك: '+esc(pname(os.votes[myId()]))+' — اضغط للتغيير':'التصويت مفتوح حتى إنهاء التمرين')+'</div></div>'+chev()+'</div></div>';
   h+=gh('التمرين القادم');
   if(os){
     h+='<div class="card cell tap" id="upcomingCard" style="display:block;padding:0" onclick="'+(isCoach?'go(\'session\')':'openSessionDetail(\''+os.id+'\')')+'">'+upcomingCard(os)+'</div>'+(isCoach?'':'<div class="foot">اضغط لعرض التشكيلة</div>');
@@ -1295,9 +1328,10 @@ function renderSession(el){
   var C=isCoach, att=attendees(s);
   h+=largeTitle('التمرين',niceDate(s.date)+' · الساعة '+fmtStart(s),C?'<button class="round-btn gray" id="editSess" onclick="openNewSession(\''+s.id+'\')" aria-label="إعدادات التمرين">'+ic('pencil','s')+'</button>':'');
 
+  var head=h, ciH='', goalH=''; h='';
   if(C){
     var ciN=Object.keys(s.checkin).filter(function(id){return P(id);}), ciLate=ciN.filter(function(id){return isLate(s,id);}).length;
-    h+='<div class="card"><div class="cell tap ind" id="checkinBtn" onclick="openCheckin()">'+tile('#FF9500','check')+'<div class="body"><div class="t">التحضير</div><div class="s">البداية '+fmtStart(s)+' · حضر <span class="num">'+ciN.length+'</span> من <span class="num">'+att.length+'</span>'+(ciLate?' · <span style="color:var(--orange)">'+ciLate+' متأخر</span>':'')+'</div></div>'+chev()+'</div></div>';
+    ciH=gh('التحضير')+'<div class="card"><div class="cell tap ind" id="checkinBtn" onclick="openCheckin()">'+tile('#FF9500','check')+'<div class="body"><div class="t">التحضير</div><div class="s">البداية '+fmtStart(s)+' · حضر <span class="num">'+ciN.length+'</span> من <span class="num">'+att.length+'</span>'+(ciLate?' · <span style="color:var(--orange)">'+ciLate+' متأخر</span>':'')+'</div></div>'+chev()+'</div></div>';
     var ps=playersArr().sort(function(a,b){return a.name.localeCompare(b.name,'ar');});
     h+=gh('قائمة اللاعبين في التمرين',(ps.length<=maxList(s)?lnk('الكل','attAll(true)','attAll'):'')+lnk('إفراغ','attAll(false)','attNone'));
     h+=ps.length?attDropdown(s,ps):emptyBox('people','لا يوجد لاعبون','أضف لاعبين أولاً من تبويب «اللاعبون».');
@@ -1313,9 +1347,12 @@ function renderSession(el){
   h+=rotationHTML(s,C);
 
   if(C){
-    h+=gh('النتيجة',lnk('هدف','openGoal()','addGoal','plus'));
-    h+='<div class="card">'+scoreCard(s)+goalsHTML(s,C)+'</div><div class="foot">النتيجة تظهر للاعبين بعد انتهاء التمرين.</div>';
+    goalH=gh('النتيجة',lnk('هدف','openGoal()','addGoal','plus'));
+    goalH+='<div class="card">'+scoreCard(s)+goalsHTML(s,C)+'</div><div class="foot">النتيجة تظهر للاعبين بعد انتهاء التمرين.</div>';
   }
+  // قبل وقت التمرين: التحضير والأهداف تحت. بعد بدايته: فوق
+  var started=Date.now()>=startTs(s);
+  h=started?head+'<div id="liveTop">'+ciH+goalH+'</div>'+h:head+h+ciH+goalH;
 
   var parts=participants(s).filter(function(id){return P(id);});
   if(C){
@@ -1327,12 +1364,12 @@ function renderSession(el){
         '</div><div class="foot">التقييم من 10. أول ضغطة تبدأ من 6، وكل ضغطة نصف درجة.</div>';
     }else h+=emptyBox('people','القائمة فارغة','أضف اللاعبين لقائمة التمرين أولاً.');
 
-    var am=autoMvp(s);
+    var am=voteWinner(s)||autoMvp(s), vt=voteTally(s), vk=Object.keys(vt).sort(function(a,b){return vt[b]-vt[a];});
     h+=gh('أفضل لاعب في التمرين');
     if(parts.length){
-      h+='<div class="card pad"><div class="small muted" style="margin-bottom:10px">'+(s.mvp?'تم اختياره يدوياً.':am?'الاقتراح التلقائي حسب أعلى تقييم: <b style="color:var(--label)">'+esc(pname(am))+'</b>':'يُقترح تلقائياً بعد التقييم، أو اختره بنفسك.')+'</div>';
+      h+='<div class="card pad">'+(voteOpen(s)?'<div class="small" style="margin-bottom:8px">تصويت اللاعبين مفتوح: <b class="num">'+Object.keys(s.votes).length+'</b> صوت'+(vk.length?' — '+vk.slice(0,3).map(function(id){return esc(shortName(id))+' ('+vt[id]+')';}).join('، '):'')+'</div>':'<div class="small muted" style="margin-bottom:8px">يفتح تصويت اللاعبين الساعة '+fmtClock(startTs(s)+VOTE_AFTER)+'</div>')+'<div class="small muted" style="margin-bottom:10px">'+(s.mvp?'تم اختياره يدوياً.':(vk.length&&am===voteWinner(s))?'الاختيار الحالي حسب تصويت اللاعبين: <b style="color:var(--label)">'+esc(pname(am))+'</b>':am?'الاقتراح التلقائي حسب أعلى تقييم: <b style="color:var(--label)">'+esc(pname(am))+'</b>':'يُقترح تلقائياً بعد التقييم، أو اختره بنفسك.')+'</div>';
       var byR=parts.slice().sort(function(a,b){return (typeof s.ratings[b]==='number'?s.ratings[b]:-1)-(typeof s.ratings[a]==='number'?s.ratings[a]:-1)||pname(a).localeCompare(pname(b),'ar');});
-      h+='<select class="field" id="mvpSel" onchange="setMvp(this.value||null)"><option value="">تلقائي'+(am?' — '+esc(pname(am)):'')+'</option>'+
+      h+='<select class="field" id="mvpSel" onchange="setMvp(this.value||null)"><option value="">تلقائي (تصويت اللاعبين ثم التقييم)'+(am?' — '+esc(pname(am)):'')+'</option>'+
         byR.map(function(id){var r=s.ratings[id];return '<option value="'+id+'"'+(s.mvp===id?' selected':'')+'>'+esc(pname(id))+(typeof r==='number'?' ('+r+')':'')+'</option>';}).join('')+'</select>';
       h+='</div>';
     }else h+='<div class="card"><div class="cell"><div class="body"><div class="s">—</div></div></div></div>';
