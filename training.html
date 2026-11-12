@@ -1332,10 +1332,14 @@ function fitScore(p,pos){
   if(!p)return 0;
   if(pos==='GK') return p.pos==='GK'?10:(p.pos2==='GK'?7:-20);
   if(p.pos==='GK'&&p.pos2!==pos) return -20;
-  if(p.pos===pos)return 10; if(p.pos2===pos)return 7;
-  if(POS_GROUP[p.pos]===POS_GROUP[pos]||POS_GROUP[p.pos2]===POS_GROUP[pos])return 3;
-  return 0;
+  if(p.pos===pos)return 10; if(p.pos2===pos)return 8;
+  // نفس الخط (دفاع/وسط/هجوم) أفضل، ثم الخط المجاور، والبعيد مرفوض قدر الإمكان
+  var d=lineDist(p,pos);
+  return d===0?5:d===1?0:-8;
 }
+var LINE={def:0,mid:1,att:2};
+function lineDist(p,pos){var L=LINE[POS_GROUP[pos]],best=9;[p.pos,p.pos2].forEach(function(q){if(q&&LINE[POS_GROUP[q]]!=null)best=Math.min(best,Math.abs(LINE[POS_GROUP[q]]-L));});return best===9?1:best;}
+function teamFit(X,slots){var a=assignSlots(X,slots),t=0;slots.forEach(function(x){var id=a[x.id];if(id)t+=fitScore(P(id),x.pos);});return t;}
 function fitKind(p,pos){return p.pos===pos?'p':p.pos2===pos?'s':'x';}
 // توزيع مثالي (Hungarian) — صفوف = لاعبون، أعمدة = مراكز
 function hungarian(a){
@@ -1647,7 +1651,8 @@ function autoBalance(){
     if(canA&&(!canB||A.length<B.length||(A.length===B.length&&sum(A)<=sum(B))))A.push(p);else B.push(p);
   });
   var traitGap=function(X,Y){var g=0;TRAITS.forEach(function(t){var a=X.filter(function(p){return (p.traits||{})[t[0]];}).length,b=Y.filter(function(p){return (p.traits||{})[t[0]];}).length;g+=Math.max(0,Math.abs(a-b)-1);});return g;};
-  var cost=function(X,Y){return Math.abs(teamScore(X,sl)-teamScore(Y,sl))+traitGap(X,Y)*3;};
+  var full=sl.length*10+slB.length*10;
+  var cost=function(X,Y){return Math.abs(teamScore(X,sl)-teamScore(Y,sl))+traitGap(X,Y)*3+(full-teamFit(X,sl)-teamFit(Y,slB))*0.7;};
   for(var it=0;it<60;it++){
     var base=cost(A,B), best=null;
     for(var i=0;i<A.length;i++)for(var j=0;j<B.length;j++){
