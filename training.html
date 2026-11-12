@@ -203,6 +203,17 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .rank.r1{background:linear-gradient(145deg,#F6E08F,#D4A93C);color:#3a2a00;}
 .rank.r2{background:linear-gradient(145deg,#F1F3F6,#AEB6C0);color:#2a2f36;}
 .rank.r3{background:linear-gradient(145deg,#F2C29A,#C4834F);color:#3a1f08;}
+.fbtn{display:inline-flex;align-items:center;gap:3px;height:26px;padding:0 9px;border-radius:13px;border:none;background:var(--fill);color:var(--label);font-size:13px;font-weight:700;white-space:nowrap;}
+.fbtn .caret{font-size:9px;color:var(--label2);}
+.fbtn:active{transform:scale(.95);}
+.pteam{position:absolute;left:12px;z-index:1;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;pointer-events:none;line-height:1.5;max-width:28%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pteam.B{top:12px;background:rgba(255,255,255,.94);color:#0A5C33;}
+.pteam.A{bottom:12px;background:#0A7D4F;color:#fff;box-shadow:0 0 0 1.5px rgba(255,255,255,.65);}
+.teams-h2{display:flex;justify-content:space-between;gap:10px;margin-bottom:12px;}
+.teams-h2 .th{display:flex;flex-direction:column;gap:7px;min-width:0;max-width:50%;}
+.teams-h2 .th.B{align-items:flex-end;}
+.teams-h2 .tn{display:flex;align-items:center;gap:7px;font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+.teams-h2 .thr{display:flex;align-items:center;gap:6px;}
 /* كبسولات */
 .caps{display:flex;gap:8px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none;}
 .caps::-webkit-scrollbar{display:none;}
@@ -1354,7 +1365,7 @@ function renderSession(el){
 
   var sA=teamStrength(s,'A'), sB=teamStrength(s,'B'), tot=(sA+sB)||1;
   h+=gh('التشكيلة',C?lnk('صورة','lineupImage()','lineupImg','down')+lnk('توزيع متوازن','autoBalance()','autoBal','scale')+lnk('مسح','clearLineup()','clearL'):'');
-  h+='<div class="card pad"><div class="teams-h"><span class="tn"><span class="dot A"></span>'+esc(s.teams.A.name)+' <span class="small muted ltr num" style="white-space:nowrap">'+teamForm(s,'A')+'</span> <span class="tag on num">'+(sA||'—')+'</span></span><span class="small muted">القوة</span><span class="tn"><span class="tag on num">'+(sB||'—')+'</span> <span class="small muted ltr num" style="white-space:nowrap">'+teamForm(s,'B')+'</span> '+esc(s.teams.B.name)+'<span class="dot B"></span></span></div>';
+  h+='<div class="card pad"><div class="teams-h2"><div class="th"><div class="tn"><span class="dot A"></span>'+esc(s.teams.A.name)+'</div><div class="thr">'+formBtn(s,'A',C)+'<span class="tag on num">القوة '+(sA||'—')+'</span></div></div><div class="th B"><div class="tn">'+esc(s.teams.B.name)+'<span class="dot B"></span></div><div class="thr"><span class="tag on num">القوة '+(sB||'—')+'</span>'+formBtn(s,'B',C)+'</div></div></div>';
   h+='<div class="balance"><i style="width:'+(sA/tot*100)+'%;background:var(--teamA)"></i><i style="width:'+(sB/tot*100)+'%;background:#C7C7CC"></i></div>';
   h+=pitchHTML(s,C);
   h+=(C?'<div class="foot" style="margin:12px 2px 0">اضغط على أي مركز في الملعب لاختيار لاعب.</div>':'')+'</div>';
@@ -1654,8 +1665,27 @@ function drawLineup(s,logo,ph){
 }
 function esc2(t){return String(t||'');}
 
+function formBtn(s,t,C){
+  var f=teamForm(s,t);
+  return C?'<button class="fbtn" id="form'+t+'" onclick="openFormPick(\''+t+'\')"><span class="ltr num">'+f+'</span>'+'<span class="caret">▾</span></button>':'<span class="small muted ltr num" style="white-space:nowrap">'+f+'</span>';
+}
+function openFormPick(t){
+  var s=openSession(); if(!s)return; var cur=teamForm(s,t);
+  var h=mh('خطة '+esc(s.teams[t].name))+'<div class="card">'+Object.keys(FORMS[s.size]).map(function(fk){var on=fk===cur;
+    return '<div class="cell tap formopt" data-f="'+fk+'" onclick="setTeamForm(\''+t+'\',\''+fk+'\')"><div class="body"><div class="t num ltr" style="direction:ltr;text-align:right">'+fk+'</div></div>'+(on?'<span style="color:var(--tint);display:inline-flex">'+ic('check','s')+'</span>':'')+'</div>';}).join('')+'</div><div class="foot">لاعبو الفريق يتوزّعون تلقائياً على مراكز الخطة الجديدة.</div>';
+  openModal(h);
+}
+function setTeamForm(t,fk){
+  var s=openSession(); if(!s)return; closeModal();
+  if(teamForm(s,t)===fk)return;
+  var s2=clone(s); s2.teams[t].formation=fk; if(t==='A')s2.formation=fk;
+  var ids=slotPlayers(s,t).filter(function(id){return P(id);});
+  var m={}; m['sessions/'+s.id+'/teams/'+t+'/formation']=fk; if(t==='A')m['sessions/'+s.id+'/formation']=fk;
+  m['sessions/'+s.id+'/teams/'+t+'/slots']=ids.length?assignSlots(ids.map(P),slotsOf(s2,t)):null;
+  putMany(m); toast('خطة '+s.teams[t].name+': '+fk);
+}
 function pitchHTML(s,C){
-  var h='<div class="pitch'+(isBig(s)?' big':'')+'"><div class="ln frame"></div><div class="ln mid"></div><div class="ln circ"></div><div class="ln boxT"></div><div class="ln boxB"></div>';
+  var h='<div class="pitch'+(isBig(s)?' big':'')+'"><div class="ln frame"></div><div class="ln mid"></div><div class="ln circ"></div><div class="ln boxT"></div><div class="ln boxB"></div><div class="pteam B">'+esc(s.teams.B.name)+'</div><div class="pteam A">'+esc(s.teams.A.name)+'</div>';
   ['A','B'].forEach(function(t){
     var sl=slotsOf(s,t);
     sl.forEach(function(x){
@@ -1698,10 +1728,8 @@ function openNewSession(editId){
   var h=mh(editId?'إعدادات التمرين':'تمرين جديد');
   h+='<div class="hstack"><div class="grow"><span class="lbl">تاريخ التمرين</span><input class="field" type="date" id="ns_date" value="'+esc(s.date)+'"></div><div class="grow"><span class="lbl">وقت البداية</span><input class="field" type="time" id="ns_time" value="'+esc(s.time||'20:00')+'"></div></div>';
   h+='<span class="lbl">عدد اللاعبين في كل فريق</span><div class="seg" id="ns_size">'+Object.keys(FORMS).map(function(n){return '<button type="button" class="num'+(+n===+window._ns.size?' on':'')+'" onclick="nsSize('+n+')">'+n+'</button>';}).join('')+'</div>';
-  h+='<span class="lbl"><span class="dot A"></span> خطة '+esc(s.teams.A.name)+'</span><div class="caps" id="ns_formA"></div>';
-  h+='<span class="lbl"><span class="dot B"></span> خطة '+esc(s.teams.B.name)+'</span><div class="caps" id="ns_formB"></div>';
   h+='<div class="hstack"><div class="grow"><span class="lbl"><span class="dot A"></span> الفريق الأول</span><input class="field" id="ns_a" maxlength="20" value="'+esc(s.teams.A.name)+'"></div><div class="grow"><span class="lbl"><span class="dot B"></span> الفريق الثاني</span><input class="field" id="ns_b" maxlength="20" value="'+esc(s.teams.B.name)+'"></div></div>';
-  if(editId) h+='<div class="foot">تغيير الخطة أو العدد يعيد ترتيب اللاعبين الموجودين تلقائياً في المراكز الجديدة.</div>';
+  h+='<div class="foot">الخطة تختارها لكل فريق من فوق الملعب.'+(editId?' تغيير العدد يعيد توزيع اللاعبين تلقائياً.':'')+'</div>';
   h+='<div class="m-foot"><button class="btn" id="ns_save" onclick="saveSessionSettings('+(editId?'\''+editId+'\'':'null')+')">'+(editId?'حفظ':'إنشاء التمرين')+'</button></div>';
   openModal(h); nsRenderForms();
 }
@@ -1710,7 +1738,8 @@ function nsRenderForms(){
   var t=window._ns, keys=Object.keys(FORMS[t.size]);
   ['A','B'].forEach(function(tm){
     if(!FORMS[t.size][t['f'+tm]]) t['f'+tm]=keys[0];
-    document.getElementById('ns_form'+tm).innerHTML=keys.map(function(f){return '<button type="button" class="cap'+(f===t['f'+tm]?' on':'')+'" onclick="window._ns.f'+tm+'=\''+f+'\';nsRenderForms()"><span class="ltr num">'+f+'</span></button>';}).join('');
+    var el=document.getElementById('ns_form'+tm); if(!el)return;
+    el.innerHTML=keys.map(function(f){return '<button type="button" class="cap'+(f===t['f'+tm]?' on':'')+'" onclick="window._ns.f'+tm+'=\''+f+'\';nsRenderForms()"><span class="ltr num">'+f+'</span></button>';}).join('');
   });
 }
 function saveSessionSettings(editId){
