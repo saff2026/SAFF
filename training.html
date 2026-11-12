@@ -1804,7 +1804,7 @@ function rulesHTML(){
 /* ---------- المدرب والإعدادات ---------- */
 function coachClick(){
   if(isCoach){ openSettings(); return; }
-  var h=mh('صلاحيات مجلس الإدارة')+'<div style="text-align:center;margin:6px 0 16px"><div class="empty" style="padding:4px 0 0"><div class="ei">'+ic('lock')+'</div></div><div class="small muted">أدخل كلمة السر لتتمكن من الإضافة والتعديل.<br>اللاعبون يمكنهم المشاهدة فقط.</div></div>'+
+  var h=mh('صلاحيات مجلس الإدارة')+'<div style="text-align:center;margin:6px 0 16px"><div class="empty" style="padding:4px 0 0"><div class="ei">'+ic('lock')+'</div></div><div class="small muted">أدخل كلمة السر لتتمكن من الإضافة والتعديل.<br>اللاعبون على المدرج يتفرّجون.</div></div>'+
     '<input class="field num" id="cc" type="password" inputmode="numeric" placeholder="كلمة السر" style="text-align:center;letter-spacing:4px" onkeydown="if(event.key===\'Enter\')coachLogin()"><div class="m-foot"><button class="btn" id="ccBtn" onclick="coachLogin()">دخول</button></div>';
   openModal(h); setTimeout(function(){var e=document.getElementById('cc');if(e)e.focus();},350);
 }
