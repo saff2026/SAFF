@@ -631,7 +631,7 @@ function startLocal(){
   try{ LOCAL=JSON.parse(lsGet(LS_KEY)||'{}')||{}; }catch(e){ LOCAL={}; }
   S = normalize(clone(LOCAL));
   document.getElementById('bnLocal').classList.add('show');
-  ready=true; render();
+  ready=true; render(); maybeAskMe();
 }
 function showErr(html){var b=document.getElementById('bnErr');b.innerHTML=tile('var(--red)','warn')+'<div class="body"><b>تنبيه</b>'+html+'</div>';b.classList.add('show');}
 
@@ -647,7 +647,7 @@ function startCloud(){
     db.ref(ROOT).on('value',function(snap){
       clearTimeout(to);
       document.getElementById('bnErr').classList.remove('show');
-      S = normalize(snap.val()); ready=true; render();
+      S = normalize(snap.val()); ready=true; render(); maybeAskMe();
     },function(err){
       clearTimeout(to); console.error(err);
       showErr('🔒 قاعدة البيانات رفضت القراءة. لازم تنشر القواعد الجديدة (ملف <b>database.rules.json</b>) في Firebase ← Realtime Database ← Rules ← Publish.');
@@ -729,6 +729,20 @@ function autoMvp(s){
   participants(s).forEach(function(id){var r=s.ratings[id]; if(typeof r!=='number')return; var v=r*10+(gl.g[id]||0)*0.5+(gl.a[id]||0)*0.25; if(v>bv){bv=v;best=id;}});
   return best;
 }
+function meOptions(sel){return '<option value="">— اختر اسمك —</option>'+playersArr().sort(function(a,b){return a.name.localeCompare(b.name,'ar');}).map(function(p){return '<option value="'+p.id+'"'+(sel===p.id?' selected':'')+'>'+esc(p.name)+'</option>';}).join('');}
+var askedMe=false;
+function maybeAskMe(){
+  if(askedMe)return; askedMe=true;
+  if(isCoach||!playersArr().length||myId()||lsGet('saff_tr_me_skip'))return;
+  setTimeout(function(){askMe();},300);
+}
+function askMe(){
+  var h=mh('أهلاً بك')+'<div style="text-align:center;margin:4px 0 16px"><div class="empty" style="padding:0"><div class="ei">'+ic('people')+'</div></div><div class="small muted">اختر اسمك مرة وحدة، والجوال يتذكّره.<br>يُستخدم للتصويت لأفضل لاعب.</div></div>'+
+    '<select class="field" id="meSel">'+meOptions(myId())+'</select>'+
+    '<div class="m-foot"><button class="btn gray" id="meSkip" onclick="lsSet(\'saff_tr_me_skip\',\'1\');closeModal()">أنا زائر</button><button class="btn" id="meOk" onclick="saveMe()">تم</button></div>';
+  openModal(h);
+}
+function saveMe(){var v=document.getElementById('meSel').value; if(!v){toast('⚠️ اختر اسمك من القائمة');return;} lsSet('saff_tr_me',v); lsDel('saff_tr_me_skip'); closeModal(); toast('أهلاً '+pname(v)); render();}
 function myId(){var v=lsGet('saff_tr_me');return v&&P(v)?v:null;}
 function openVote(sid){ openModal(''); voteInner(sid); modalRefresh=function(){ if(!S.sessions[sid]){closeModal();return;} voteInner(sid); }; }
 function voteInner(sid){
@@ -738,12 +752,13 @@ function voteInner(sid){
   var h=mh('أفضل لاعب في التمرين');
   if(!voteOpen(s)){ setModal(h+'<div class="card"><div class="empty"><div class="ei">'+icF('star')+'</div><b>التصويت مغلق</b>'+(s.status==='done'?'انتهى التصويت.':'يفتح بعد ساعتين من بداية التمرين.')+'</div></div>'); return; }
   if(!me){
-    h+='<div class="foot" style="text-align:center;margin:0 0 12px">مين أنت؟ اختر اسمك مرة وحدة، والجوال يتذكّره.</div>';
-    h+='<div class="card">'+parts.map(function(id){return '<div class="cell tap ind vme" data-id="'+id+'" onclick="lsSet(\'saff_tr_me\',\''+id+'\');voteInner(\''+sid+'\')">'+avatar(id)+'<div class="body"><div class="t">'+esc(pname(id))+'</div></div>'+chev()+'</div>';}).join('')+'</div>';
+    var notIn=myId()&&parts.indexOf(myId())<0;
+    h+='<div class="foot" style="text-align:center;margin:0 0 12px">'+(notIn?'اسمك ('+esc(pname(myId()))+') مو ضمن لاعبي هذا التمرين. إذا كان خطأ اختر اسمك:':'مين أنت؟ اختر اسمك مرة وحدة، والجوال يتذكّره.')+'</div>';
+    h+='<select class="field" id="voteMe">'+meOptions(myId())+'</select><div class="m-foot"><button class="btn" id="voteMeOk" onclick="var v=document.getElementById(\'voteMe\').value;if(!v){toast(\'⚠️ اختر اسمك\');return;}lsSet(\'saff_tr_me\',v);voteInner(\''+sid+'\')">متابعة</button></div>';
     setModal(h); return;
   }
   var mine=s.votes[me], n=Object.keys(voteTally(s)).length?Object.keys(s.votes).length:0;
-  h+='<div class="card" style="margin-bottom:12px"><div class="cell ind">'+avatar(me)+'<div class="body"><div class="t">'+esc(pname(me))+'</div><div class="s">'+(mine?'صوتك: '+esc(pname(mine))+' — تقدر تغيّر صوتك':'اختر أفضل لاعب في التمرين')+'</div></div><button class="btn sm gray" onclick="lsDel(\'saff_tr_me\');voteInner(\''+sid+'\')">لست أنا</button></div></div>';
+  h+='<div class="card" style="margin-bottom:12px"><div class="cell ind">'+avatar(me)+'<div class="body"><div class="t">'+esc(pname(me))+'</div><div class="s">'+(mine?'صوتك: '+esc(pname(mine))+' — تقدر تغيّر صوتك':'اختر أفضل لاعب في التمرين')+'</div></div><button class="btn sm gray" id="notMe" onclick="lsDel(\'saff_tr_me\');voteInner(\''+sid+'\')">لست أنا</button></div></div>';
   h+='<div class="card">'+parts.filter(function(id){return id!==me;}).map(function(id){var on=mine===id;
     return '<div class="cell tap ind vopt" data-id="'+id+'" onclick="castVote(\''+sid+'\',\''+id+'\')">'+avatar(id)+'<div class="body"><div class="t">'+esc(pname(id))+'</div><div class="s">'+POS[P(id).pos].ar+'</div></div>'+(on?'<span style="color:#D4A93C;display:inline-flex">'+icF('star','s')+'</span>':'')+'</div>';}).join('')+'</div>';
   h+='<div class="foot" style="text-align:center">صوّت <span class="num">'+Object.keys(s.votes).length+'</span> لاعب حتى الآن. النتيجة تظهر بعد انتهاء التمرين.</div>';
@@ -979,6 +994,7 @@ window.addEventListener('scroll',function(){document.getElementById('nav').class
 function renderHome(el){
   var ps=playersArr(), ds=doneSessions(), st=computeStats(), os=openSession(), h='';
 
+  if(!isCoach&&myId()) h+='<div class="foot" id="meLine" style="margin:4px 4px 0">أهلاً <b style="color:var(--label)">'+esc(pname(myId()))+'</b> · <a href="#" style="color:var(--tint)" onclick="event.preventDefault();askMe()">تغيير</a></div>';
   if(os&&voteOpen(os)) h+='<div class="card" style="margin-top:6px"><div class="cell tap ind" id="voteCard" onclick="openVote(\''+os.id+'\')">'+tile('#D4A93C','star',true)+'<div class="body"><div class="t">صوّت لأفضل لاعب في التمرين</div><div class="s">'+(myId()&&os.votes[myId()]?'صوتك: '+esc(pname(os.votes[myId()]))+' — اضغط للتغيير':'التصويت مفتوح حتى إنهاء التمرين')+'</div></div>'+chev()+'</div></div>';
   h+=gh('التمرين القادم');
   if(os){
