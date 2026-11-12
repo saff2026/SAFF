@@ -737,7 +737,7 @@ function maybeAskMe(){
   setTimeout(function(){askMe();},300);
 }
 function askMe(){
-  var h=mh('أهلاً بك')+'<div style="text-align:center;margin:4px 0 16px"><div class="empty" style="padding:0"><div class="ei">'+ic('people')+'</div></div><div class="small muted">اختر اسمك مرة وحدة، والجوال يتذكّره.<br>يُستخدم للتصويت لأفضل لاعب.</div></div>'+
+  var h=mh('أهلاً بك')+'<div style="text-align:center;margin:4px 0 16px"><div class="empty" style="padding:0"><div class="ei">'+ic('people')+'</div></div><div class="small muted">اختر اسمك مرة وحدة، والجوال يتذكّره.</div></div>'+
     '<select class="field" id="meSel">'+meOptions(myId())+'</select>'+
     '<div class="m-foot"><button class="btn gray" id="meSkip" onclick="lsSet(\'saff_tr_me_skip\',\'1\');closeModal()">أنا زائر</button><button class="btn" id="meOk" onclick="saveMe()">تم</button></div>';
   openModal(h);
