@@ -71,11 +71,14 @@ svg.i.f{fill:currentColor;stroke:none;}
 .nav.scrolled{border-bottom-color:var(--sep);}
 .nav .wrap{display:flex;align-items:center;gap:10px;height:52px;}
 .nav .logo{height:32px;width:32px;object-fit:contain;}
-.nav .org{flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--label2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.nav .org{flex:1;min-width:0;font-size:18px;font-weight:800;color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .nav .ntitle{position:absolute;left:50%;transform:translateX(-50%);font-size:17px;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;}
-.nav.scrolled .ntitle{opacity:1;}
-.nav.scrolled .org{opacity:0;}
-.coach-btn{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 12px;border-radius:16px;border:none;background:var(--fill);color:var(--label);font-size:14px;font-weight:600;transition:transform .15s,background .2s;}
+.nav .ntitle{display:none;}
+
+.coach-btn{display:inline-flex;align-items:center;gap:4px;height:32px;padding:0 10px;border-radius:16px;border:none;background:var(--fill);color:var(--label);font-size:13px;flex:none;white-space:nowrap;font-weight:600;transition:transform .15s,background .2s;}
+.coach-btn .full{display:inline;}
+@media(max-width:400px){.coach-btn .full{display:none;}}
+@media(max-width:340px){.nav .org{font-size:16px;}.nav .wrap{gap:8px;}.coach-btn .lbl2{display:none;}}
 .coach-btn.coach{background:var(--tint-soft);color:var(--tint);}
 .coach-btn:active{transform:scale(.95);}
 
@@ -101,6 +104,7 @@ svg.i.f{fill:currentColor;stroke:none;}
 @keyframes pageIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
 
 /* ============ مجموعات وقوائم (نمط iOS) ============ */
+#pg-home>.gh:first-child{margin-top:10px;}
 .gh{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:26px 4px 7px;}
 .gh h2{font-size:20px;font-weight:700;}
 .gh .lnk{background:none;border:none;color:var(--tint);font-size:15px;font-weight:500;padding:4px 0;display:inline-flex;align-items:center;gap:4px;}
@@ -368,9 +372,9 @@ img.avatar{object-fit:cover;}
 <header class="nav" id="nav">
   <div class="wrap">
     <picture><source srcset="saff-white.png" media="(prefers-color-scheme: dark)"><img class="logo" src="saff.png" alt="الاتحاد السعودي لكرة القدم"></picture>
-    <div class="org">الاتحاد السعودي لكرة القدم</div>
+    <div class="org">تمرين ساف الأسبوعي</div>
     <div class="ntitle" id="navTitle">تمرين ساف الأسبوعي</div>
-    <button class="coach-btn" id="coachBtn" onclick="coachClick()">صلاحيات مجلس الإدارة</button>
+    <button class="coach-btn" id="coachBtn" onclick="coachClick()" aria-label="صلاحيات مجلس الإدارة">صلاحيات مجلس الإدارة</button>
   </div>
 </header>
 
@@ -790,7 +794,7 @@ function render(){
   if(!ready)return;
   document.getElementById('loading').style.display='none';
   var cb=document.getElementById('coachBtn');
-  cb.innerHTML=isCoach?ic('unlock','xs')+'مجلس الإدارة':ic('lock','xs')+'صلاحيات مجلس الإدارة'; cb.classList.toggle('coach',isCoach);
+  cb.innerHTML=isCoach?ic('unlock','xs')+'مجلس الإدارة':ic('lock','xs')+'<span class="lbl2"><span class="full">صلاحيات </span>مجلس الإدارة</span>'; cb.classList.toggle('coach',isCoach);
   var stab=document.querySelector('.tab[data-t=session]'); if(stab) stab.style.display=isCoach?'':'none';
   if(!isCoach&&curTab==='session'){ curTab='home'; document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-t')==='home');}); }
   document.getElementById('navTitle').textContent=TITLES[curTab];
@@ -804,7 +808,6 @@ window.addEventListener('scroll',function(){document.getElementById('nav').class
 /* ---------- الرئيسية ---------- */
 function renderHome(el){
   var ps=playersArr(), ds=doneSessions(), st=computeStats(), os=openSession(), h='';
-  h+=largeTitle('تمرين ساف الأسبوعي','');
 
   h+=gh('التمرين القادم');
   if(os){
@@ -842,7 +845,6 @@ function renderHome(el){
     h+='<div style="margin-top:22px">'+emptyBox('people','أهلاً بك في تمرين ساف الأسبوعي',isCoach?'ابدأ بإضافة اللاعبين من تبويب «اللاعبون».':'اضغط «صلاحيات مجلس الإدارة» في الأعلى وأدخل كلمة السر لتبدأ.')+'</div>';
   }
   if(isCoach) h+='<div class="card" style="margin-top:26px"><div class="cell tap ind" onclick="openSettings()">'+tile('#8E8E93','gear')+'<div class="body"><div class="t">الإعدادات والنسخ الاحتياطي</div></div>'+chev()+'</div></div>';
-  h+='<div class="footnote">تمرين ساف الأسبوعي · الاتحاد السعودي لكرة القدم</div>';
   el.innerHTML=h;
 }
 
@@ -909,20 +911,28 @@ function openPlayerForm(id){
 }
 function pfPhotoBox(){var u=photoSrc(pf.p);return u?'<img class="pv" src="'+u+'" alt="">':'<div class="pv">'+ic('people')+'</div>';}
 // تصغير الصورة وقصّها مربعاً (320×320) حتى تُحفظ بسرعة
-function loadImageFile(file,cb){
-  if(!file||!/^image\//.test(file.type)){toast('⚠️ اختر ملف صورة');return;}
-  var url=URL.createObjectURL(file), img=new Image();
-  img.onload=function(){cb(img);setTimeout(function(){URL.revokeObjectURL(url);},2000);};
-  img.onerror=function(){URL.revokeObjectURL(url);toast('⚠️ تعذّر قراءة الصورة');};
+var IMG_EXT=/\.(jpe?g|jfif|png|webp|gif|bmp|avif|heic|heif)$/i;
+function isImageFile(f){return !!f&&(/^image\//.test(f.type||'')||IMG_EXT.test(f.name||''));}
+// يفتح الصورة؛ ولو فشلت يرجع رسالة واضحة بدل ما يعلّق
+function loadImageFile(file,cb,fail){
+  fail=fail||function(msg){toast('⚠️ '+msg);};
+  if(!isImageFile(file)){fail('الملف «'+(file&&file.name||'')+'» ليس صورة');return;}
+  var url=URL.createObjectURL(file), img=new Image(), done=false;
+  var heic=/\.(heic|heif)$/i.test(file.name||'')||/hei[cf]/i.test(file.type||'');
+  var to=setTimeout(function(){ if(done)return; done=true; URL.revokeObjectURL(url); fail('تعذّر فتح الصورة «'+file.name+'»'); },20000);
+  img.onload=function(){ if(done)return; done=true; clearTimeout(to); cb(img); setTimeout(function(){URL.revokeObjectURL(url);},3000); };
+  img.onerror=function(){ if(done)return; done=true; clearTimeout(to); URL.revokeObjectURL(url);
+    fail(heic?'صيغة HEIC (صور الآيفون) لا يفتحها هذا المتصفح — حوّلها إلى JPG أو افتح الصفحة من Safari':'تعذّر قراءة الصورة «'+file.name+'»'); };
   img.src=url;
 }
+function withTimeout(p,ms){return new Promise(function(res){var t=setTimeout(function(){res(null);},ms);p.then(function(v){clearTimeout(t);res(v);},function(){clearTimeout(t);res(null);});});}
 // ---------- التعرف على الوجه (مكتبة مفتوحة المصدر تُحمَّل فقط عند إضافة الصور) ----------
 var FACE={lib:'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.13/dist/face-api.js',model:'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.13/model/',p:null};
 function faceReady(){
   if(FACE.p)return FACE.p;
   FACE.p=new Promise(function(res,rej){
     var sc=document.createElement('script'); sc.src=FACE.lib;
-    sc.onload=function(){ try{ faceapi.nets.tinyFaceDetector.loadFromUri(FACE.model).then(res,rej); }catch(e){rej(e);} };
+    sc.onload=function(){ try{ faceapi.nets.tinyFaceDetector.loadFromUri(FACE.model).then(function(){FACE.loaded=true;res();},rej); }catch(e){rej(e);} };
     sc.onerror=rej; document.head.appendChild(sc);
   });
   FACE.p.catch(function(){FACE.p=null;});
@@ -930,6 +940,12 @@ function faceReady(){
 }
 // يرجع مربع أكبر وجه في الصورة، أو null
 function detectFace(img){
+  // حد زمني: أول مرة (تحميل المكتبة) 25 ثانية، وبعدها 8 ثوانٍ لكل صورة
+  var limit=FACE.loaded?8000:(FACE.slow?1500:25000);
+  var t0=Date.now();
+  return withTimeout(detectFaceRaw(img),limit).then(function(b){ if(!FACE.loaded&&Date.now()-t0>=limit-50)FACE.slow=true; return b; });
+}
+function detectFaceRaw(img){
   return faceReady().then(function(){
     var c=document.createElement('canvas'), m=Math.max(img.naturalWidth,img.naturalHeight), r=Math.min(1,1024/m);
     c.width=Math.round(img.naturalWidth*r); c.height=Math.round(img.naturalHeight*r); c.getContext('2d').drawImage(img,0,0,c.width,c.height);
@@ -1018,31 +1034,33 @@ function matchPlayer(fileName){
 var BULK=[];
 function bulkPick(inp){
   var files=[].slice.call(inp.files||[]); inp.value=''; if(!files.length)return;
-  BULK=[]; files=files.filter(function(f){return /^image\//.test(f.type);});
+  BULK=[];
   if(!files.length){toast('⚠️ اختر ملفات صور');return;}
   openModal(mh('صور اللاعبين')+'<div class="empty"><div class="spin"></div><span id="bulkProg">جارِ التعرف على الوجوه… 0/'+files.length+'</span></div>');
   var i=0;
   (function next(){
     if(i>=files.length){bulkSheet();return;}
     var f=files[i], idx=i++;
+    var prog=function(){var pg=document.getElementById('bulkProg'); if(pg)pg.textContent='جارِ التعرف على الوجوه… '+(idx+1)+'/'+files.length;};
     loadImageFile(f,function(img){
       detectFace(img).then(function(box){
-        var st=faceState(img,box);
-        BULK[idx]={name:f.name,img:img,pid:matchPlayer(f.name),st:st,face:!!box,url:renderCrop(img,st)};
-        var pg=document.getElementById('bulkProg'); if(pg)pg.textContent='جارِ التعرف على الوجوه… '+(idx+1)+'/'+files.length;
-        next();
+        try{ var st=faceState(img,box); BULK[idx]={name:f.name,img:img,pid:matchPlayer(f.name),st:st,face:!!box,url:renderCrop(img,st)}; }
+        catch(e){ BULK[idx]={name:f.name,err:'تعذّر معالجة الصورة'}; }
+        prog(); next();
       });
-    });
+    },function(msg){ BULK[idx]={name:f.name,err:msg}; prog(); next(); });
   })();
 }
 function bulkSheet(){
   BULK=BULK.filter(Boolean);
-  var used={}; BULK.forEach(function(b){if(b.pid)used[b.pid]=(used[b.pid]||0)+1;});
-  var ok=BULK.filter(function(b){return b.pid;}).length;
+  var used={}; BULK.forEach(function(b){if(b.pid&&!b.err)used[b.pid]=(used[b.pid]||0)+1;});
+  var ok=BULK.filter(function(b){return b.pid&&!b.err;}).length, bad=BULK.filter(function(b){return b.err;});
   var opts=function(sel){return '<option value="">— اختر اللاعب —</option>'+playersArr().sort(function(a,b){return a.name.localeCompare(b.name,'ar');}).map(function(p){return '<option value="'+p.id+'"'+(sel===p.id?' selected':'')+'>'+esc(p.name)+'</option>';}).join('');};
   var h=mh('صور اللاعبين');
   h+='<div class="foot" style="text-align:center;margin:0 0 10px">تمت مطابقة <b class="num">'+ok+'</b> من <b class="num">'+BULK.length+'</b> صورة باسم الملف. اضغط «ضبط» لتكبير الصورة أو تحريكها.</div>';
+  if(bad.length) h+='<div class="notice" style="margin:0 0 12px">'+tile('var(--red)','warn')+'<div class="body"><b>'+bad.length+' صورة لم تُفتح</b>'+bad.map(function(b){return esc(b.err);}).join('<br>')+'</div></div>';
   h+='<div class="card">'+BULK.map(function(b,i){
+    if(b.err) return '';
     var dup=b.pid&&used[b.pid]>1;
     return '<div class="cell bulk-row" data-i="'+i+'"><img class="thumb" src="'+b.url+'" alt=""><div class="body"><div class="t" style="font-size:14px;color:var(--label2)">'+esc(b.name)+'</div>'+
       '<select class="field" onchange="BULK['+i+'].pid=this.value||null;bulkSheet()">'+opts(b.pid)+'</select>'+
@@ -1056,7 +1074,7 @@ function bulkSheet(){
 function bulkAdjust(i){var b=BULK[i];openCropper(b.img,b.pid?pname(b.pid):b.name,function(url,st){b.url=url;b.st=st;b.face=true;bulkSheet();},b.st);}
 function bulkSave(){
   var m={},n=0,seen={};
-  BULK.forEach(function(b){ if(b.pid&&P(b.pid)&&!seen[b.pid]){seen[b.pid]=1;m['players/'+b.pid+'/photo']=b.url;n++;} });
+  BULK.forEach(function(b){ if(!b.err&&b.pid&&P(b.pid)&&!seen[b.pid]){seen[b.pid]=1;m['players/'+b.pid+'/photo']=b.url;n++;} });
   if(!n){toast('⚠️ لم تُطابَق أي صورة مع لاعب');return;}
   putMany(m); closeModal(); toast('تم حفظ '+n+' صورة'); BULK=[];
 }
@@ -1610,7 +1628,7 @@ function sessionDetailInner(id){
     h+='<div class="card">'+(ids.length?ids.sort(function(a,b){return (s.ratings[b]||0)-(s.ratings[a]||0);}).map(function(pid){return '<div class="cell tap" onclick="openPlayer(\''+pid+'\')"><div class="body"><div class="t">'+(m===pid?'⭐ ':'')+esc(pname(pid))+(teamOf(s,pid)&&teamOf(s,pid).sub?' <span class="tag">بديل</span>':'')+'</div>'+((gl.g[pid]||gl.a[pid])?'<div class="s">'+(gl.g[pid]?gl.g[pid]+' هدف':'')+(gl.g[pid]&&gl.a[pid]?' · ':'')+(gl.a[pid]?gl.a[pid]+' صناعة':'')+'</div>':'')+'</div>'+(done?rBadge(s.ratings[pid]):'')+'</div>';}).join(''):'<div class="cell"><div class="body"><div class="s">—</div></div></div>')+'</div>';
   });
   var bench=participants(s).filter(function(pid){return !teamOf(s,pid);});
-  if(done&&bench.length) h+=gh('الاحتياط')+'<div class="card">'+bench.map(function(pid){return '<div class="cell tap" onclick="openPlayer(\''+pid+'\')"><div class="body"><div class="t">'+(m===pid?'⭐ ':'')+esc(pname(pid))+'</div></div>'+(done?rBadge(s.ratings[pid]):'')+'</div>';}).join('')+'</div>';
+
   var cis=Object.keys(s.checkin||{}).filter(function(pid){return P(pid);}).sort(function(a,b){return s.checkin[a]-s.checkin[b];});
   if(cis.length&&done) h+=gh('التحضير')+'<div class="foot" style="margin:-2px 4px 8px">البداية '+fmtStart(s)+'</div><div class="card">'+cis.map(function(pid){return '<div class="cell"><div class="body"><div class="t">'+esc(pname(pid))+'</div><div class="s">وصل '+fmtClock(s.checkin[pid])+'</div></div>'+lateBadge(s,pid)+'</div>';}).join('')+'</div>';
   if(s.notes) h+=gh('ملاحظات المدرب')+'<div class="card pad" style="white-space:pre-wrap;line-height:1.7;font-size:15px">'+esc(s.notes)+'</div>';
