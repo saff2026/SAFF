@@ -431,11 +431,12 @@ var ROOT = "training";
 
 var POS = {
   GK:{ar:'حارس مرمى'}, CB:{ar:'قلب دفاع'}, RB:{ar:'ظهير أيمن'}, LB:{ar:'ظهير أيسر'},
-  CDM:{ar:'وسط دفاعي'}, CM:{ar:'وسط'}, CAM:{ar:'صانع ألعاب'},
+  CM:{ar:'وسط'},
   RW:{ar:'جناح أيمن'}, LW:{ar:'جناح أيسر'}, ST:{ar:'مهاجم'}
 };
-var POS_ORDER = ['GK','CB','RB','LB','CDM','CM','CAM','RW','LW','ST'];
-var POS_GROUP = {GK:'gk',CB:'def',RB:'def',LB:'def',CDM:'mid',CM:'mid',CAM:'mid',RW:'att',LW:'att',ST:'att'};
+var OLD_POS = {CAM:'CM',CDM:'CM'};
+var POS_ORDER = ['GK','CB','RB','LB','CM','RW','LW','ST'];
+var POS_GROUP = {GK:'gk',CB:'def',RB:'def',LB:'def',CM:'mid',RW:'att',LW:'att',ST:'att'};
 var ATTR = {pac:'السرعة',sho:'التسديد',pas:'التمرير',dri:'المراوغة',def:'الدفاع',phy:'البدنية',gk:'الحراسة'};
 var ATTR_KEYS = ['pac','sho','pas','dri','def','phy','gk'];
 var W = {
@@ -443,9 +444,7 @@ var W = {
   CB:{def:.5,phy:.3,pas:.1,pac:.1},
   RB:{def:.35,pac:.3,pas:.2,phy:.15},
   LB:{def:.35,pac:.3,pas:.2,phy:.15},
-  CDM:{def:.35,pas:.35,phy:.2,dri:.1},
   CM:{pas:.4,dri:.25,def:.15,sho:.1,phy:.1},
-  CAM:{pas:.35,dri:.35,sho:.2,pac:.1},
   RW:{pac:.35,dri:.35,sho:.2,pas:.1},
   LW:{pac:.35,dri:.35,sho:.2,pas:.1},
   ST:{sho:.5,pac:.2,dri:.15,phy:.15}
@@ -457,8 +456,8 @@ var FORMS = {
   6:{'2-2-1':[['GK'],['CB','CB'],['CM','CM'],['ST']], '2-1-2':[['GK'],['CB','CB'],['CM'],['ST','ST']], '3-1-1':[['GK'],['LB','CB','RB'],['CM'],['ST']]},
   7:{'2-3-1':[['GK'],['CB','CB'],['LW','CM','RW'],['ST']], '3-2-1':[['GK'],['LB','CB','RB'],['CM','CM'],['ST']], '3-1-2':[['GK'],['LB','CB','RB'],['CM'],['ST','ST']]},
   8:{'3-3-1':[['GK'],['LB','CB','RB'],['LW','CM','RW'],['ST']], '3-2-2':[['GK'],['LB','CB','RB'],['CM','CM'],['ST','ST']], '2-3-2':[['GK'],['CB','CB'],['LW','CM','RW'],['ST','ST']]},
-  9:{'3-3-2':[['GK'],['LB','CB','RB'],['CM','CDM','CM'],['ST','ST']], '3-4-1':[['GK'],['LB','CB','RB'],['LW','CM','CM','RW'],['ST']], '4-3-1':[['GK'],['LB','CB','CB','RB'],['CM','CDM','CM'],['ST']]},
-  11:{'4-3-3':[['GK'],['LB','CB','CB','RB'],['CM','CDM','CM'],['LW','ST','RW']], '4-4-2':[['GK'],['LB','CB','CB','RB'],['LW','CM','CM','RW'],['ST','ST']], '4-2-3-1':[['GK'],['LB','CB','CB','RB'],['CDM','CDM'],['LW','CAM','RW'],['ST']], '3-5-2':[['GK'],['CB','CB','CB'],['LW','CM','CDM','CM','RW'],['ST','ST']]}
+  9:{'3-3-2':[['GK'],['LB','CB','RB'],['CM','CM','CM'],['ST','ST']], '3-4-1':[['GK'],['LB','CB','RB'],['LW','CM','CM','RW'],['ST']], '4-3-1':[['GK'],['LB','CB','CB','RB'],['CM','CM','CM'],['ST']]},
+  11:{'4-3-3':[['GK'],['LB','CB','CB','RB'],['CM','CM','CM'],['LW','ST','RW']], '4-4-2':[['GK'],['LB','CB','CB','RB'],['LW','CM','CM','RW'],['ST','ST']], '4-2-3-1':[['GK'],['LB','CB','CB','RB'],['CM','CM'],['LW','CM','RW'],['ST']], '3-5-2':[['GK'],['CB','CB','CB'],['LW','CM','CM','CM','RW'],['ST','ST']]}
 };
 
 /* ------------------------- state ------------------------- */
@@ -486,6 +485,8 @@ function normalize(d){
   var out = {players:{},sessions:{},weeks:{}};
   Object.keys(d.players||{}).forEach(function(k){
     var p=d.players[k]; if(!p)return; p.id=k; p.attrs=p.attrs||{};
+    // المراكز الملغاة (صانع ألعاب، وسط دفاعي) تصير «وسط»
+    if(OLD_POS[p.pos]){p.pos=OLD_POS[p.pos];p._mig=true;} if(OLD_POS[p.pos2]){p.pos2=OLD_POS[p.pos2];p._mig=true;} if(p.pos2&&p.pos2===p.pos){p.pos2='';p._mig=true;} if(!POS[p.pos]){p.pos='CM';p._mig=true;}
     ATTR_KEYS.forEach(function(a){ if(typeof p.attrs[a]!=='number') p.attrs[a]= a==='gk'?25:60; });
     out.players[k]=p;
   });
@@ -791,8 +792,15 @@ function go(t){
   document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-t')===t);});
   render(); window.scrollTo(0,0);
 }
+var migTried={};
+function migratePositions(){
+  if(!isCoach)return; var m={};
+  playersArr().forEach(function(p){ if(p._mig&&!migTried[p.id]){ migTried[p.id]=1; m['players/'+p.id+'/pos']=p.pos; m['players/'+p.id+'/pos2']=p.pos2||''; } });
+  if(Object.keys(m).length){ putMany(m); toast('تم تحويل مراكز «صانع ألعاب» و«وسط دفاعي» إلى «وسط»'); }
+}
 function render(){
   if(!ready)return;
+  if(isCoach&&playersArr().some(function(p){return p._mig&&!migTried[p.id];})){ setTimeout(migratePositions,0); }
   document.getElementById('loading').style.display='none';
   var cb=document.getElementById('coachBtn');
   cb.innerHTML=isCoach?ic('unlock','xs')+'مجلس الإدارة':ic('lock','xs')+'<span class="lbl2"><span class="full">صلاحيات </span>مجلس الإدارة</span>'; cb.classList.toggle('coach',isCoach);
