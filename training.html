@@ -1695,9 +1695,9 @@ function pitchHTML(s,C){
       var act=C?'onclick="openSlot(\''+t+'\',\''+x.id+'\')"':(p?'onclick="openPlayer(\''+pid+'\')"':'');
       var cls='tok '+t+(act?' click':'');
       if(p){
-        var fin=s.status==='done', rr=s.ratings&&s.ratings[pid], badge=fin?(typeof rr==='number'?'<span class="ov rt num '+(rr>=7.5?'hi':rr>=5.5?'mid':'lo')+'">'+rr+'</span>':''):'<span class="ov num">'+ovr(p)+'</span>';
-        var face=photoSrc(p)?'<img src="'+photoSrc(p)+'" alt="">':(fin?esc(p.name.trim().charAt(0)):ovr(p));
-        h+='<div class="'+cls+'" data-pid="'+pid+'" style="top:'+top+'%;left:'+left+'%" '+act+'><div class="sh num">'+face+((photoSrc(p)||fin)?badge:'')+'</div><div class="nm">'+esc(shortName(pid))+'</div></div>';
+        var fin=s.status==='done', rr=s.ratings&&s.ratings[pid], badge=fin&&typeof rr==='number'?'<span class="ov rt num '+(rr>=7.5?'hi':rr>=5.5?'mid':'lo')+'">'+rr+'</span>':'';
+        var face=photoSrc(p)?'<img src="'+photoSrc(p)+'" alt="">':esc(p.name.trim().charAt(0));
+        h+='<div class="'+cls+'" data-pid="'+pid+'" style="top:'+top+'%;left:'+left+'%" '+act+'><div class="sh">'+face+badge+'</div><div class="nm">'+esc(shortName(pid))+'</div></div>';
       }else{
         h+='<div class="'+cls+' empty" style="top:'+top+'%;left:'+left+'%" '+act+'><div class="sh">'+(C?ic('plus','xs'):'')+'</div><div class="ps">'+POS[x.pos].ar+'</div></div>';
       }
@@ -1705,9 +1705,9 @@ function pitchHTML(s,C){
     // البديل في الزاوية بجانب منطقة جزاء فريقه
     subsOf(s,t).filter(function(id){return P(id);}).slice(0,1).forEach(function(id){
       var p=P(id), top=t==='A'?91:9, fin=s.status==='done', rr=s.ratings&&s.ratings[id];
-      var face=photoSrc(p)?'<img src="'+photoSrc(p)+'" alt="">':(fin?esc(p.name.trim().charAt(0)):ovr(p));
-      var badge=fin?(typeof rr==='number'?'<span class="ov rt num '+(rr>=7.5?'hi':rr>=5.5?'mid':'lo')+'">'+rr+'</span>':''):(photoSrc(p)?'<span class="ov num">'+ovr(p)+'</span>':'');
-      h+='<div class="tok '+t+' click subtok" data-pid="'+id+'" style="top:'+top+'%;left:89%" onclick="'+(C?'openSubPicker(\''+t+'\')':'openPlayer(\''+id+'\')')+'"><span class="subtag">بديل</span><div class="sh num">'+face+badge+'</div><div class="nm">'+esc(shortName(id))+'</div></div>';
+      var face=photoSrc(p)?'<img src="'+photoSrc(p)+'" alt="">':esc(p.name.trim().charAt(0));
+      var badge=fin&&typeof rr==='number'?'<span class="ov rt num '+(rr>=7.5?'hi':rr>=5.5?'mid':'lo')+'">'+rr+'</span>':'';
+      h+='<div class="tok '+t+' click subtok" data-pid="'+id+'" style="top:'+top+'%;left:89%" onclick="'+(C?'openSubPicker(\''+t+'\')':'openPlayer(\''+id+'\')')+'"><span class="subtag">بديل</span><div class="sh">'+face+badge+'</div><div class="nm">'+esc(shortName(id))+'</div></div>';
     });
     if(C&&!subsOf(s,t).filter(function(id){return P(id);}).length) h+='<div class="tok '+t+' click empty subtok" id="addSub-'+t+'" style="top:'+(t==='A'?91:9)+'%;left:89%" onclick="openSubPicker(\''+t+'\')"><span class="subtag">بديل</span><div class="sh">'+ic('plus','xs')+'</div></div>';
   });
