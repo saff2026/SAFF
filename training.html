@@ -185,6 +185,8 @@ img.avatar{object-fit:cover;}
 .rot-move{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:15px;line-height:1.5;margin:3px 0;}
 .rot-move .rl{display:inline-block;min-width:42px;font-size:13px;font-weight:700;}
 .rot-move+.rot-move{margin-top:4px;}
+.tok.subtok .sh{width:32px;height:32px;font-size:12px;}
+.tok .subtag{position:absolute;top:-17px;background:#E6CC78;color:#2b2000;font-size:9px;font-weight:800;border-radius:6px;padding:0 5px;line-height:1.5;}
 /* كبسولات */
 .caps{display:flex;gap:8px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none;}
 .caps::-webkit-scrollbar{display:none;}
@@ -683,7 +685,7 @@ function computeStats(){
 /*
   نموذج التقييم بعد كل تمرين — مبني على منهجية «إيلو» (Elo):
   1) أداء متوقع لكل لاعب حسب تقييمه مقارنةً ببقية لاعبي التمرين.
-  2) أداء فعلي = تقييم المدرب + مساهمات (الهدف يُوزن حسب المركز، الصناعة، أفضل لاعب)
+  2) أداء فعلي = تقييم اللجنة الفنيّة + مساهمات (الهدف يُوزن حسب المركز، الصناعة، أفضل لاعب)
      + نتيجة الفريق مقارنةً بالنتيجة المتوقعة من قوة الفريقين (معادلة إيلو) مع هامش الفوز − التأخير.
   3) التغيير = معامل الخبرة (K) × (الفعلي − المتوقع)، ويصعب الصعود قرب القمة والهبوط قرب القاع.
   4) يُوزَّع على طاقات المركز (وتُرجَّح التسديد بالأهداف والتمرير بالصناعة)، والكسور تُحفظ وتتراكم.
@@ -798,7 +800,7 @@ function cardHTML(p){
     '<div><div class="ovr '+tier(o)+'"><b class="num">'+o+'</b></div>'+
     (tr?'<div class="trend '+(tr>0?'up':'dn')+'">'+(tr>0?'▲ ':'▼ ')+Math.abs(tr)+'</div>':'')+'</div></div>'+
     '<div class="pc-name">'+esc(p.name)+'</div>'+
-    '<div class="pc-meta">'+POS[p.pos].ar+(p.pos2?' · '+POS[p.pos2].ar:'')+(p.age?' · '+esc(p.age)+' سنة':'')+'</div>'+
+    '<div class="pc-meta">'+POS[p.pos].ar+(p.age?' · '+esc(p.age)+' سنة':'')+'</div>'+
     '<div class="pc-attrs">'+cardAttrs(p).map(function(a){var v=p.attrs[a];return '<div class="at"><div class="r"><span>'+ATTR[a]+'</span><b class="num">'+v+'</b></div><div class="bar"><i style="width:'+v+'%"></i></div></div>';}).join('')+'</div></div>';
 }
 function tierColor(o){return o>=80?'#D4A93C':o>=70?'#A9B1BB':'#C4834F';}
@@ -1439,7 +1441,7 @@ function shareLineup(){
 }
 function drawLineup(s,logo,ph){
   var W=1080, subsA=subsOf(s,'A').filter(function(id){return P(id);}), subsB=subsOf(s,'B').filter(function(id){return P(id);});
-  var hasSubs=subsA.length||subsB.length, PX=56, PY=330, PW=W-PX*2, PH=1120, H=PY+PH+(hasSubs?190:90);
+  var PX=56, PY=330, PW=W-PX*2, PH=1120, H=PY+PH+70;
   var cv=document.createElement('canvas'); cv.width=W; cv.height=H; var c=cv.getContext('2d');
   c.direction='rtl'; c.textAlign='center'; c.textBaseline='middle';
   // الخلفية
@@ -1470,29 +1472,31 @@ function drawLineup(s,logo,ph){
   cornerPill(s.teams.A.name,PY+PH-58,'#0A7D4F','#fff');
   // اللاعبون
   var sl=slotsOf(s), big=s.size>=9, R=big?31:38, nameF=(big?'700 20px ':'700 24px ')+IMG_FONT;
+  var drawP=function(pid,t,cx,cy,r,isSub){
+    var p=P(pid);
+    c.save(); c.shadowColor='rgba(0,0,0,.35)'; c.shadowBlur=18; c.shadowOffsetY=6;
+    c.beginPath(); c.arc(cx,cy,r+5,0,Math.PI*2); c.fillStyle=t==='A'?'#0A7D4F':'#fff'; c.fill(); c.restore();
+    c.save(); c.beginPath(); c.arc(cx,cy,r,0,Math.PI*2); c.clip();
+    var im=ph[pid];
+    if(im){var sc=Math.max(2*r/im.naturalWidth,2*r/im.naturalHeight),iw=im.naturalWidth*sc,ih=im.naturalHeight*sc;c.drawImage(im,cx-iw/2,cy-ih/2,iw,ih);}
+    else{c.fillStyle=t==='A'?'#0F8F5B':'#F2F5F3';c.fillRect(cx-r,cy-r,2*r,2*r);c.fillStyle=t==='A'?'#fff':'#0A7D4F';c.font='800 '+Math.round(r*.95)+'px '+IMG_FONT;c.fillText(p.name.trim().charAt(0),cx,cy+3);}
+    c.restore();
+    c.save(); c.shadowColor='rgba(0,0,0,.3)'; c.shadowBlur=8;
+    pill(shortName(pid),cx,cy+r+(big?19:22),'rgba(4,21,16,.8)','#fff',nameF,12,big?28:34); c.restore();
+    if(isSub){ c.save(); pill('بديل',cx,cy-r-(big?16:19),'#E6CC78','#2b2000','800 '+(big?17:20)+'px '+IMG_FONT,10,big?24:28); c.restore(); }
+  };
   ['A','B'].forEach(function(t){
     sl.forEach(function(x){
-      var pid=s.teams[t].slots[x.id], p=pid&&P(pid); if(!p)return;
+      var pid=s.teams[t].slots[x.id]; if(!pid||!P(pid))return;
       var top=t==='A'?96-x.y*0.48:4+x.y*0.48, left=t==='A'?x.x:100-x.x;
-      var cx=PX+left/100*PW, cy=PY+top/100*PH;
-      c.save(); c.shadowColor='rgba(0,0,0,.35)'; c.shadowBlur=18; c.shadowOffsetY=6;
-      c.beginPath(); c.arc(cx,cy,R+5,0,Math.PI*2); c.fillStyle=t==='A'?'#0A7D4F':'#fff'; c.fill(); c.restore();
-      c.save(); c.beginPath(); c.arc(cx,cy,R,0,Math.PI*2); c.clip();
-      var im=ph[pid];
-      if(im){var sc=Math.max(2*R/im.naturalWidth,2*R/im.naturalHeight),iw=im.naturalWidth*sc,ih=im.naturalHeight*sc;c.drawImage(im,cx-iw/2,cy-ih/2,iw,ih);}
-      else{c.fillStyle=t==='A'?'#0F8F5B':'#F2F5F3';c.fillRect(cx-R,cy-R,2*R,2*R);c.fillStyle=t==='A'?'#fff':'#0A7D4F';c.font='800 '+Math.round(R*.95)+'px '+IMG_FONT;c.fillText(p.name.trim().charAt(0),cx,cy+3);}
-      c.restore();
-      c.save(); c.shadowColor='rgba(0,0,0,.3)'; c.shadowBlur=8;
-      pill(shortName(pid),cx,cy+R+(big?19:22),'rgba(4,21,16,.8)','#fff',nameF,12,big?28:34); c.restore();
+      drawP(pid,t,PX+left/100*PW,PY+top/100*PH,R,false);
+    });
+    // البديل في الزاوية بجانب منطقة جزاء فريقه
+    (t==='A'?subsA:subsB).slice(0,1).forEach(function(id){
+      var cy=t==='A'?PY+PH*0.918:PY+PH*0.062, cx=PX+PW*0.885;
+      drawP(id,t,cx,cy,R*0.9,true);
     });
   });
-  // البدلاء
-  if(hasSubs){
-    var y0=PY+PH+70;
-    c.fillStyle='rgba(255,255,255,.55)'; c.font='600 26px '+IMG_FONT; c.fillText('البدلاء',W/2,y0-28);
-    var item=function(t,ids,x){var txt=esc2(s.teams[t].name)+': '+(ids.length?ids.map(function(id){return pname(id);}).join('، '):'—');pill(txt,x,y0+30,t==='A'?'#0A7D4F':'rgba(255,255,255,.92)',t==='A'?'#fff':'#0A5C33','700 28px '+IMG_FONT,26,56);};
-    item('A',subsA,W*0.73); item('B',subsB,W*0.27);
-  }
   return cv.toDataURL('image/png');
 }
 function esc2(t){return String(t||'');}
@@ -1513,6 +1517,13 @@ function pitchHTML(s,C){
       }else{
         h+='<div class="'+cls+' empty" style="top:'+top+'%;left:'+left+'%" '+act+'><div class="sh">'+(C?ic('plus','xs'):'')+'</div><div class="ps">'+POS[x.pos].ar+'</div></div>';
       }
+    });
+    // البديل في الزاوية بجانب منطقة جزاء فريقه
+    subsOf(s,t).filter(function(id){return P(id);}).slice(0,1).forEach(function(id){
+      var p=P(id), top=t==='A'?91:9, fin=s.status==='done', rr=s.ratings&&s.ratings[id];
+      var face=photoSrc(p)?'<img src="'+photoSrc(p)+'" alt="">':(fin?esc(p.name.trim().charAt(0)):ovr(p));
+      var badge=fin?(typeof rr==='number'?'<span class="ov rt num '+(rr>=7.5?'hi':rr>=5.5?'mid':'lo')+'">'+rr+'</span>':''):(photoSrc(p)?'<span class="ov num">'+ovr(p)+'</span>':'');
+      h+='<div class="tok '+t+' click subtok" style="top:'+top+'%;left:89%" onclick="openPlayer(\''+id+'\')"><span class="subtag">بديل</span><div class="sh num">'+face+badge+'</div><div class="nm">'+esc(shortName(id))+'</div></div>';
     });
   });
   return h+'</div>';
@@ -1727,7 +1738,7 @@ function renderArchive(el){
       var sc=scoreOf(s), m=mvpOf(s), gc=goalCount(s).g;
       var scorers=Object.keys(gc).sort(function(a,b){return gc[b]-gc[a];}).slice(0,3).map(function(id){return esc(shortName(id))+(gc[id]>1?' ×'+gc[id]:'');}).join('، ');
       h+='<div class="cell tap li" onclick="openSessionDetail(\''+s.id+'\')">'+dateTile(s.date)+'<div class="body"><div class="t">'+esc(s.teams.A.name)+' <span style="display:inline-flex;direction:rtl;gap:5px;margin:0 6px;font-weight:700"><b class="num">'+sc.A+'</b><span class="muted">–</span><b class="num">'+sc.B+'</b></span> '+esc(s.teams.B.name)+'</div>'+
-        '<div class="s">'+(scorers?'الأهداف: '+scorers:'بدون أهداف')+(m?' · أفضل لاعب: '+esc(shortName(m)):'')+'</div></div>'+chev()+'</div>';
+        (m?'<div class="s" style="display:flex;align-items:center;gap:5px"><span style="color:#D4A93C;display:inline-flex">'+icF('star','xs')+'</span>أفضل لاعب: '+esc(shortName(m))+'</div>':'')+'</div>'+chev()+'</div>';
   });
   h+='</div>';
   el.innerHTML=h;
@@ -1797,7 +1808,7 @@ function rulesHTML(){
      '<div style="font-size:12px;letter-spacing:.5px;color:#E6CC78;font-weight:700">نموذج تقييم احترافي</div>'+
      '<div style="font-size:21px;font-weight:800;margin:6px 0 8px">تتحدّث الطاقات تلقائياً بعد كل تمرين</div>'+
      '<div style="font-size:14px;line-height:1.75;color:rgba(255,255,255,.82)">يعتمد على منهجية «إيلو» (Elo)، الأساس الرياضي نفسه الذي يعتمده الاتحاد الدولي لكرة القدم (فيفا) في تصنيف المنتخبات منذ 2018، ويقارن أداء كل لاعب بالأداء المتوقع منه.</div></div>'+
-     f('star','#D4A93C','تقييم المدرب')+f('ball','var(--tint)','الأهداف والصناعة حسب المركز')+f('scale','#0A84FF','النتيجة وقوة الفريق المنافس')+f('trend','#5856D6','مستوى اللاعب وخبرته')+f('check','var(--orange)','الالتزام بالحضور')+'</div>';
+     f('star','#D4A93C','تقييم اللجنة الفنيّة')+f('ball','var(--tint)','الأهداف والصناعة حسب المركز')+f('scale','#0A84FF','النتيجة وقوة الفريق المنافس')+f('trend','#5856D6','مستوى اللاعب وخبرته')+f('check','var(--orange)','الالتزام بالحضور')+'</div>';
   return h+'</div>';
 }
 
