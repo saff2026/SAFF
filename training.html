@@ -187,6 +187,15 @@ img.avatar{object-fit:cover;}
 .rot-move+.rot-move{margin-top:4px;}
 .tok.subtok .sh{width:32px;height:32px;font-size:12px;}
 .tok .subtag{position:absolute;top:-17px;background:#E6CC78;color:#2b2000;font-size:9px;font-weight:800;border-radius:6px;padding:0 5px;line-height:1.5;}
+.stars{color:#D4A93C;letter-spacing:1px;font-size:12px;white-space:nowrap;}
+.stars.big{font-size:16px;}
+.stars .off{color:var(--label3);opacity:.6;}
+.pc-stars{display:flex;flex-direction:column;gap:2px;margin-top:8px;font-size:11px;color:var(--label2);min-width:0;}
+.pc-stars>span{display:flex;align-items:center;justify-content:space-between;gap:4px;}
+.starpick{display:flex;gap:6px;}
+.starpick button{flex:1;height:40px;border:none;border-radius:10px;background:var(--fill2);font-size:22px;color:var(--label3);transition:color .15s,background .15s,transform .1s;}
+.starpick button.on{color:#D4A93C;background:rgba(212,169,60,.14);}
+.starpick button:active{transform:scale(.92);}
 /* كبسولات */
 .caps{display:flex;gap:8px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none;}
 .caps::-webkit-scrollbar{display:none;}
@@ -494,6 +503,7 @@ function normalize(d){
     // المراكز الملغاة (صانع ألعاب، وسط دفاعي) تصير «وسط»
     if(OLD_POS[p.pos]){p.pos=OLD_POS[p.pos];p._mig=true;} if(OLD_POS[p.pos2]){p.pos2=OLD_POS[p.pos2];p._mig=true;} if(p.pos2&&p.pos2===p.pos){p.pos2='';p._mig=true;} if(!POS[p.pos]){p.pos='CM';p._mig=true;}
     ATTR_KEYS.forEach(function(a){ if(typeof p.attrs[a]!=='number') p.attrs[a]= a==='gk'?25:60; });
+    p.sm=clamp(Math.round(+p.sm||3),1,5); p.wf=clamp(Math.round(+p.wf||3),1,5);
     out.players[k]=p;
   });
   Object.keys(d.sessions||{}).forEach(function(k){
@@ -793,6 +803,8 @@ function mh(title){return '<div class="grabber"></div><div class="m-h"><span cla
 var TITLES={home:'تمرين ساف الأسبوعي',players:'اللاعبون',session:'التمرين',archive:'الأرشيف',stats:'الإحصائيات'};
 
 /* ---------- بطاقة اللاعب ---------- */
+function starsHTML(n,cls){n=clamp(+n||0,0,5);return '<span class="stars '+(cls||'')+'" aria-label="'+n+' من 5">'+'★'.repeat(n)+'<span class="off">'+'★'.repeat(5-n)+'</span></span>';}
+function starPick(id,key,val){return '<div class="starpick" id="'+id+'">'+[1,2,3,4,5].map(function(i){return '<button type="button" class="'+(i<=val?'on':'')+'" data-v="'+i+'" onclick="pf.p.'+key+'='+i+';this.parentNode.querySelectorAll(\'button\').forEach(function(b){b.classList.toggle(\'on\',+b.dataset.v<='+i+')})" aria-label="'+i+'">★</button>';}).join('')+'</div>';}
 function cardHTML(p){
   var o=ovr(p), tr=lastTrend(p.id);
   return '<div class="pcard" onclick="openPlayer(\''+p.id+'\')">'+
@@ -801,6 +813,7 @@ function cardHTML(p){
     (tr?'<div class="trend '+(tr>0?'up':'dn')+'">'+(tr>0?'▲ ':'▼ ')+Math.abs(tr)+'</div>':'')+'</div></div>'+
     '<div class="pc-name">'+esc(p.name)+'</div>'+
     '<div class="pc-meta">'+POS[p.pos].ar+(p.age?' · '+esc(p.age)+' سنة':'')+'</div>'+
+    '<div class="pc-stars"><span>المهارة '+starsHTML(p.sm)+'</span><span>القدم الضعيفة '+starsHTML(p.wf)+'</span></div>'+
     '<div class="pc-attrs">'+cardAttrs(p).map(function(a){var v=p.attrs[a];return '<div class="at"><div class="r"><span>'+ATTR[a]+'</span><b class="num">'+v+'</b></div><div class="bar"><i style="width:'+v+'%"></i></div></div>';}).join('')+'</div></div>';
 }
 function tierColor(o){return o>=80?'#D4A93C':o>=70?'#A9B1BB':'#C4834F';}
@@ -937,13 +950,15 @@ function posOptions(sel,allowNone){
 var pf=null;
 function openPlayerForm(id){
   if(!isCoach)return;
-  var p=id?clone(P(id)):{name:'',num:'',age:'',foot:'R',pos:'CM',pos2:'',attrs:{pac:60,sho:60,pas:60,dri:60,def:60,phy:60,gk:25}};
+  var p=id?clone(P(id)):{name:'',num:'',age:'',foot:'R',sm:3,wf:3,pos:'CM',pos2:'',attrs:{pac:60,sho:60,pas:60,dri:60,def:60,phy:60,gk:25}};
   pf={id:id||null,p:p};
   var h=mh(id?'تعديل اللاعب':'لاعب جديد');
   h+='<div class="photo-edit"><div id="f_pv">'+pfPhotoBox()+'</div><div class="hstack"><label class="btn sm tinted" style="cursor:pointer">'+ic('cam','xs')+'اختيار صورة<input type="file" accept="image/*" id="f_file" style="display:none" onchange="pickPhoto(this)"></label><button type="button" class="btn sm gray" id="f_adjphoto" onclick="adjustPhoto()">ضبط</button><button type="button" class="btn sm gray" id="f_rmphoto" onclick="pf.p.photo=\'\';document.getElementById(\'f_pv\').innerHTML=pfPhotoBox()">إزالة</button></div></div>';
   h+='<span class="lbl">الاسم</span><input class="field" id="f_name" maxlength="30" value="'+esc(p.name)+'" placeholder="مثال: سالم الدوسري">';
   h+='<span class="lbl">العمر</span><input class="field num" id="f_age" type="number" inputmode="numeric" min="5" max="60" value="'+esc(p.age)+'">';
+  h+='<div class="hstack" style="align-items:flex-start"><div class="grow"><span class="lbl">نجوم المهارة</span>'+starPick('f_sm','sm',p.sm||3)+'</div></div>';
   h+='<span class="lbl">القدم المفضلة</span><div class="seg" id="f_foot">'+['R','L','B'].map(function(k){return '<button type="button" class="'+(p.foot===k?'on':'')+'" onclick="pf.p.foot=\''+k+'\';this.parentNode.querySelectorAll(\'button\').forEach(function(b){b.classList.remove(\'on\')});this.classList.add(\'on\')">'+FOOT[k]+'</button>';}).join('')+'</div>';
+  h+='<span class="lbl">نجوم القدم الضعيفة</span>'+starPick('f_wf','wf',p.wf||3);
   h+='<div class="hstack"><div class="grow"><span class="lbl">المركز الأساسي</span><select class="field" id="f_pos" onchange="pfPos()">'+posOptions(p.pos)+'</select></div>'+
      '<div class="grow"><span class="lbl">المركز الثانوي</span><select class="field" id="f_pos2" onchange="pf.p.pos2=this.value;pfOvr()">'+posOptions(p.pos2,true)+'</select></div></div>';
   h+='<span class="lbl">الطاقات</span><div class="card" id="f_attrs">'+ATTR_KEYS.map(function(a){
@@ -1140,7 +1155,7 @@ function savePlayer(){
   if(p.pos2===p.pos)p.pos2='';
   var dup=playersArr().filter(function(x){return x.id!==pf.id&&x.name===p.name;});
   if(dup.length){toast('⚠️ يوجد لاعب بنفس الاسم');return;}
-  var id=pf.id||uid('p'); var rec={name:p.name,age:p.age,foot:p.foot,pos:p.pos,pos2:p.pos2,attrs:p.attrs,created:p.created||Date.now()}; if(p.carry)rec.carry=p.carry; if(photoSrc(p))rec.photo=p.photo;
+  var id=pf.id||uid('p'); var rec={name:p.name,age:p.age,foot:p.foot,sm:clamp(+p.sm||3,1,5),wf:clamp(+p.wf||3,1,5),pos:p.pos,pos2:p.pos2,attrs:p.attrs,created:p.created||Date.now()}; if(p.carry)rec.carry=p.carry; if(photoSrc(p))rec.photo=p.photo;
   put('players/'+id,rec); closeModal(); toast(pf.id?'تم حفظ التعديلات':'تمت إضافة '+p.name);
 }
 function deletePlayer(id){
@@ -1157,7 +1172,7 @@ function openPlayer(id){
 function openPlayerInner(id){
   var p=P(id), st=computeStats()[id], o=ovr(p);
   var h=mh('');
-  h+='<div class="prof">'+ring(o,POS[p.pos].ar,photoSrc(p))+'<div class="nm">'+esc(p.name)+'</div><div class="mt">'+'المركز الأساسي: '+POS[p.pos].ar+(p.pos2?' · المركز الثانوي: '+POS[p.pos2].ar:'')+'</div><div class="mt">'+(p.age?esc(p.age)+' سنة · ':'')+'القدم: '+(FOOT[p.foot]||'—')+'</div></div>';
+  h+='<div class="prof">'+ring(o,POS[p.pos].ar,photoSrc(p))+'<div class="nm">'+esc(p.name)+'</div><div class="mt">'+'المركز الأساسي: '+POS[p.pos].ar+(p.pos2?' · المركز الثانوي: '+POS[p.pos2].ar:'')+'</div><div class="mt">'+(p.age?esc(p.age)+' سنة · ':'')+'القدم: '+(FOOT[p.foot]||'—')+'</div><div class="mt" style="display:flex;gap:16px;justify-content:center;margin-top:8px"><span>المهارة '+starsHTML(p.sm,'big')+'</span><span>القدم الضعيفة '+starsHTML(p.wf,'big')+'</span></div></div>';
   h+='<div class="card sgrid" style="margin-top:16px">'+
     '<div><b class="num">'+st.apps+'</b><span>تمرين</span></div><div><b class="num">'+st.goals+'</b><span>هدف</span></div><div><b class="num">'+st.assists+'</b><span>صناعة</span></div>'+
     '<div><b class="num">'+st.mvp+'</b><span>أفضل لاعب</span></div><div><b class="num">'+(st.avg==null?'—':st.avg)+'</b><span>معدل التقييم</span></div><div><b class="num ltr" style="font-size:18px">'+st.w+'-'+st.d+'-'+st.l+'</b><span>فوز-تعادل-خسارة</span></div></div>'+(st.late?'<div class="foot" style="text-align:center;color:var(--orange)">تأخّر '+st.late+' مرة · مجموع '+st.lateMin+' دقيقة</div>':'');
