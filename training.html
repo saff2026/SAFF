@@ -108,7 +108,7 @@ svg.i.f{fill:currentColor;stroke:none;}
 #pg-home>.gh:first-child{margin-top:10px;}
 .gh{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:26px 4px 7px;}
 .gh h2{font-size:20px;font-weight:700;}
-.gh .lnk{background:none;border:none;color:var(--tint);font-size:15px;font-weight:500;padding:4px 0;display:inline-flex;align-items:center;gap:4px;}
+.gh .lnk{background:none;border:none;color:var(--tint);font-size:15px;font-weight:500;padding:4px 0;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;}
 .gh .lnk:active{opacity:.5;}
 .gh .acts{display:flex;gap:14px;}
 .foot{font-size:13px;color:var(--label2);margin:7px 16px 0;line-height:1.5;}
@@ -379,6 +379,7 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .m-h .side{width:30px;flex:none;}
 .m-x{width:30px;height:30px;border-radius:50%;border:none;background:var(--fill);color:var(--label2);display:inline-flex;align-items:center;justify-content:center;flex:none;}
 .m-foot{display:flex;gap:10px;margin-top:22px;}
+.balpri .small{display:block;margin:0 4px 6px;}
 .cap.todo:not(.on){color:var(--orange);}
 .tok .pin{position:absolute;top:-5px;left:-5px;width:17px;height:17px;border-radius:50%;background:#1C1C1E;color:#FFD60A;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.4);}
 .tok .pin .i{width:10px;height:10px;}
@@ -1486,7 +1487,10 @@ function renderSession(el){
   }
 
   var sA=teamStrength(s,'A'), sB=teamStrength(s,'B'), tot=(sA+sB)||1;
-  h+=gh('التشكيلة',C?lnk('صورة','lineupImage()','lineupImg','down')+lnk('توزيع متوازن','autoBalance()','autoBal','scale')+lnk('قيود','openLocks()','lockBtn','lock')+lnk('مسح','clearLineup()','clearL'):'');
+  h+=gh('التشكيلة',C?lnk('صورة','lineupImage()','lineupImg','down')+lnk('توزيع','autoBalance()','autoBal','scale')+lnk('قيود','openLocks()','lockBtn','lock')+lnk('مسح','clearLineup()','clearL'):'');
+  if(C){ var bp=BAL_PRI[s.balPri]?s.balPri:'mix';
+    h+='<div class="balpri"><span class="small muted">أولوية التوزيع التلقائي</span><div class="seg" id="balPri">'+['str','mix','pos'].map(function(k){return '<button class="'+(bp===k?'on':'')+'" id="bp-'+k+'" onclick="setBalPri(\''+k+'\')">'+BAL_PRI[k].l+'</button>';}).join('')+'</div>'+
+      '<div class="foot" style="margin:6px 2px 10px">'+{str:'أهم شيء أن قوة الفريقين متقاربة جداً، حتى لو لعب بعضهم في مركزه الثاني.',mix:'يوازن بين تقارب القوة ولعب كل لاعب في مراكزه.',pos:'أهم شيء أن أكثر عدد يلعب في مركزه الأساسي (الأول)، حتى لو زاد فرق القوة قليلاً.'}[bp]+'</div></div>'; }
   h+='<div class="card pad"><div class="teams-h2"><div class="th"><div class="tn"><span class="dot A"></span>'+esc(s.teams.A.name)+'</div><div class="thr">'+formBtn(s,'A',C)+'<span class="tag on num">القوة '+(sA||'—')+'</span></div></div><div class="th B"><div class="tn">'+esc(s.teams.B.name)+'<span class="dot B"></span></div><div class="thr"><span class="tag on num">القوة '+(sB||'—')+'</span>'+formBtn(s,'B',C)+'</div></div></div>';
   h+='<div class="balance"><i style="width:'+(sA/tot*100)+'%;background:var(--teamA)"></i><i style="width:'+(sB/tot*100)+'%;background:#C7C7CC"></i></div>';
   h+=pitchHTML(s,C);
@@ -1706,7 +1710,7 @@ function rotationHTML(s,C){
   var any=['A','B'].some(function(t){return subsOf(s,t).length;});
   h+=gh('ترتيب التبديل');
   if(C) h+='<div class="seg" style="margin-bottom:10px">'+[['att','هجوم ← دفاع'],['def','دفاع ← هجوم'],['best','الأنسب للمراكز']].map(function(o){return '<button class="'+(dir===o[0]?'on':'')+'" id="rot-'+o[0]+'" onclick="put(\'sessions/'+s.id+'/rotDir\',\''+o[0]+'\')">'+o[1]+'</button>';}).join('')+'</div>';
-  if(!any){ return h+'<div class="card"><div class="cell"><div class="body"><div class="s">لا يوجد بدلاء. '+(C?'أضف بديلاً لكل فريق من الأسفل أو اضغط «توزيع متوازن».':'')+'</div></div></div></div>'; }
+  if(!any){ return h+'<div class="card"><div class="cell"><div class="body"><div class="s">لا يوجد بدلاء. '+(C?'أضف بديلاً لكل فريق من الأسفل أو اضغط «توزيع».':'')+'</div></div></div></div>'; }
   ['A','B'].forEach(function(t){
     var plan=rotationPlan(s,t,dir);
     h+='<div class="foot" style="margin:12px 4px 6px;font-weight:600;color:var(--label);display:flex;align-items:center;gap:6px"><span class="dot '+t+'"></span>'+esc(s.teams[t].name)+'</div>';
@@ -1770,7 +1774,7 @@ function locksInner(){
   var pool=attendees(s).filter(function(id){return P(id);}); if(!pool.length)pool=playersArr().map(function(p){return p.id;});
   pool.sort(function(a,b){return pname(a).localeCompare(pname(b),'ar');});
   var opts=function(id){return '<select class="field" id="'+id+'"><option value="">اختر لاعب</option>'+pool.map(function(x){return '<option value="'+x+'">'+esc(pname(x))+'</option>';}).join('')+'</select>';};
-  h+='<div class="foot" style="margin:0 2px 12px">القيود تُطبَّق لما تضغط «توزيع متوازن»، والباقي يتوزّع حولها بأفضل شكل.</div>';
+  h+='<div class="foot" style="margin:0 2px 12px">القيود تُطبَّق لما تضغط «توزيع»، والباقي يتوزّع حولها بأفضل شكل.</div>';
   h+=gh('<span style="font-size:17px">تثبيت لاعب</span>');
   var lk=Object.keys(L);
   if(lk.length) h+='<div class="card">'+lk.map(function(id){return '<div class="cell ind lockrow" data-id="'+id+'">'+avatar(id)+'<div class="body"><div class="t">'+esc(pname(id))+'</div><div class="s">'+lockText(s,L[id])+'</div></div><button class="m-x" aria-label="إلغاء" onclick="put(\'sessions/'+s.id+'/locks/'+id+'\',null)">'+ic('x','xs')+'</button></div>';}).join('')+'</div>';
@@ -1814,11 +1818,11 @@ function lineupInfoHTML(s){
   var L=locksOf(s), Ap=apartOf(s), bad=0;
   Object.keys(L).forEach(function(id){var tm=teamOf(s,id),x=L[id]; if(!tm){bad++;return;} if(x.t&&tm.t!==x.t)bad++; else if(x.pos){ if(tm.sub)bad++; else { var z=slotsOf(s,tm.t).filter(function(q){return q.id===tm.slot;})[0]; if(!z||z.pos!==x.pos)bad++; } } });
   Ap.forEach(function(x){var a=teamOf(s,x.a),b=teamOf(s,x.b); if(a&&b&&a.t===b.t)bad++;});
-  if(Object.keys(L).length||Ap.length) rows.push('<div class="cell tap ind" onclick="openLocks()">'+tile(bad?'#FF3B30':'#8E8E93','lock')+'<div class="body"><div class="t">القيود: <b class="num">'+(Object.keys(L).length+Ap.length)+'</b></div><div class="s">'+(bad?'<span class="dn">'+bad+' غير مطبّق — اضغط «توزيع متوازن»</span>':'كلها مطبّقة')+'</div></div>'+chev()+'</div>');
+  if(Object.keys(L).length||Ap.length) rows.push('<div class="cell tap ind" onclick="openLocks()">'+tile(bad?'#FF3B30':'#8E8E93','lock')+'<div class="body"><div class="t">القيود: <b class="num">'+(Object.keys(L).length+Ap.length)+'</b></div><div class="s">'+(bad?'<span class="dn">'+bad+' غير مطبّق — اضغط «توزيع»</span>':'كلها مطبّقة')+'</div></div>'+chev()+'</div>');
   var b=s.bal, note;
-  if(b&&b.sig===curSig(s)) note='<span class="up">✓ هذا أفضل توزيع</span> — '+(b.all?'جرّبتُ كل الاحتمالات (<span class="num">'+fmtNum(b.n)+'</span>) واخترت الأفضل.':'قارنت <span class="num">'+fmtNum(b.n)+'</span> توزيع واخترت الأفضل.');
-  else if(b) note='عدّلت التشكيلة يدوياً بعد التوزيع التلقائي. اضغط «توزيع متوازن» لو تبغى الأفضل حسابياً.';
-  else note='اضغط «توزيع متوازن» ليجرّب كل الاحتمالات ويختار الأفضل.';
+  if(b&&b.sig===curSig(s)) note='<span class="up">✓ هذا أفضل توزيع</span> بأولوية «'+(BAL_PRI[b.pri]||BAL_PRI.mix).l+'» — '+(b.all?'جرّبتُ كل الاحتمالات (<span class="num">'+fmtNum(b.n)+'</span>) واخترت الأفضل.':'قارنت <span class="num">'+fmtNum(b.n)+'</span> توزيع واخترت الأفضل.');
+  else if(b) note='عدّلت التشكيلة يدوياً بعد التوزيع التلقائي. اضغط «توزيع» لو تبغى الأفضل حسابياً.';
+  else note='اضغط «توزيع» ليجرّب كل الاحتمالات ويختار الأفضل.';
   return gh('لماذا هذه التشكيلة؟')+'<div class="card" id="lineupInfo">'+rows.join('')+'</div><div class="foot" id="balNote">'+note+'</div>';
 }
 function removeSub(t,id){var s=openSession(); if(!s)return; put('sessions/'+s.id+'/teams/'+t+'/subs/'+id,null);}
@@ -2051,18 +2055,20 @@ function locksOf(s){var o={},l=s.locks||{};Object.keys(l).forEach(function(id){v
 function apartOf(s){var o=[];Object.keys(s.apart||{}).forEach(function(k){var x=s.apart[k];if(x&&x.a&&x.b&&P(x.a)&&P(x.b))o.push({k:k,a:x.a,b:x.b});});return o;}
 function lineupSig(slA,slB,subA,subB){var f=function(o){return Object.keys(o||{}).filter(function(k){return o[k];}).sort().map(function(k){return k+':'+(o[k]===true?'1':o[k]);}).join(',');};return f(slA)+'|'+f(slB)+'|'+f(subA)+'|'+f(subB);}
 function curSig(s){return lineupSig(s.teams.A.slots,s.teams.B.slots,s.teams.A.subs,s.teams.B.subs);}
+var BAL_PRI={str:{s:25,f:1,l:'قوة متقاربة'},mix:{s:1,f:1,l:'متوازن'},pos:{s:0.05,f:4,pb:8,l:'المراكز الأساسية'}};
 var BAL_LIMIT=250000; // حتى هذا العدد يجرّب كل الاحتمالات
-function balanceSolve(s){
+function balanceSolve(s,pri){
   var locks=locksOf(s), apart=apartOf(s);
   var ids=attendees(s).filter(function(id){return P(id)&&!(s.absent||{})[id];});
   var sl={A:slotsOf(s,'A'),B:slotsOf(s,'B')}, cap={A:sl.A.length+1,B:sl.B.length+1};
   if(ids.length>cap.A+cap.B){ // أكثر من المسموح: يُستبعد الأضعف (غير المثبّت)
     ids.sort(function(a,b){return (locks[b]?1:0)-(locks[a]?1:0)||ovr(P(b))-ovr(P(a));}); ids=ids.slice(0,cap.A+cap.B); }
+  var PW=BAL_PRI[pri||s.balPri]||BAL_PRI.mix; // وزن القوة مقابل المراكز حسب اختيار المدرب
   var N=ids.length, memo={}, evals=0, useMemo=true;
   // حساب قيم كل لاعب مرة وحدة فقط (للسرعة)
   var OV={}, VAL={A:{},B:{}}, FIT={A:{},B:{}}, TR={};
   ids.forEach(function(id){var p=P(id),lk=locks[id]; OV[id]=ovr(p); TR[id]=TRAITS.map(function(t){return (p.traits||{})[t[0]]?1:0;});
-    ['A','B'].forEach(function(t){VAL[t][id]=sl[t].map(function(x){var v=fitScore(p,x.pos)*10+traitFit(p,x.pos)*1.5+OV[id]*0.01; if(lk&&lk.pos&&lk.pos!==x.pos)v-=1e5; return -v;}); FIT[t][id]=sl[t].map(function(x){return fitScore(p,x.pos);});});});
+    ['A','B'].forEach(function(t){VAL[t][id]=sl[t].map(function(x){var fs=fitScore(p,x.pos)+(PW.pb&&prefRank(p,x.pos)===0?PW.pb:0);var v=fs*10+traitFit(p,x.pos)*1.5+OV[id]*0.01; if(lk&&lk.pos&&lk.pos!==x.pos)v-=1e5; return -v;}); FIT[t][id]=sl[t].map(function(x){return fitScore(p,x.pos)+(PW.pb&&prefRank(p,x.pos)===0?PW.pb:0);});});});
   var teamEval=function(t,X){
     var key=useMemo?t+X.slice().sort().join(','):''; if(useMemo&&memo[key])return memo[key];
     var slots=sl[t], k=X.length, cols=slots.length+Math.max(0,k-slots.length), res={asg:{},bench:[],fit:0,bad:0};
@@ -2082,9 +2088,9 @@ function balanceSolve(s){
     evals++;
     var ea=teamEval('A',X), eb=teamEval('B',Y);
     var mA=ea.n?ea.sum/ea.n:0, mB=eb.n?eb.sum/eb.n:0;
-    var fitLoss=(10*sl.A.length-ea.fit)+(10*sl.B.length-eb.fit);
+    var top=10+(PW.pb||0), fitLoss=(top*sl.A.length-ea.fit)+(top*sl.B.length-eb.fit);
     var ap=0; apart.forEach(function(x){ if((X.indexOf(x.a)>=0&&X.indexOf(x.b)>=0)||(Y.indexOf(x.a)>=0&&Y.indexOf(x.b)>=0))ap++; });
-    return Math.abs(mA-mB)*nn + fitLoss*0.7 + traitGap(X,Y)*3 + ap*1000 + (ea.bad+eb.bad)*1e4 + Math.abs(X.length-Y.length)*0.01;
+    return Math.abs(mA-mB)*nn*PW.s + fitLoss*0.7*PW.f + traitGap(X,Y)*3 + ap*1000 + (ea.bad+eb.bad)*1e4 + Math.abs(X.length-Y.length)*0.01;
   };
   var fixA=ids.filter(function(id){return locks[id]&&locks[id].t==='A';}), fixB=ids.filter(function(id){return locks[id]&&locks[id].t==='B';});
   var F=ids.filter(function(id){return !(locks[id]&&locks[id].t);});
@@ -2132,17 +2138,23 @@ function balanceSolve(s){
   var subA={},subB={}; ea.bench.forEach(function(id){subA[id]=true;}); eb.bench.forEach(function(id){subB[id]=true;});
   return {slotsA:ea.asg,slotsB:eb.asg,subA:subA,subB:subB,cost:best.c,evals:evals,total:exhaustive?total:evals,exhaustive:exhaustive,ms:Date.now()-t0,left:attendees(s).filter(function(id){return P(id)&&!(s.absent||{})[id]&&best.A.indexOf(id)<0&&best.B.indexOf(id)<0;})};
 }
-function autoBalance(){
-  var s=openSession(); if(!s)return;
+function autoBalance(pri){
+  var s=openSession(); if(!s)return; pri=BAL_PRI[pri]?pri:(BAL_PRI[s.balPri]?s.balPri:'mix');
   var ids=attendees(s).filter(function(id){return P(id)&&!(s.absent||{})[id];});
   if(ids.length<2){toast('⚠️ أضف لاعبين على الأقل لقائمة التمرين');return;}
-  var r=balanceSolve(s), b='sessions/'+s.id+'/', m={};
+  var r=balanceSolve(s,pri), b='sessions/'+s.id+'/', m={};
   var nA=Object.keys(r.subA).length, nB=Object.keys(r.subB).length;
   m[b+'teams/A/slots']=r.slotsA; m[b+'teams/B/slots']=r.slotsB;
   m[b+'teams/A/subs']=nA?r.subA:null; m[b+'teams/B/subs']=nB?r.subB:null;
-  m[b+'bal']={n:r.total,all:r.exhaustive,sig:lineupSig(r.slotsA,r.slotsB,r.subA,r.subB),at:Date.now()};
+  m[b+'bal']={n:r.total,all:r.exhaustive,sig:lineupSig(r.slotsA,r.slotsB,r.subA,r.subB),at:Date.now(),pri:pri}; m[b+'balPri']=pri;
   putMany(m);
   toast('تم التوزيع — '+(r.exhaustive?'جرّبت كل الاحتمالات ('+fmtNum(r.total)+')':'قارنت '+fmtNum(r.total)+' توزيع')+(nA+nB?(nA===nB?' مع بديل لكل فريق':' مع '+(nA+nB)+' بدلاء'):''));
+}
+function setBalPri(k){
+  var s=openSession(); if(!s||!BAL_PRI[k])return;
+  var auto=!slotPlayers(s,'A').length&&!slotPlayers(s,'B').length||(s.bal&&s.bal.sig===curSig(s));
+  if(auto&&attendees(s).length>=2) autoBalance(k); // التشكيلة تلقائية: نعيد التوزيع فوراً بالأولوية الجديدة
+  else { put('sessions/'+s.id+'/balPri',k); toast('الأولوية: '+BAL_PRI[k].l+' — اضغط «توزيع» لتطبيقها'); }
 }
 function fmtNum(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
 
