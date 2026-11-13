@@ -16,9 +16,9 @@ CHANGES = [
     ('saff_tr_', 'saff_el_', 10),                        # إعدادات الجوال (الدخول، اسمي، الأقسام...)
     # بدون شعار الاتحاد: كورة بدلاً منه
     ('<picture><source srcset="saff-white.png" media="(prefers-color-scheme: dark)"><img class="logo" src="saff.png" alt="الاتحاد السعودي لكرة القدم"></picture>',
-     '<img class="logo" src="ball.png" alt="">', 1),
-    ('icon-saff-192.png', 'icon-elite-192.png', 2),       # أيقونة الشاشة الرئيسية
-    ("loadImg('saff-white.png')", "loadImg('ball.png')", 2),  # صور المشاركة
+     '<img class="logo" src="ball.png?v=2" alt="">', 1),
+    ('icon-saff-192.png', 'icon-elite-192.png?v=2', 2),       # أيقونة الشاشة الرئيسية
+    ("loadImg('saff-white.png')", "loadImg('ball.png?v=2')", 2),  # صور المشاركة
     ('الاتحاد السعودي لكرة القدم · ', '', 1),             # تذييل صور المشاركة
 ]
 
