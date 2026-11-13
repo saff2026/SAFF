@@ -1944,7 +1944,7 @@ function saveGoal(){
 function delGoal(sid,gk){askConfirm('<b>حذف هذا الهدف؟</b>',function(){put('sessions/'+sid+'/goals/'+gk,null);},'حذف');}
 function rate(pid,d){
   var s=openSession(); if(!s)return;
-  var r=s.ratings[pid]; r=(typeof r==='number')?clamp(r+d,1,10):6;
+  var r=s.ratings[pid]; r=(typeof r==='number')?clamp(r+d,1,10):5;
   put('sessions/'+s.id+'/ratings/'+pid,r);
 }
 function setMvp(pid){var s=openSession(); if(!s)return; put('sessions/'+s.id+'/mvp',pid);}
