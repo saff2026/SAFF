@@ -1100,7 +1100,7 @@ function renderPlayerGrid(){
   var g=document.getElementById('pGrid'); if(!g)return;
   var q=ui.pSearch.trim().replace(/\s+/g,'');
   var arr=playersArr().filter(function(p){
-    if(ui.pFilter!=='all'&&POS_GROUP[p.pos]!==ui.pFilter&&POS_GROUP[p.pos2]!==ui.pFilter)return false;
+    if(ui.pFilter!=='all'&&POS_GROUP[p.pos]!==ui.pFilter)return false; // المركز الأساسي فقط
     if(q&&p.name.replace(/\s+/g,'').indexOf(q)<0)return false;
     return true;
   });
