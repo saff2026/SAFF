@@ -222,6 +222,8 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .av-wrap .avatar{box-shadow:0 0 0 1px var(--sep),0 2px 6px rgba(0,0,0,.08);}
 .av-wrap .mini{position:absolute;bottom:-3px;left:-4px;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 0 0 2px var(--card);}
 .av-wrap .mini svg.i.xs{width:11px;height:11px;}
+#cc{letter-spacing:4px;}
+#cc::placeholder{letter-spacing:normal;}
 /* كبسولات */
 .caps{display:flex;gap:8px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none;}
 .caps::-webkit-scrollbar{display:none;}
@@ -2065,7 +2067,7 @@ function rulesHTML(){
 function coachClick(){
   if(isCoach){ openSettings(); return; }
   var h=mh('صلاحيات مجلس الإدارة')+'<div style="text-align:center;margin:6px 0 16px"><div class="empty" style="padding:4px 0 0"><div class="ei">'+ic('lock')+'</div></div><div class="small muted">أدخل كلمة السر لتتمكن من الإضافة والتعديل.<br>اللاعبون على المدرج يتفرّجون.</div></div>'+
-    '<input class="field num" id="cc" type="password" inputmode="numeric" placeholder="كلمة السر" style="text-align:center;letter-spacing:4px" onkeydown="if(event.key===\'Enter\')coachLogin()"><div class="m-foot"><button class="btn" id="ccBtn" onclick="coachLogin()">دخول</button></div>';
+    '<input class="field num" id="cc" type="password" inputmode="numeric" placeholder="كلمة السر" style="text-align:center" onkeydown="if(event.key===\'Enter\')coachLogin()"><div class="m-foot"><button class="btn" id="ccBtn" onclick="coachLogin()">دخول</button></div>';
   openModal(h); setTimeout(function(){var e=document.getElementById('cc');if(e)e.focus();},350);
 }
 function coachLogin(){
