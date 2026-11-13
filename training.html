@@ -438,14 +438,14 @@ body.v2 #pg-home .card.tap:has(.score), body.v2 #ov .card:has(.score){position:r
   box-shadow:0 18px 40px -18px rgba(8,70,45,.75),0 2px 6px rgba(0,0,0,.08);}
 body.v2 #pg-home .card.tap:has(.score):before, body.v2 #ov .card:has(.score):before{content:"";position:absolute;left:50%;top:50%;width:150px;height:150px;border-radius:50%;border:1.5px solid rgba(255,255,255,.10);transform:translate(-50%,-50%);pointer-events:none;}
 body.v2 #pg-home .card.tap:has(.score):after, body.v2 #ov .card:has(.score):after{content:"";position:absolute;left:50%;top:0;bottom:0;width:1.5px;background:rgba(255,255,255,.10);pointer-events:none;}
-body.v2 .card:has(.score) .score{position:relative;z-index:1;}
-body.v2 .card:has(.score) .meta, body.v2 .card:has(.score) .score .meta{color:rgba(255,255,255,.72)!important;}
-body.v2 .card:has(.score) .nums i{color:rgba(255,255,255,.45);}
-body.v2 .card:has(.score) .dot.B{box-shadow:none;}
-body.v2 .card:has(.score) .dot.A{background:#5BE49B;box-shadow:0 0 0 3px rgba(255,255,255,.18);}
-body.v2 .card:has(.score) .cell .t{color:#fff;} body.v2 .card:has(.score) .cell .s{color:rgba(255,255,255,.7);}
-body.v2 .card:has(.score) .cell+.cell:before{background:rgba(255,255,255,.14);}
-body.v2 .card:has(.score) .gx{background:rgba(255,255,255,.15);color:#fff;}
+body.v2 #pg-home .card.tap:has(.score) .score, body.v2 #ov .card:has(.score) .score{position:relative;z-index:1;}
+body.v2 #pg-home .card.tap:has(.score) .meta, body.v2 #ov .card:has(.score) .meta, body.v2 #pg-home .card.tap:has(.score) .score .meta, body.v2 #ov .card:has(.score) .score .meta{color:rgba(255,255,255,.72)!important;}
+body.v2 #pg-home .card.tap:has(.score) .nums i, body.v2 #ov .card:has(.score) .nums i{color:rgba(255,255,255,.45);}
+body.v2 #pg-home .card.tap:has(.score) .dot.B, body.v2 #ov .card:has(.score) .dot.B{box-shadow:none;}
+body.v2 #pg-home .card.tap:has(.score) .dot.A, body.v2 #ov .card:has(.score) .dot.A{background:#5BE49B;box-shadow:0 0 0 3px rgba(255,255,255,.18);}
+body.v2 #pg-home .card.tap:has(.score) .cell .t, body.v2 #ov .card:has(.score) .cell .t{color:#fff;}body.v2 #pg-home .card.tap:has(.score) .cell .s, body.v2 #ov .card:has(.score) .cell .s{color:rgba(255,255,255,.7);}
+body.v2 #pg-home .card.tap:has(.score) .cell+.cell:before, body.v2 #ov .card:has(.score) .cell+.cell:before{background:rgba(255,255,255,.14);}
+body.v2 #pg-home .card.tap:has(.score) .gx, body.v2 #ov .card:has(.score) .gx{background:rgba(255,255,255,.15);color:#fff;}
 /* شريط التبويبات العائم */
 body.v2 .tabbar{left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));padding:6px;border-radius:28px;border:1px solid rgba(10,60,40,.08);box-shadow:0 16px 40px -12px rgba(0,0,0,.25),0 2px 6px rgba(0,0,0,.06);}
 @media (prefers-color-scheme: dark){ body.v2 .tabbar{border-color:rgba(255,255,255,.08);background:rgba(28,28,30,.78);} }
