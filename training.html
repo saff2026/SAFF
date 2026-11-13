@@ -382,6 +382,10 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .tok .pin{position:absolute;top:-5px;left:-5px;width:17px;height:17px;border-radius:50%;background:#1C1C1E;color:#FFD60A;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.4);}
 .tok .pin .i{width:10px;height:10px;}
 #lineupInfo .s{line-height:1.6;}
+.trtab{display:grid;grid-template-columns:1fr auto auto;gap:6px 16px;align-items:center;margin-top:8px;font-size:14px;}
+.trtab .th{display:flex;align-items:center;gap:5px;justify-content:center;font-size:12px;color:var(--label2);font-weight:600;max-width:90px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.trtab .tl{color:var(--label2);}
+.trtab b{text-align:center;font-size:16px;}
 .prefs .prow{gap:10px;padding-top:8px;padding-bottom:8px;}
 .prefs .prow .field{width:58%;margin:0;flex:none;}
 .prank{width:26px;height:26px;border-radius:50%;background:var(--tint-soft);color:var(--tint);display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:none;}
@@ -1789,8 +1793,10 @@ function lineupInfoHTML(s){
   rows.push('<div class="cell">'+tile('#0A84FF','scale')+'<div class="body"><div class="t">فرق القوة: <b class="num">'+d.toFixed(1)+'</b></div><div class="s">'+esc(s.teams.A.name)+' <span class="num">'+mA.toFixed(1)+'</span> · '+esc(s.teams.B.name)+' <span class="num">'+mB.toFixed(1)+'</span></div></div></div>');
   rows.push('<div class="cell">'+tile('#34C759','check')+'<div class="body"><div class="t">في مركزهم الأول: <b class="num">'+firsts+'</b> من <b class="num">'+tot+'</b></div>'+(others.length?'<div class="s">في مركز من مراكزهم: '+others.join('، ')+'</div>':'')+'</div></div>');
   if(outs.length) rows.push('<div class="cell">'+tile('#FF9500','warn')+'<div class="body"><div class="t">خارج مراكزهم: <b class="num">'+outs.length+'</b></div><div class="s">'+outs.join('، ')+'</div></div></div>');
-  var tr=TRAITS.map(function(x){var c=function(t){return teamPlayers(s,t).filter(function(id){return P(id)&&(P(id).traits||{})[x[0]];}).length;};return x[1]+' <span class="num">'+c('A')+'–'+c('B')+'</span>';}).join(' · ');
-  rows.push('<div class="cell">'+tile('#AF52DE','people')+'<div class="body"><div class="t">توزيع الخصائص</div><div class="s">'+tr+'</div></div></div>');
+  var trc=function(t,k){return teamPlayers(s,t).filter(function(id){return P(id)&&(P(id).traits||{})[k];}).length;};
+  var tr='<div class="trtab"><span></span><span class="th"><span class="dot A"></span>'+esc(s.teams.A.name)+'</span><span class="th"><span class="dot B"></span>'+esc(s.teams.B.name)+'</span>'+
+    TRAITS.map(function(x){return '<span class="tl">'+x[1]+'</span><b class="num">'+trc('A',x[0])+'</b><b class="num">'+trc('B',x[0])+'</b>';}).join('')+'</div>';
+  rows.push('<div class="cell">'+tile('#AF52DE','people')+'<div class="body"><div class="t">توزيع الخصائص</div>'+tr+'</div></div>');
   var L=locksOf(s), Ap=apartOf(s), bad=0;
   Object.keys(L).forEach(function(id){var tm=teamOf(s,id),x=L[id]; if(!tm){bad++;return;} if(x.t&&tm.t!==x.t)bad++; else if(x.pos){ if(tm.sub)bad++; else { var z=slotsOf(s,tm.t).filter(function(q){return q.id===tm.slot;})[0]; if(!z||z.pos!==x.pos)bad++; } } });
   Ap.forEach(function(x){var a=teamOf(s,x.a),b=teamOf(s,x.b); if(a&&b&&a.t===b.t)bad++;});
