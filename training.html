@@ -373,6 +373,17 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .m-h .side{width:30px;flex:none;}
 .m-x{width:30px;height:30px;border-radius:50%;border:none;background:var(--fill);color:var(--label2);display:inline-flex;align-items:center;justify-content:center;flex:none;}
 .m-foot{display:flex;gap:10px;margin-top:22px;}
+.gcols{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:12px 16px 16px;border-top:.5px solid var(--sep);}
+.gcols:before{content:"";position:absolute;top:12px;bottom:16px;left:50%;width:.5px;background:var(--sep);}
+.gcol{display:flex;flex-direction:column;gap:12px;min-width:0;}
+.gcol.B{align-items:flex-end;text-align:left;}
+.gl{display:flex;align-items:flex-start;gap:6px;min-width:0;max-width:100%;}
+.gcol.B .gl{flex-direction:row-reverse;}
+.gl .gi{color:var(--label2);display:inline-flex;flex:none;margin-top:3px;}
+.gl .gb{min-width:0;}
+.gl .gn{font-size:15px;font-weight:600;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.gl .ga{font-size:12px;color:var(--label2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.gl .gx{width:22px;height:22px;flex:none;margin-top:1px;}
 .m-edit{height:30px;padding:0 12px;border-radius:15px;border:none;background:var(--tint-soft);color:var(--tint);font:inherit;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:5px;flex:none;cursor:pointer;}
 .m-foot .btn{flex:1;}
 .slider{display:flex;align-items:center;gap:12px;padding:9px 16px;}
@@ -447,6 +458,10 @@ body.v2 #pg-home .card.tap:has(.score) .dot.A, body.v2 #ov .card:has(.score) .do
 body.v2 #pg-home .card.tap:has(.score) .cell .t, body.v2 #ov .card:has(.score) .cell .t{color:#fff;}body.v2 #pg-home .card.tap:has(.score) .cell .s, body.v2 #ov .card:has(.score) .cell .s{color:rgba(255,255,255,.7);}
 body.v2 #pg-home .card.tap:has(.score) .cell+.cell:before, body.v2 #ov .card:has(.score) .cell+.cell:before{background:rgba(255,255,255,.14);}
 body.v2 #pg-home .card.tap:has(.score) .gx, body.v2 #ov .card:has(.score) .gx{background:rgba(255,255,255,.15);color:#fff;}
+body.v2 #pg-home .card.tap:has(.score) .gn, body.v2 #ov .card:has(.score) .gn{color:#fff;}
+body.v2 #pg-home .card.tap:has(.score) .ga, body.v2 #pg-home .card.tap:has(.score) .gi, body.v2 #ov .card:has(.score) .ga, body.v2 #ov .card:has(.score) .gi{color:rgba(255,255,255,.7);}
+body.v2 #pg-home .card.tap:has(.score) .gcols, body.v2 #ov .card:has(.score) .gcols{border-top-color:rgba(255,255,255,.14);}
+body.v2 #pg-home .card.tap:has(.score) .gcols:before, body.v2 #ov .card:has(.score) .gcols:before{background:rgba(255,255,255,.14);}
 /* شريط التبويبات العائم */
 body.v2 .tabbar{left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));padding:6px;border-radius:28px;border:1px solid rgba(10,60,40,.08);box-shadow:0 16px 40px -12px rgba(0,0,0,.25),0 2px 6px rgba(0,0,0,.06);}
 @media (prefers-color-scheme: dark){ body.v2 .tabbar{border-color:rgba(255,255,255,.08);background:rgba(28,28,30,.78);} }
@@ -880,11 +895,16 @@ function sessionChanges(s){
   var avg=parts.reduce(function(t,id){return t+ovr(P(id));},0)/parts.length;
   var str={A:teamStrength(s,'A')||avg,B:teamStrength(s,'B')||avg};
   var stats=computeStats();
+  // المقارنة بمتوسط هذا التمرين: من فوق المتوسط يرتفع ومن تحته ينزل
+  var rs=parts.map(function(id){return s.ratings[id];}).filter(function(r){return typeof r==='number';});
+  var avgR=rs.length?rs.reduce(function(t,r){return t+r;},0)/rs.length:6.2;
+  var evOf=function(id){var p=P(id);return Math.min(2,(gl.g[id]||0)*(GOAL_W[p.pos]||.5)+(gl.a[id]||0)*.35+(m===id?.5:0));};
+  var evAvg=parts.reduce(function(t,id){return t+evOf(id);},0)/parts.length;
   parts.forEach(function(id){
     var p=P(id), o=ovr(p), r=s.ratings[id], tm=teamOf(s,id), g=gl.g[id]||0, a=gl.a[id]||0, isM=m===id;
-    var exp=clamp(6.2+(o-avg)/8,4.5,8.5);
+    var exp=clamp(avgR+(o-avg)/8,3,9.5);
     var base=typeof r==='number'?r:exp;
-    var ev=Math.min(2,g*(GOAL_W[p.pos]||.5)+a*.35+(isM?.5:0));
+    var ev=evOf(id)-evAvg;
     var resT=0;
     if(tm){ var my=sc[tm.t], op=sc[tm.t==='A'?'B':'A'], S=my>op?1:my<op?0:.5;
       var Ew=1/(1+Math.pow(10,(str[tm.t==='A'?'B':'A']-str[tm.t])/20));
@@ -893,7 +913,7 @@ function sessionChanges(s){
     var perf=base+ev+resT+late;
     var apps=stats[id]?stats[id].apps:0, K=apps<5?.9:apps<15?.7:.55;
     var dO=K*(perf-exp);
-    dO*= dO>0?clamp((99-o)/35,.25,1):clamp((o-25)/35,.25,1);
+    dO*= dO>0?clamp((99-o)/14,.25,1):clamp((o-20)/14,.25,1); // يصعب الصعود قرب القمة والنزول قرب القاع فقط
     dO=clamp(dO,-3,3);
     // التوزيع على طاقات المركز
     var u={};
@@ -1797,9 +1817,11 @@ function pitchHTML(s,C){
 function goalsHTML(s,C){
   var gs=Object.keys(s.goals).map(function(k){var g=clone(s.goals[k]);g._k=k;return g;}).sort(function(a,b){return (a.at||0)-(b.at||0);});
   if(!gs.length)return '<div class="cell"><div class="body" style="text-align:center"><div class="s">لم تُسجَّل أهداف بعد</div></div></div>';
-  return gs.map(function(g){
-    return '<div class="cell gitem"><span class="dot '+g.t+'"></span><span style="color:var(--label2);display:inline-flex">'+ic('ball','s')+'</span><div class="body"><div class="t">'+(g.s?esc(pname(g.s)):'غير محدد')+'</div>'+(g.a?'<div class="s">صناعة: '+esc(pname(g.a))+'</div>':'')+'</div>'+(C?'<button class="m-x gx" onclick="delGoal(\''+s.id+'\',\''+g._k+'\')" aria-label="حذف الهدف">'+ic('x','xs')+'</button>':'')+'</div>';
-  }).join('');
+  var col=function(t){var xs=gs.filter(function(g){return g.t===t;});
+    return '<div class="gcol '+t+'">'+xs.map(function(g){
+      return '<div class="gl gitem"><span class="gi">'+ic('ball','xs')+'</span><div class="gb"><div class="gn">'+(g.s?esc(pname(g.s)):'غير محدد')+'</div>'+(g.a?'<div class="ga">صناعة: '+esc(pname(g.a))+'</div>':'')+'</div>'+
+        (C?'<button class="m-x gx" onclick="delGoal(\''+s.id+'\',\''+g._k+'\')" aria-label="حذف الهدف">'+ic('x','xs')+'</button>':'')+'</div>';}).join('')+'</div>';};
+  return '<div class="gcols">'+col('A')+col('B')+'</div>';
 }
 
 function openNewSession(editId){
