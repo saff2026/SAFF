@@ -772,7 +772,7 @@ function voteInner(sid){
     setModal(h); return;
   }
   var mine=s.votes[me], n=Object.keys(voteTally(s)).length?Object.keys(s.votes).length:0;
-  h+='<div class="card" style="margin-bottom:12px"><div class="cell ind">'+avatar(me)+'<div class="body"><div class="t">'+esc(pname(me))+'</div><div class="s">'+(mine?'صوتك: '+esc(pname(mine))+' — تقدر تغيّر صوتك':'اختر أفضل لاعب في التمرين')+'</div></div><button class="btn sm gray" id="notMe" onclick="lsDel(\'saff_tr_me\');voteInner(\''+sid+'\')">لست أنا</button></div></div>';
+  h+='<div class="card" style="margin-bottom:12px"><div class="cell ind">'+avatar(me)+'<div class="body"><div class="t">'+esc(pname(me))+'</div><div class="s">لا يمكنك التصويت لنفسك</div></div><button class="btn sm gray" id="notMe" onclick="lsDel(\'saff_tr_me\');voteInner(\''+sid+'\')">لست أنا</button></div></div>';
   h+='<div class="card">'+parts.filter(function(id){return id!==me;}).map(function(id){var on=mine===id;
     return '<div class="cell tap ind vopt" data-id="'+id+'" onclick="castVote(\''+sid+'\',\''+id+'\')">'+avatar(id)+'<div class="body"><div class="t">'+esc(pname(id))+'</div><div class="s">'+POS[P(id).pos].ar+'</div></div>'+(on?'<span style="color:#D4A93C;display:inline-flex">'+icF('star','s')+'</span>':'')+'</div>';}).join('')+'</div>';
   h+='<div class="foot" style="text-align:center">صوّت <span class="num">'+Object.keys(s.votes).length+'</span> لاعب حتى الآن. النتيجة تظهر بعد انتهاء التمرين.</div>';
