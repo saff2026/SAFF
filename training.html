@@ -1411,6 +1411,7 @@ function renderSession(el){
   h+='<div class="card pad"><div class="teams-h2"><div class="th"><div class="tn"><span class="dot A"></span>'+esc(s.teams.A.name)+'</div><div class="thr">'+formBtn(s,'A',C)+'<span class="tag on num">القوة '+(sA||'—')+'</span></div></div><div class="th B"><div class="tn">'+esc(s.teams.B.name)+'<span class="dot B"></span></div><div class="thr"><span class="tag on num">القوة '+(sB||'—')+'</span>'+formBtn(s,'B',C)+'</div></div></div>';
   h+='<div class="balance"><i style="width:'+(sA/tot*100)+'%;background:var(--teamA)"></i><i style="width:'+(sB/tot*100)+'%;background:#C7C7CC"></i></div>';
   h+=pitchHTML(s,C);
+  h+=benchHTML(s,C);
   h+=(C?'<div class="foot" style="margin:12px 2px 0">اضغط على أي مركز في الملعب لاختيار لاعب.</div>':'')+'</div>';
 
   h+=rotationHTML(s,C);
@@ -1620,6 +1621,28 @@ function subsHTML(s,C){
       (C&&!subs.length?'<span class="chip" id="addSub-'+t+'" onclick="openSubPicker(\''+t+'\')">'+ic('plus','xs')+'بديل</span>':(subs.length?'':'<span class="small muted">لا يوجد</span>'))+'</div>';
   });
   return h;
+}
+// اللاعبون الحاضرون بدون مركز ولا بديل (الاحتياط)
+function benchOf(s){return Object.keys(s.att).filter(function(id){return s.att[id]&&P(id)&&!teamOf(s,id)&&!(s.absent&&s.absent[id]);});}
+function benchHTML(s,C){
+  var b=benchOf(s); if(!b.length)return '';
+  b.sort(function(x,y){return ovr(P(y))-ovr(P(x));});
+  return '<div id="benchRow" style="margin-top:14px"><div class="small muted" style="margin-bottom:8px;display:flex;align-items:center;gap:6px">'+ic('people','xs')+'الاحتياط (بدون مركز): <b class="num">'+b.length+'</b></div><div class="hstack" style="flex-wrap:wrap;gap:8px">'+
+    b.map(function(id){return '<span class="chip benchchip" data-id="'+id+'" onclick="'+(C?'openBench(\''+id+'\')':'openPlayer(\''+id+'\')')+'">'+esc(pname(id))+'<span class="o">'+POS[P(id).pos].ar+'</span></span>';}).join('')+
+    '</div>'+(C?'<div class="foot" style="margin:8px 2px 0">اضغط على اسم اللاعب لتنزيله في مركز.</div>':'')+'</div>';
+}
+function openBench(pid){
+  var s=openSession(); if(!s||!P(pid))return;
+  var p=P(pid), h=mh('أين ينزل '+esc(pname(pid))+'؟'), empty=[], full=[];
+  ['A','B'].forEach(function(t){ slotsOf(s,t).forEach(function(sl){ var x={t:t,sl:sl,fit:fitScore(p,sl.pos),cur:s.teams[t].slots[sl.id]}; (x.cur&&P(x.cur)?full:empty).push(x); }); });
+  var by=function(a,b){return b.fit-a.fit;}; empty.sort(by); full.sort(by);
+  var row=function(x,sub){return '<div class="cell tap ind li benchopt" onclick="pickSlot(\''+x.t+'\',\''+x.sl.id+'\',\''+pid+'\')"><span class="dot '+x.t+'"></span><div class="body"><div class="t">'+POS[x.sl.pos].ar+' · '+esc(s.teams[x.t].name)+'</div><div class="s">'+sub+'</div></div>'+chev()+'</div>';};
+  if(empty.length) h+=gh('<span style="font-size:17px">مراكز فاضية</span>')+'<div class="card picker">'+empty.map(function(x){return row(x,'المركز فاضي');}).join('')+'</div>';
+  var subT=['A','B'].filter(function(t){return !subsOf(s,t).filter(function(id){return P(id);}).length;});
+  if(subT.length) h+=gh('<span style="font-size:17px">بديل</span>')+'<div class="card picker">'+subT.map(function(t){return '<div class="cell tap ind li benchopt" onclick="addSub(\''+t+'\',\''+pid+'\');closeModal()"><span class="dot '+t+'"></span><div class="body"><div class="t">بديل '+esc(s.teams[t].name)+'</div><div class="s">لا يوجد بديل لهذا الفريق</div></div>'+chev()+'</div>';}).join('')+'</div>';
+  if(full.length) h+=gh('<span style="font-size:17px">مكان لاعب</span>')+'<div class="card picker">'+full.map(function(x){return row(x,'مكان '+esc(pname(x.cur))+' — وينتقل هو للاحتياط');}).join('')+'</div>';
+  h+='<div class="foot">الترتيب حسب الأنسب لمركز '+esc(p.name)+' ('+POS[p.pos].ar+').</div>';
+  openModal(h);
 }
 function removeSub(t,id){var s=openSession(); if(!s)return; put('sessions/'+s.id+'/teams/'+t+'/subs/'+id,null);}
 function openSubPicker(t){
