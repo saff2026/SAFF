@@ -1472,9 +1472,9 @@ function setCi(pid,k){
 }
 function checkinInner(){
   var s=openSession(); if(!s)return;
-  var ps=playersArr(), exp=ps.filter(function(p){return s.att[p.id];}), other=ps.filter(function(p){return !s.att[p.id];});
+  var ps=playersArr(), exp=ps.filter(function(p){return s.att[p.id];});
   var order=function(a,b){var ca=ciStatus(s,a.id)?1:0,cb=ciStatus(s,b.id)?1:0; return ca-cb||a.name.localeCompare(b.name,'ar');};
-  exp.sort(order); other.sort(order);
+  exp.sort(order);
   var row=function(p){var st=ciStatus(s,p.id), ts=s.checkin[p.id], lm=ts?lateMin(s,ts):0;
     var sub=st==='abs'?'غاب':ts?'وصل '+fmtClock(ts)+(lm>0?' · بعد البداية بـ '+lm+' د':''):POS[p.pos].ar;
     return '<div class="cell ind cirow" data-id="'+p.id+'" style="flex-wrap:wrap">'+avatar(p.id)+'<div class="body"><div class="t">'+esc(p.name)+'</div><div class="s">'+sub+'</div></div>'+
@@ -1483,7 +1483,6 @@ function checkinInner(){
   var h=mh('التحضير');
   h+='<div class="card"><div class="cell"><div class="body"><div class="t">بداية التمرين '+fmtStart(s)+'</div><div class="s">في الوقت <b class="num">'+cnt.ok+'</b> · متأخر <b class="num">'+cnt.late+'</b> · غاب <b class="num">'+cnt.abs+'</b> · بدون <b class="num">'+cnt.none+'</b></div><div class="s" style="margin-top:4px">اختر لكل لاعب حالته، واضغطها مرة ثانية لإلغائها.</div></div></div></div>';
   h+=gh('<span style="font-size:17px">قائمة اللاعبين في التمرين</span>')+(exp.length?'<div class="card">'+exp.map(row).join('')+'</div>':'<div class="card"><div class="cell"><div class="body"><div class="s">لم تُحدَّد قائمة اللاعبين بعد.</div></div></div></div>');
-  if(other.length) h+=gh('<span style="font-size:17px">بقية اللاعبين</span>')+'<div class="card">'+other.map(row).join('')+'</div><div class="foot">تحضير لاعب من هنا يضيفه لقائمة اللاعبين تلقائياً.</div>';
   setModal(h);
 }
 function checkIn(pid,late){var s=openSession(); if(!s)return; if(!s.att[pid]&&!canAdd(s))return; var m={}; m['sessions/'+s.id+'/checkin/'+pid]=Date.now(); m['sessions/'+s.id+'/lateSet/'+pid]=late?true:null; if(!s.att[pid]) m['sessions/'+s.id+'/att/'+pid]=true; putMany(m); var lm=lateMin(s,Date.now()); toast(pname(pid)+(late||lm>0?' — متأخر'+(lm>0?' '+lm+' دقيقة':''):' — في الوقت'));}
