@@ -113,6 +113,8 @@ svg.i.f{fill:currentColor;stroke:none;}
 .gh .lnk{background:none;border:none;color:var(--tint);font-size:15px;font-weight:500;padding:4px 0;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;}
 .gh .lnk:active{opacity:.5;}
 .gh .acts{display:flex;gap:14px;}
+@media(max-width:380px){.gh .acts{gap:9px;} .gh.foldable h2{gap:5px;}}
+@media(max-width:345px){.gh .lnk .i{display:none;} .gh h2{font-size:18px;}}
 .foot{font-size:13px;color:var(--label2);margin:7px 16px 0;line-height:1.5;}
 .card{background:var(--card);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;}
 .card.pad{padding:16px;}
@@ -381,6 +383,10 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .m-h .side{width:30px;flex:none;}
 .m-x{width:30px;height:30px;border-radius:50%;border:none;background:var(--fill);color:var(--label2);display:inline-flex;align-items:center;justify-content:center;flex:none;}
 .m-foot{display:flex;gap:10px;margin-top:22px;}
+.gh.foldable h2{cursor:pointer;display:flex;align-items:center;gap:8px;-webkit-user-select:none;user-select:none;}
+.gh .fchev{display:inline-flex;color:var(--label3);transform:rotate(-90deg);transition:transform .2s;}
+.gh.folded .fchev{transform:rotate(0deg);}
+.gh.folded h2{color:var(--label2);}
 .pchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
 .pchip{font-size:13px;padding:3px 9px;border-radius:12px;background:var(--fill);color:var(--label);}
 .pchip.hi{background:rgba(52,199,89,.15);} .pchip.mid{background:rgba(255,204,0,.18);} .pchip.lo{background:rgba(255,59,48,.14);}
@@ -1546,7 +1552,7 @@ function renderSession(el){
       var order=parts.slice().sort(function(a,b){var ta=teamOf(s,a),tb=teamOf(s,b);return ((ta?ta.t:'C')+pname(a)).localeCompare((tb?tb.t:'C')+pname(b),'ar');});
       h+='<div class="card">'+order.map(function(id){var r=s.ratings[id],tm=teamOf(s,id);
         return '<div class="cell rrow"><span class="dot '+(tm?tm.t:'N')+'"></span><div class="body"><div class="t">'+esc(pname(id))+'</div></div><span class="rv num">'+(typeof r==='number'?r:'—')+'</span><div class="stepper"><button onclick="rate(\''+id+'\',-0.5)" aria-label="إنقاص">−</button><span class="sp"></span><button onclick="rate(\''+id+'\',0.5)" aria-label="زيادة">+</button></div></div>';}).join('')+
-        '</div><div class="foot">التقييم من 10. أول ضغطة تبدأ من 6، وكل ضغطة نصف درجة.</div>';
+        '</div><div class="foot">التقييم من 10. أول ضغطة تبدأ من 5، وكل ضغطة نصف درجة.</div>';
     }else h+=emptyBox('people','القائمة فارغة','أضف اللاعبين لقائمة التمرين أولاً.');
 
     var am=voteWinner(s)||autoMvp(s), vt=voteTally(s), vk=Object.keys(vt).sort(function(a,b){return vt[b]-vt[a];});
@@ -1570,6 +1576,27 @@ function renderSession(el){
     :started?head+'<div id="liveTop">'+ciH+goalH+'</div>'+mid+rest
     :head+mid+ciH+goalH+rest;
   el.innerHTML=h;
+  foldSections(el);
+}
+/* أقسام صفحة التمرين تنفتح وتنقفل بالضغط على عنوانها، ويتذكّر الجوال اختيارك */
+function foldGet(){try{return JSON.parse(localStorage.getItem('saff_tr_fold')||'[]')||[];}catch(e){return [];}}
+function foldSet(a){try{localStorage.setItem('saff_tr_fold',JSON.stringify(a));}catch(e){}}
+function foldSections(root){
+  var closed=foldGet();
+  root.querySelectorAll('.gh').forEach(function(g){
+    var h2=g.querySelector('h2'); if(!h2||g.getAttribute('data-fold'))return;
+    var key=h2.textContent.trim(), body=document.createElement('div'); body.className='gfold';
+    var n=g.nextSibling;
+    while(n&&!(n.nodeType===1&&(n.classList.contains('gh')||n.id==='liveTop'||n.id==='lineupEnd'||(n.classList.contains('stack')&&n.querySelector('#finishBtn'))))){var nx=n.nextSibling;body.appendChild(n);n=nx;}
+    g.parentNode.insertBefore(body,g.nextSibling);
+    g.setAttribute('data-fold',key); g.classList.add('foldable');
+    h2.insertAdjacentHTML('beforeend','<span class="fchev">'+ic('chev','xs')+'</span>');
+    h2.setAttribute('role','button'); h2.setAttribute('aria-expanded',closed.indexOf(key)<0?'true':'false');
+    if(closed.indexOf(key)>=0){g.classList.add('folded');body.style.display='none';}
+    h2.onclick=function(){ var c=foldGet(), i=c.indexOf(key), shut=i<0;
+      if(shut)c.push(key); else c.splice(i,1); foldSet(c);
+      g.classList.toggle('folded',shut); body.style.display=shut?'none':''; h2.setAttribute('aria-expanded',shut?'false':'true'); };
+  });
 }
 var GROUPS=[['gk','حراس المرمى'],['def','الدفاع'],['mid','الوسط'],['att','الهجوم']];
 function openCheckin(){
