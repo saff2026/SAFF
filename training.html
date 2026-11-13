@@ -271,6 +271,7 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .at b{color:var(--label);font-weight:700;}
 .bar{height:3px;border-radius:2px;background:var(--fill);margin-top:3px;overflow:hidden;}
 .bar i{display:block;height:100%;border-radius:2px;background:var(--tint);}
+.bar i.b1{background:#0A9F57;} .bar i.b2{background:#7AC943;} .bar i.b3{background:#F2C230;} .bar i.b4{background:#F08A24;} .bar i.b5{background:#E5484D;}
 .trend{font-size:11px;font-weight:700;direction:ltr;margin-top:4px;text-align:center;}
 .up{color:var(--green);} .dn{color:var(--red);}
 
@@ -722,6 +723,8 @@ function ovrAt(p,pos){
   return clamp(s,1,99);
 }
 function ovr(p){return ovrAt(p,p.pos);}
+// لون خط الطاقة حسب الرقم
+function barCls(v){return v>=80?'b1':v>=70?'b2':v>=60?'b3':v>=50?'b4':'b5';}
 function tier(o){return o>=80?'t-gold':o>=70?'t-silver':'t-bronze';}
 function keyAttrs(pos){if(pos==='GK')return ['gk','pas'];var w=W[pos]||W.CM;return Object.keys(w).sort(function(a,b){return w[b]-w[a];}).slice(0,3);}
 // الطاقات المهمة للاعب: الحارس = الحراسة + التمرير فقط
@@ -1021,7 +1024,7 @@ function cardHTML(p){
     '<div class="pc-name">'+esc(p.name)+'</div>'+
     '<div class="pc-meta">'+POS[p.pos].ar+(p.age?' · '+esc(p.age)+' سنة':'')+'</div>'+
     '<div class="pc-stars"><span>المهارة '+starsHTML(p.sm)+'</span><span>القدم الضعيفة '+starsHTML(p.wf)+'</span></div>'+
-    '<div class="pc-attrs">'+cardAttrs(p).map(function(a){var v=p.attrs[a];return '<div class="at"><div class="r"><span>'+ATTR[a]+'</span><b class="num">'+v+'</b></div><div class="bar"><i style="width:'+v+'%"></i></div></div>';}).join('')+'</div></div>';
+    '<div class="pc-attrs">'+cardAttrs(p).map(function(a){var v=p.attrs[a];return '<div class="at"><div class="r"><span>'+ATTR[a]+'</span><b class="num">'+v+'</b></div><div class="bar"><i class="'+barCls(v)+'" style="width:'+v+'%"></i></div></div>';}).join('')+'</div></div>';
 }
 function tierColor(o){return o>=80?'#D4A93C':o>=70?'#A9B1BB':'#C4834F';}
 function ring(val,label,src){
@@ -1410,7 +1413,7 @@ function openPlayerInner(id){
     '<div><b class="num">'+st.apps+'</b><span>تمرين</span></div><div><b class="num">'+st.goals+'</b><span>هدف</span></div><div><b class="num">'+st.assists+'</b><span>صناعة</span></div>'+
     '<div><b class="num">'+st.mvp+'</b><span>أفضل لاعب</span></div><div><b class="num">'+(st.avg==null?'—':st.avg)+'</b><span>معدل التقييم</span></div><div><b class="num ltr" style="font-size:18px">'+st.w+'-'+st.d+'-'+st.l+'</b><span>فوز-تعادل-خسارة</span></div></div>'+(st.late?'<div class="foot" style="text-align:center;color:var(--orange)">تأخّر '+st.late+' مرة · مجموع '+st.lateMin+' دقيقة</div>':'');
   var showA=relAttrs(p);
-  h+=gh('الطاقات')+'<div class="card pad abars">'+showA.map(function(a){var v=p.attrs[a];return '<div class="at"><div class="r"><span>'+ATTR[a]+'</span><b class="num">'+v+'</b></div><div class="bar"><i style="width:'+v+'%"></i></div></div>';}).join('')+'</div>';
+  h+=gh('الطاقات')+'<div class="card pad abars">'+showA.map(function(a){var v=p.attrs[a];return '<div class="at"><div class="r"><span>'+ATTR[a]+'</span><b class="num">'+v+'</b></div><div class="bar"><i class="'+barCls(v)+'" style="width:'+v+'%"></i></div></div>';}).join('')+'</div>';
   var hist=[]; updList().forEach(function(ss){var c=ss.upd[id]; if(c){ if(!hist.length)hist.push({v:c.ovrB}); hist.push({v:c.ovrA,d:c.ovrA-c.ovrB,s:ss,c:c}); }});
   h+=gh('تطور التقييم');
   if(hist.length>1){
