@@ -811,7 +811,7 @@ function voteInner(sid){
   var parts=participants(s).filter(function(id){return P(id);}).sort(function(a,b){return pname(a).localeCompare(pname(b),'ar');});
   var me=myId(); if(me&&parts.indexOf(me)<0) me=null;
   var h=mh('أفضل لاعب في التمرين');
-  if(!voteOpen(s)){ setModal(h+'<div class="card"><div class="empty"><div class="ei">'+icF('star')+'</div><b>التصويت مغلق</b>'+(Date.now()>=voteEnd(s)?'انتهى التصويت.':'يفتح '+fmtWhen(voteStart(s))+' ويستمر 12 ساعة.')+'</div></div>'); return; }
+  if(!voteOpen(s)){ setModal(h+'<div class="card"><div class="empty"><div class="ei">'+icF('star')+'</div><b>التصويت مغلق</b>'+(s.status==='done'?'انتهى التصويت بإنهاء التمرين.':Date.now()>=voteEnd(s)?'انتهى التصويت.':'يفتح '+fmtWhen(voteStart(s))+' ويستمر 12 ساعة.')+'</div></div>'); return; }
   if(!me){
     var notIn=myId()&&parts.indexOf(myId())<0;
     h+='<div class="foot" style="text-align:center;margin:0 0 12px">'+(notIn?'اسمك ('+esc(pname(myId()))+') مو ضمن لاعبي هذا التمرين. إذا كان خطأ اختر اسمك:':'مين أنت؟ اختر اسمك مرة وحدة، والجوال يتذكّره.')+'</div>';
@@ -832,7 +832,8 @@ var VOTE_AFTER=2*3600*1000, VOTE_LEN=12*3600*1000;
 function voteStart(s){return startTs(s)+VOTE_AFTER;}
 function voteEnd(s){return voteStart(s)+VOTE_LEN;}
 // التصويت مفتوح 12 ساعة: يبدأ بعد ساعتين من بداية التمرين
-function voteOpen(s){var n=Date.now();return !!s&&n>=voteStart(s)&&n<voteEnd(s);}
+// التصويت مفتوح بعد ساعتين من البداية ولمدة 12 ساعة، ويُقفل فوراً عند إنهاء التمرين
+function voteOpen(s){var n=Date.now();return !!s&&s.status!=='done'&&n>=voteStart(s)&&n<voteEnd(s);}
 function voteSession(){return sessArr().filter(function(s){return voteOpen(s);}).sort(function(a,b){return voteStart(b)-voteStart(a);})[0]||null;}
 function fmtWhen(ts){var d=new Date(ts),t=new Date();var same=d.toDateString()===t.toDateString();return (same?'':(d.toDateString()===new Date(t.getTime()+864e5).toDateString()?'بكرة ':niceDate(fmtD(d),false)+' '))+fmtClock(ts);}
 // تصحيح مكافأة أفضل لاعب إذا تغيّرت النتيجة بعد إنهاء التمرين (يُنفَّذ لمجلس الإدارة بعد قفل التصويت)
@@ -1094,7 +1095,7 @@ function renderHome(el){
   h+=gh('التمرين القادم');
   if(os){
     h+='<div class="card cell tap" id="upcomingCard" style="display:block;padding:0" onclick="'+(isCoach?'go(\'session\')':'openSessionDetail(\''+os.id+'\')')+'">'+upcomingCard(os)+'</div>'+(isCoach?'':'<div class="foot">اضغط لعرض التشكيلة</div>');
-    if(vs&&vs.id===os.id){ h+=voteH; voteH=''; }
+    if(vs){ h+=voteH; voteH=''; }
   }else{
     h+='<div class="card"><div class="empty"><div class="ei">'+ic('ball')+'</div><b>لا يوجد تمرين قادم</b>'+(isCoach?'<button class="btn sm" style="margin-top:12px" onclick="go(\'session\')">'+ic('plus','xs')+'إنشاء تمرين</button>':'سيظهر هنا عندما يُنشئ مجلس الإدارة تمريناً')+'</div></div>';
   }
@@ -1103,15 +1104,8 @@ function renderHome(el){
     var last=ds[0], m=mvpOf(last);
     h+=gh('التمرين السابق',lnk('التفاصيل','openSessionDetail(\''+last.id+'\')'));
     h+='<div class="card cell tap" style="display:block;padding:0" onclick="openSessionDetail(\''+last.id+'\')">'+scoreCard(last,niceDate(last.date))+'</div>';
-    if(vs&&vs.id===last.id){ h+=voteH; voteH=''; }
   }
 
-  // التصويت لتمرين غير المعروض أعلاه: نعرض التمرين نفسه والتصويت تحته
-  if(voteH){
-    h+=gh('تمرين '+niceDate(vs.date),lnk('التفاصيل','openSessionDetail(\''+vs.id+'\')'));
-    h+='<div class="card cell tap" id="voteSessCard" style="display:block;padding:0" onclick="openSessionDetail(\''+vs.id+'\')">'+(vs.status==='done'?scoreCard(vs,niceDate(vs.date)):upcomingCard(vs))+'</div>'+voteH;
-    voteH='';
-  }
   var top=function(key,lbl,unit,color,icon,filled){
     var arr=vals(st).filter(function(x){return x[key]>0&&P(x.id);}).sort(function(a,b){return b[key]-a[key];});
     if(!arr.length)return '';
@@ -2218,7 +2212,10 @@ function finishSession(){
   Object.keys(ch).forEach(function(id){var c=ch[id].c; if(c.ovrA>c.ovrB)ups++; else if(c.ovrA<c.ovrB)dns++;});
   var msg='<b>إنهاء التمرين وحفظه في الأرشيف؟</b><br><span class="small">سيتم تحديث الطاقات الآن: <span class="up">'+ups+' يتحسّن</span> · <span class="dn">'+dns+' يتراجع</span></span>';
   if(unr.length) msg+='<br><span class="small" style="color:var(--orange)">'+unr.length+' لاعب بدون تقييم: '+unr.slice(0,4).map(function(id){return esc(pname(id));}).join('، ')+(unr.length>4?'…':'')+'</span>';
-  if(m) msg+='<br><span class="small">'+(voteOpen(s)||Date.now()<voteStart(s)?'أفضل لاعب حالياً: '+esc(pname(m))+' — التصويت يستمر حتى '+fmtWhen(voteEnd(s)):'أفضل لاعب: '+esc(pname(m)))+'</span>';
+  var nv=Object.keys(s.votes||{}).length;
+  if(m) msg+='<br><span class="small">أفضل لاعب: '+esc(pname(m))+(nv?' (من <span class="num">'+nv+'</span> صوت)':'')+'</span>';
+  if(voteOpen(s)) msg+='<br><span class="small" style="color:var(--orange)">التصويت مفتوح الآن، وإنهاء التمرين يقفله.</span>';
+  else if(Date.now()<voteStart(s)) msg+='<br><span class="small" style="color:var(--orange)">التصويت ما فتح بعد (يفتح '+fmtWhen(voteStart(s))+')، وإنهاء التمرين الآن يلغيه.</span>';
   askConfirm(msg,function(){
     var mp={}, up={};
     Object.keys(ch).forEach(function(id){ up[id]=ch[id].c; if(ch[id].c.d) mp['players/'+id+'/attrs']=ch[id].after; mp['players/'+id+'/carry']=ch[id].carry; });
