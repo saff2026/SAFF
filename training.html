@@ -1889,15 +1889,26 @@ function openSlot(t,slotId){
   var sl=slotsOf(s,t).filter(function(x){return x.id===slotId;})[0]; if(!sl)return;
   var cur=s.teams[t].slots[slotId];
   var list=playersArr().map(function(p){var tm=teamOf(s,p.id);return {p:p,o:ovr(p),fit:fitScore(p,sl.pos),tm:tm,att:!!s.att[p.id]};});
-  list.sort(function(a,b){ if(a.att!==b.att)return a.att?-1:1; var fa=a.tm?1:0,fb=b.tm?1:0; if(fa!==fb)return fa-fb; return (b.fit-a.fit)||(b.o-a.o);});
+  list.sort(function(a,b){return (b.fit-a.fit)||(b.o-a.o);});
   var h=mh(POS[sl.pos].ar+' · '+esc(s.teams[t].name));
   if(cur) h+='<button class="btn danger block sm" style="margin-bottom:12px" onclick="pickSlot(\''+t+'\',\''+slotId+'\',null)">إفراغ المركز (ينتقل للاحتياط)</button>';
-  if(list.length){
-    h+='<div class="card picker">'+list.map(function(x){
-      var where=x.tm?(x.tm.sub?'بديل '+esc(s.teams[x.tm.t].name)+' — سيتم التبديل':x.tm.t===t&&x.tm.slot===slotId?'في هذا المركز':'في '+esc(s.teams[x.tm.t].name)+' (<span class="ltr">'+slotsOf(s,x.tm.t).filter(function(z){return z.id===x.tm.slot;})[0].pos+'</span>) — سيتم التبديل'):(x.att?'احتياط':'خارج القائمة');
-      return '<div class="cell tap ind li" style="'+(x.att?'':'opacity:.55')+'" onclick="pickSlot(\''+t+'\',\''+slotId+'\',\''+x.p.id+'\')">'+avatar(x.p.id)+'<div class="body"><div class="t">'+esc(x.p.name)+' <span class="tag">'+POS[x.p.pos].ar+(x.p.pos2?' / '+POS[x.p.pos2].ar:'')+'</span></div><div class="s">'+where+'</div></div><span class="v strong num">'+x.o+'</span></div>';
-    }).join('')+'</div>';
-  }else h+=emptyBox('people','لا يوجد لاعبون','');
+  var tn=function(k){return esc(s.teams[k].name);};
+  var slotPos=function(k,id){var z=slotsOf(s,k).filter(function(q){return q.id===id;})[0];return z?POS[z.pos].ar:'';};
+  var swapTxt=cur?'يتبادل مع '+esc(pname(cur)):'ينتقل لهذا المركز';
+  var groups=[
+    {h:'الاحتياط (غير موزَّع)', f:function(x){return x.att&&!x.tm;}, w:function(x){return 'غير موزَّع — ينزل لهذا المركز';}},
+    {h:'من '+tn(t), f:function(x){return x.tm&&x.tm.t===t&&!(x.tm.slot===slotId);}, w:function(x){return x.tm.sub?'بديل '+tn(t)+' — '+swapTxt:'يلعب الآن '+slotPos(t,x.tm.slot)+' — '+swapTxt;}},
+    {h:'من '+tn(t==='A'?'B':'A'), f:function(x){return x.tm&&x.tm.t!==t;}, w:function(x){var o=x.tm.t;return x.tm.sub?'بديل '+tn(o)+' — '+swapTxt:'يلعب الآن '+slotPos(o,x.tm.slot)+' — '+swapTxt;}},
+    {h:'خارج قائمة التمرين', f:function(x){return !x.att&&!x.tm;}, w:function(x){return 'يُضاف للتمرين وينزل لهذا المركز';}}
+  ];
+  var row=function(x,w,dim){return '<div class="cell tap ind li" style="'+(dim?'opacity:.55':'')+'" onclick="pickSlot(\''+t+'\',\''+slotId+'\',\''+x.p.id+'\')">'+avatar(x.p.id)+'<div class="body"><div class="t">'+esc(x.p.name)+' <span class="tag">'+POS[x.p.pos].ar+'</span></div><div class="s">'+w+'</div></div><span class="v strong num">'+x.o+'</span></div>';};
+  var curX=cur?list.filter(function(x){return x.p.id===cur;})[0]:null;
+  if(curX) h+=gh('<span style="font-size:17px">في هذا المركز الآن</span>')+'<div class="card picker">'+row(curX,'يلعب '+POS[sl.pos].ar+' في '+tn(t),false)+'</div>';
+  var any=false;
+  groups.forEach(function(g,gi){var xs=list.filter(g.f); if(!xs.length)return; any=true;
+    h+=gh('<span style="font-size:17px">'+g.h+'</span>')+'<div class="card picker">'+xs.map(function(x){return row(x,g.w(x),gi===3);}).join('')+'</div>';});
+  if(any) h+='<div class="foot">الترتيب حسب الأنسب لمركز '+POS[sl.pos].ar+'.</div>';
+  else if(!curX) h+=emptyBox('people','لا يوجد لاعبون','');
   openModal(h);
 }
 function pickSlot(t,slotId,pid){
