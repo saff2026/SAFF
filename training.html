@@ -381,6 +381,9 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .m-h .side{width:30px;flex:none;}
 .m-x{width:30px;height:30px;border-radius:50%;border:none;background:var(--fill);color:var(--label2);display:inline-flex;align-items:center;justify-content:center;flex:none;}
 .m-foot{display:flex;gap:10px;margin-top:22px;}
+.pchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.pchip{font-size:13px;padding:3px 9px;border-radius:12px;background:var(--fill);color:var(--label);}
+.pchip.hi{background:rgba(52,199,89,.15);} .pchip.mid{background:rgba(255,204,0,.18);} .pchip.lo{background:rgba(255,59,48,.14);}
 .balpri .small{display:block;margin:0 4px 6px;}
 .cap.todo:not(.on){color:var(--orange);}
 .tok .pin{position:absolute;top:-5px;left:-5px;width:17px;height:17px;border-radius:50%;background:#1C1C1E;color:#FFD60A;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.4);}
@@ -1663,9 +1666,10 @@ function hungarian(a){
   }
   var ans=[]; for(j=1;j<=m;j++) if(p[j]) ans[p[j]-1]=j-1; return ans;
 }
-function bestAssign(ids,sl,prev){
+// w: وزن إضافي لكل لاعب حتى يلعب في مركزه الأساسي (يُرفع لمن لعب فيه وقتاً أقل)
+function bestAssign(ids,sl,prev,w){
   if(!ids.length)return {};
-  var a=ids.map(function(id){var p=P(id);return sl.map(function(x){return -(fitScore(p,x.pos)*10+traitFit(p,x.pos)*1.5+(prev&&prev[x.id]===id?4:0)+ovr(p)*0.01);});});
+  var a=ids.map(function(id){var p=P(id),pb=8*((w&&w[id])||1);return sl.map(function(x){return -(fitScore(p,x.pos)*10+(prefRank(p,x.pos)===0?pb:0)+traitFit(p,x.pos)*1.5+(prev&&prev[x.id]===id?4:0)+ovr(p)*0.01);});});
   var r=hungarian(a), res={}; ids.forEach(function(id,i){res[sl[r[i]].id]=id;}); return res;
 }
 function fitCount(asg,sl){var n=0;sl.forEach(function(x){var p=P(asg[x.id]);if(p&&fitKind(p,x.pos)!=='x')n++;});return n;}
@@ -1700,7 +1704,7 @@ function rotationPlan(s,t,dir){
     var outPos=null; for(var k in cur) if(cur[k]===best.c) outPos=k;
     var moves=[]; sl.forEach(function(x){var id=best.asg[x.id]; if(!id||id===inn)return; var was=null; for(var k2 in cur) if(cur[k2]===id) was=k2; if(was&&was!==x.id&&sl.filter(function(z){return z.id===was;})[0].pos!==x.pos) moves.push({id:id,from:sl.filter(function(z){return z.id===was;})[0].pos,to:x.pos});});
     var inPos=null; for(var k3 in best.asg) if(best.asg[k3]===inn) inPos=sl.filter(function(z){return z.id===k3;})[0].pos;
-    steps.push({inn:inn,out:best.c,outPos:sl.filter(function(z){return z.id===outPos;})[0].pos,inPos:inPos,moves:moves,fit:best.fit});
+    steps.push({inn:inn,out:best.c,outPos:sl.filter(function(z){return z.id===outPos;})[0].pos,inPos:inPos,moves:moves,fit:best.fit,asg:best.asg});
     rested[best.c]=true; queue.push(best.c); cur=best.asg;
   }
   var periods=[start.fit].concat(steps.map(function(x){return x.fit;}));
@@ -1711,7 +1715,21 @@ function rotationPlan(s,t,dir){
 function rotationBest(sl,cur0,sub,toRest){
   var members=vals(cur0).concat([sub]), K=toRest.length, offs=[sub].concat(toRest), A={}, slPos={};
   sl.forEach(function(x){slPos[x.id]=x.pos;});
-  offs.forEach(function(o){A[o]=bestAssign(members.filter(function(id){return id!==o;}),sl,cur0);});
+  // عدالة: نكرر الحساب ونرفع وزن من لعب في مركزه الأساسي وقتاً أقل، ونحتفظ بالأفضل للجميع
+  var elig=members.filter(function(id){var p=P(id);return sl.some(function(x){return x.pos===p.pos;});});
+  var w={}, bestA=null, bestSc=-1e9;
+  for(var it=0;it<16;it++){
+    var AA={}; offs.forEach(function(o){AA[o]=bestAssign(members.filter(function(id){return id!==o;}),sl,cur0,w);});
+    var prim={},play={},outR=0; members.forEach(function(id){prim[id]=0;play[id]=0;});
+    offs.forEach(function(o){Object.keys(AA[o]).forEach(function(k){var id=AA[o][k];play[id]++;if(slPos[k]===P(id).pos)prim[id]++;if(prefRank(P(id),slPos[k])<0)outR++;});});
+    var sh=elig.map(function(id){return play[id]?prim[id]/play[id]:1;}), tot=0; members.forEach(function(id){tot+=prim[id];});
+    var mn=sh.length?Math.min.apply(null,sh):1, mean=sh.length?sh.reduce(function(a,b){return a+b;},0)/sh.length:1;
+    var sc=tot+mn*offs.length*2-outR*3; // اللعب خارج مراكزه المرتّبة ممنوع قدر الإمكان
+    if(sc>bestSc+1e-9){bestSc=sc;bestA=AA;}
+    var changed=false; elig.forEach(function(id,i){ if(sh[i]<mean-1e-9&&(w[id]||1)<6){w[id]=(w[id]||1)+0.75;changed=true;} });
+    if(!changed)break;
+  }
+  offs.forEach(function(o){A[o]=bestA[o];});
   var where=function(asg){var w={};Object.keys(asg).forEach(function(k){w[asg[k]]=k;});return w;};
   var W={}; offs.forEach(function(o){W[o]=where(A[o]);});
   var mv=function(a,b){var n=0;members.forEach(function(id){if(id===a||id===b)return;if(W[a][id]&&W[b][id]&&slPos[W[a][id]]!==slPos[W[b][id]])n++;});return n;};
@@ -1727,12 +1745,19 @@ function rotationBest(sl,cur0,sub,toRest){
   order.forEach(function(o){
     var pa=A[prev], na=A[o], pw=W[prev], nw=W[o];
     var moves=[]; members.forEach(function(id){if(id===prev||id===o)return; if(pw[id]&&nw[id]&&slPos[pw[id]]!==slPos[nw[id]])moves.push({id:id,from:slPos[pw[id]],to:slPos[nw[id]]});});
-    steps.push({inn:prev,out:o,outPos:slPos[pw[o]],inPos:slPos[nw[prev]],moves:moves,fit:fitCount(na,sl)});
+    steps.push({inn:prev,out:o,outPos:slPos[pw[o]],inPos:slPos[nw[prev]],moves:moves,fit:fitCount(na,sl),asg:na});
     prev=o;
   });
   var start={asg:A[sub],fit:fitCount(A[sub],sl)};
   var periods=[start.fit].concat(steps.map(function(x){return x.fit;}));
   return {start:start,steps:steps,n:sl.length,fitTotal:periods.reduce(function(a,b){return a+b;},0),slotsTotal:periods.length*sl.length,moves:dp[FULL][last]};
+}
+// كم فترة لعب كل لاعب في مركزه الأساسي من الفترات اللي لعبها
+function rotPrimStats(plan,sl){
+  var pos={}; sl.forEach(function(x){pos[x.id]=x.pos;});
+  var per=[plan.start.asg].concat(plan.steps.map(function(x){return x.asg;})), st={};
+  per.forEach(function(asg){ if(!asg)return; Object.keys(asg).forEach(function(k){var id=asg[k];if(!P(id))return; st[id]=st[id]||{play:0,prim:0}; st[id].play++; if(pos[k]===P(id).pos)st[id].prim++;}); });
+  return st;
 }
 function rotationHTML(s,C){
   var dir=s.rotDir||'att', h='';
@@ -1751,6 +1776,10 @@ function rotationHTML(s,C){
         '<div class="rot-move"><span class="rl dn">يخرج</span><b>'+esc(pname(x.out))+'</b><span class="small muted">من</span> '+posLabel(x.outPos,false)+'</div>'+mv+'</div></div>';
     }).join('')+'</div>';
     var pct=Math.round(plan.fitTotal/plan.slotsTotal*100);
+    var stt=rotPrimStats(plan,slotsOf(s,t)), sids=Object.keys(stt).sort(function(a,b){return stt[a].prim/stt[a].play-stt[b].prim/stt[b].play;});
+    var avg=sids.length?Math.round(sids.reduce(function(a,id){return a+stt[id].prim/stt[id].play;},0)/sids.length*100):0;
+    h+='<div class="card primst" style="margin-top:8px"><div class="cell"><div class="body"><div class="t">وقت كل لاعب في مركزه الأساسي</div><div class="s">المتوسط <b class="num">'+avg+'%</b> من الوقت</div><div class="pchips">'+
+      sids.map(function(id){var pc=Math.round(stt[id].prim/stt[id].play*100);return '<span class="pchip '+(pc>=75?'hi':pc>=40?'mid':'lo')+'">'+esc(pname(id))+' <b class="num">'+pc+'%</b></span>';}).join('')+'</div></div></div></div>';
     h+='<div class="foot">'+plan.steps.length+' تبديلات، وكل لاعب يرتاح مرة وحدة. <b class="num">'+pct+'%</b> من وقت التمرين يلعب فيه كل لاعب في مركزه المفضّل أو الثانوي.</div>';
   });
   return h;
