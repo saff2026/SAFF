@@ -12,8 +12,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="تمرين نخبة السبت">
-<link rel="apple-touch-icon" href="icon-elite-192.png">
-<link rel="icon" type="image/png" href="icon-elite-192.png">
+<link rel="apple-touch-icon" href="icon-elite-192.png?v=2">
+<link rel="icon" type="image/png" href="icon-elite-192.png?v=2">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -541,7 +541,7 @@ document.addEventListener('DOMContentLoaded',function(){applyTheme();});
 
 <header class="nav" id="nav">
   <div class="wrap">
-    <img class="logo" src="ball.png" alt="">
+    <img class="logo" src="ball.png?v=2" alt="">
     <div class="org">تمرين نخبة السبت</div>
     <div class="ntitle" id="navTitle">تمرين نخبة السبت</div>
     <button class="theme-btn" id="themeBtn" onclick="openTheme()" aria-label="المظهر"><svg class="i s" viewBox="0 0 24 24"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg></button>
@@ -1945,7 +1945,7 @@ function lineupImage(sid){
   if(!ids.length){toast('⚠️ وزّع الفريقين أولاً');return;}
   toast('جارِ تجهيز الصورة…');
   var fontP=(document.fonts&&document.fonts.load)?Promise.all(['800 60px Tajawal','700 30px Tajawal','500 26px Tajawal'].map(function(f){return document.fonts.load(f).catch(function(){});})):Promise.resolve();
-  Promise.all([fontP,loadImg('ball.png')].concat(ids.map(function(id){return loadImg(photoSrc(P(id)));}))).then(function(r){
+  Promise.all([fontP,loadImg('ball.png?v=2')].concat(ids.map(function(id){return loadImg(photoSrc(P(id)));}))).then(function(r){
     var ph={}; ids.forEach(function(id,i){ph[id]=r[i+2];});
     var url; try{url=drawLineup(s,r[1],ph);}catch(e){console.error(e);toast('⚠️ تعذّر تجهيز الصورة');return;}
     LINEUP_URL=url; LINEUP_NAME='تشكيلة-'+s.date+'.png';
@@ -2045,7 +2045,7 @@ function posterShare(kind,sid){
   toast('جارِ تجهيز الصورة…');
   var ids=participants(s).concat(teamPlayers(s,'A'),teamPlayers(s,'B')).filter(function(id,i,a){return P(id)&&a.indexOf(id)===i;});
   var fontP=(document.fonts&&document.fonts.load)?Promise.all(['900 90px Tajawal','800 34px Tajawal','700 24px Tajawal'].map(function(f){return document.fonts.load(f).catch(function(){});})):Promise.resolve();
-  Promise.all([fontP,loadImg('ball.png')].concat(ids.map(function(id){return loadImg(photoSrc(P(id)));}))).then(function(r){
+  Promise.all([fontP,loadImg('ball.png?v=2')].concat(ids.map(function(id){return loadImg(photoSrc(P(id)));}))).then(function(r){
     var ph={}; ids.forEach(function(id,i){ph[id]=r[i+2];});
     var url, name={sum:'ملخص',list:'قائمة',rot:'التبديل'}[kind]+'-'+s.date+'.png', title={sum:'ملخص التمرين',list:'قائمة اللاعبين',rot:'ترتيب التبديل'}[kind];
     try{ url=drawPoster(kind,s,r[1],ph); }catch(e){console.error(e);toast('⚠️ تعذّر تجهيز الصورة');return;}
