@@ -143,6 +143,11 @@ svg.i.f{fill:currentColor;stroke:none;}
 .stack{display:flex;flex-direction:column;gap:10px;}
 .hstack{display:flex;gap:10px;align-items:center;}
 .grow{flex:1;min-width:0;}
+/* التاريخ والوقت: كل واحد نصف العرض بالضبط (الآيفون يعطيها عرضاً أدنى خاصاً بها) */
+.dt-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;}
+.dt-row>div{min-width:0;}
+.dt-row .field{-webkit-appearance:none;appearance:none;display:block;min-width:0;max-width:100%;width:100%;box-sizing:border-box;text-align:center;}
+.dt-row .field::-webkit-date-and-time-value{text-align:center;margin:0;}
 
 /* ============ حقول ============ */
 .field{width:100%;height:46px;background:var(--fill2);border:none;border-radius:12px;padding:0 14px;font-size:17px;outline:none;color:var(--label);transition:box-shadow .2s;}
@@ -1961,10 +1966,9 @@ function openNewSession(editId){
   var s=editId?S.sessions[editId]:{date:today(),size:7,formation:'2-3-1',teams:{A:{name:'الأخضر'},B:{name:'الأبيض'}}};
   window._ns={size:s.size,fA:teamForm(s,'A')||s.formation,fB:teamForm(s,'B')||s.formation};
   var h=mh(editId?'إعدادات التمرين':'تمرين جديد');
-  h+='<div class="hstack"><div class="grow"><span class="lbl">تاريخ التمرين</span><input class="field" type="date" id="ns_date" value="'+esc(s.date)+'"></div><div class="grow"><span class="lbl">وقت البداية</span><input class="field" type="time" id="ns_time" value="'+esc(s.time||'20:00')+'"></div></div>';
+  h+='<div class="dt-row"><div><span class="lbl">تاريخ التمرين</span><input class="field" type="date" id="ns_date" value="'+esc(s.date)+'"></div><div><span class="lbl">وقت البداية</span><input class="field" type="time" id="ns_time" value="'+esc(s.time||'20:00')+'"></div></div>';
   h+='<span class="lbl">عدد اللاعبين في كل فريق</span><div class="seg" id="ns_size">'+Object.keys(FORMS).map(function(n){return '<button type="button" class="num'+(+n===+window._ns.size?' on':'')+'" onclick="nsSize('+n+')">'+n+'</button>';}).join('')+'</div>';
   h+='<div class="hstack"><div class="grow"><span class="lbl"><span class="dot A"></span> الفريق الأول</span><input class="field" id="ns_a" maxlength="20" value="'+esc(s.teams.A.name)+'"></div><div class="grow"><span class="lbl"><span class="dot B"></span> الفريق الثاني</span><input class="field" id="ns_b" maxlength="20" value="'+esc(s.teams.B.name)+'"></div></div>';
-  h+='<div class="foot">الخطة تختارها لكل فريق من فوق الملعب.'+(editId?' تغيير العدد يعيد توزيع اللاعبين تلقائياً.':'')+'</div>';
   h+='<div class="m-foot"><button class="btn" id="ns_save" onclick="saveSessionSettings('+(editId?'\''+editId+'\'':'null')+')">'+(editId?'حفظ':'إنشاء التمرين')+'</button></div>';
   openModal(h); nsRenderForms();
 }
