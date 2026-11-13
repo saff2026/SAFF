@@ -896,6 +896,13 @@ function voteWinner(s){var t=voteTally(s),ids=Object.keys(t);if(!ids.length)retu
 function mvpOf(s){return s.mvp||voteWinner(s)||autoMvp(s);}
 
 /* ------------------------- dates & weeks ------------------------- */
+// التمرين الجديد: نفس يوم ووقت آخر تمرين بعد أسبوع (ولا يكون تاريخاً ماضياً)
+function nextSessDefaults(){
+  var last=sessArr().slice().sort(function(a,b){return startTs(b)-startTs(a);})[0];
+  if(!last) return {date:today(),time:'20:00',size:7};
+  var d=parseD(last.date), t=today(), g=0; do{ d.setDate(d.getDate()+7); }while(fmtD(d)<t&&g++<200);
+  return {date:fmtD(d),time:/^\d\d:\d\d$/.test(last.time||'')?last.time:'20:00',size:FORMS[last.size]?last.size:7};
+}
 function today(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function parseD(s){var a=s.split('-');return new Date(+a[0],+a[1]-1,+a[2]);}
 function fmtD(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
@@ -1124,7 +1131,7 @@ function renderHome(el){
   if(!isCoach&&myId()) h+='<div class="foot" id="meLine" style="margin:4px 4px 0">أهلاً <b style="color:var(--label)">'+esc(pname(myId()))+'</b> · <a href="#" style="color:var(--tint)" onclick="event.preventDefault();askMe()">تغيير</a></div>';
   var vs=voteSession();
   var voteH=vs?'<div class="card" style="margin-top:10px"><div class="cell tap ind" id="voteCard" onclick="openVote(\''+vs.id+'\')">'+tile('#D4A93C','star',true)+'<div class="body"><div class="t">صوّت لأفضل لاعب في التمرين</div><div class="s">'+(myId()&&vs.votes[myId()]?'صوتك: '+esc(pname(vs.votes[myId()]))+' — اضغط للتغيير':'التصويت مفتوح حتى '+fmtWhen(voteEnd(vs)))+'</div></div>'+chev()+'</div></div>':'';
-  h+=gh('التمرين القادم');
+  h+=gh(os&&Date.now()>=startTs(os)?'التمرين الحالي':'التمرين القادم');
   if(os){
     h+='<div class="card cell tap" id="upcomingCard" style="display:block;padding:0" onclick="'+(isCoach?'go(\'session\')':'openSessionDetail(\''+os.id+'\')')+'">'+upcomingCard(os)+'</div>'+(isCoach?'':'<div class="foot">اضغط لعرض التشكيلة</div>');
     if(vs){ h+=voteH; voteH=''; }
@@ -2257,7 +2264,8 @@ function goalsHTML(s,C){
 
 function openNewSession(editId){
   if(!isCoach)return;
-  var s=editId?S.sessions[editId]:{date:today(),size:7,formation:'2-3-1',teams:{A:{name:'الأخضر'},B:{name:'الأبيض'}}};
+  var nd=nextSessDefaults();
+  var s=editId?S.sessions[editId]:{date:nd.date,time:nd.time,size:nd.size,formation:FORMS[nd.size]?Object.keys(FORMS[nd.size])[0]:'2-3-1',teams:{A:{name:'الأخضر'},B:{name:'الأبيض'}}};
   window._ns={size:s.size,fA:teamForm(s,'A')||s.formation,fB:teamForm(s,'B')||s.formation};
   var h=mh(editId?'إعدادات التمرين':'تمرين جديد');
   h+='<div class="dt-row"><div><span class="lbl">تاريخ التمرين</span><input class="field" type="date" id="ns_date" value="'+esc(s.date)+'"></div><div><span class="lbl">وقت البداية</span><input class="field" type="time" id="ns_time" value="'+esc(s.time||'20:00')+'"></div></div>';
