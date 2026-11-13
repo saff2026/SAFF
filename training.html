@@ -373,6 +373,7 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .m-h .side{width:30px;flex:none;}
 .m-x{width:30px;height:30px;border-radius:50%;border:none;background:var(--fill);color:var(--label2);display:inline-flex;align-items:center;justify-content:center;flex:none;}
 .m-foot{display:flex;gap:10px;margin-top:22px;}
+.m-edit{height:30px;padding:0 12px;border-radius:15px;border:none;background:var(--tint-soft);color:var(--tint);font:inherit;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:5px;flex:none;cursor:pointer;}
 .m-foot .btn{flex:1;}
 .slider{display:flex;align-items:center;gap:12px;padding:9px 16px;}
 .slider+.slider{border-top:.5px solid var(--sep);}
@@ -1355,6 +1356,7 @@ function openPlayer(id){
 function openPlayerInner(id){
   var p=P(id), st=computeStats()[id], o=ovr(p);
   var h=mh('');
+  if(isCoach) h=h.replace('<span class="side"></span>','<button class="m-edit" id="editPlayer" onclick="openPlayerForm(\''+id+'\')">'+ic('pencil','xs')+'تعديل</button>');
   h+='<div class="prof">'+ring(o,POS[p.pos].ar,photoSrc(p))+'<div class="nm">'+esc(p.name)+'</div><div class="mt">'+'المركز الأساسي: '+POS[p.pos].ar+(p.pos2?' · المركز الثانوي: '+POS[p.pos2].ar:'')+'</div><div class="mt">'+(p.age?esc(p.age)+' سنة · ':'')+'القدم: '+(FOOT[p.foot]||'—')+'</div><div class="mt" style="display:flex;gap:16px;justify-content:center;margin-top:8px"><span>المهارة '+starsHTML(p.sm,'big')+'</span><span>القدم الضعيفة '+starsHTML(p.wf,'big')+'</span></div>'+(traitsOf(p).length?'<div class="chips" style="justify-content:center;gap:6px;margin-top:10px">'+traitsOf(p).map(function(k){return '<span class="tag on">'+TRAITS.filter(function(x){return x[0]===k;})[0][1]+'</span>';}).join('')+'</div>':'')+'</div>';
   h+='<div class="card sgrid" style="margin-top:16px">'+
     '<div><b class="num">'+st.apps+'</b><span>تمرين</span></div><div><b class="num">'+st.goals+'</b><span>هدف</span></div><div><b class="num">'+st.assists+'</b><span>صناعة</span></div>'+
@@ -1373,7 +1375,6 @@ function openPlayerInner(id){
   if(st.ratings.length){
     h+='<div class="card">'+st.ratings.slice().reverse().slice(0,8).map(function(r){return '<div class="cell tap" onclick="openSessionDetail(\''+r.sid+'\')"><div class="body"><div class="t" style="font-size:15px">'+niceDate(r.date)+'</div></div>'+rBadge(r.r)+chev()+'</div>';}).join('')+'</div>';
   }else h+='<div class="card"><div class="cell"><div class="body"><div class="s">لا توجد تقييمات بعد.</div></div></div></div>';
-  if(isCoach) h+='<div class="m-foot"><button class="btn tinted" id="editPlayer" onclick="openPlayerForm(\''+id+'\')">'+ic('pencil','s')+'تعديل البيانات والطاقات</button></div>';
   setModal(h);
 }
 function sparkline(v){
