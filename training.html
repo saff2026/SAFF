@@ -779,13 +779,13 @@ function voteInner(sid){
     setModal(h); return;
   }
   var mine=s.votes[me], n=Object.keys(voteTally(s)).length?Object.keys(s.votes).length:0;
-  h+='<div class="card" style="margin-bottom:12px"><div class="cell ind">'+avatar(me)+'<div class="body"><div class="t">'+esc(pname(me))+'</div><div class="s">لا يمكنك التصويت لنفسك</div></div><button class="btn sm gray" id="notMe" onclick="lsDel(\'saff_tr_me\');voteInner(\''+sid+'\')">لست أنا</button></div></div>';
-  h+='<div class="card">'+parts.filter(function(id){return id!==me;}).map(function(id){var on=mine===id;
+  h+='<div class="card" style="margin-bottom:12px"><div class="cell ind">'+avatar(me)+'<div class="body"><div class="t">'+esc(pname(me))+'</div><div class="s">'+(mine?'صوتك: '+esc(pname(mine))+' — تقدر تغيّره':'اختر أفضل لاعب من القائمة')+'</div></div><button class="btn sm gray" id="notMe" onclick="lsDel(\'saff_tr_me\');voteInner(\''+sid+'\')">لست أنا</button></div></div>';
+  h+='<div class="card">'+parts.map(function(id){var on=mine===id;
     return '<div class="cell tap ind vopt" data-id="'+id+'" onclick="castVote(\''+sid+'\',\''+id+'\')">'+avatar(id)+'<div class="body"><div class="t">'+esc(pname(id))+'</div><div class="s">'+POS[P(id).pos].ar+'</div></div>'+(on?'<span style="color:#D4A93C;display:inline-flex">'+icF('star','s')+'</span>':'')+'</div>';}).join('')+'</div>';
   h+='<div class="foot" style="text-align:center">صوّت <span class="num">'+Object.keys(s.votes).length+'</span> لاعب حتى الآن. التصويت مفتوح حتى '+fmtWhen(voteEnd(s))+'، والنتيجة تظهر بعدها.</div>';
   setModal(h);
 }
-function castVote(sid,pid){var s=S.sessions[sid],me=myId(); if(!s||!me||!voteOpen(s))return; if(pid===me){toast('⚠️ ما تقدر تصوّت لنفسك');return;} putVote('sessions/'+sid+'/votes/'+me,pid); toast('تم تصويتك لـ '+pname(pid));}
+function castVote(sid,pid){var s=S.sessions[sid],me=myId(); if(!s||!me||!voteOpen(s))return; putVote('sessions/'+sid+'/votes/'+me,pid); toast('تم تصويتك لـ '+pname(pid));}
 function goalCount(s){var g={},a={};vals(s.goals).forEach(function(x){if(x.s)g[x.s]=(g[x.s]||0)+1;if(x.a)a[x.a]=(a[x.a]||0)+1;});return {g:g,a:a};}
 // تصويت اللاعبين على أفضل لاعب
 var VOTE_AFTER=2*3600*1000, VOTE_LEN=12*3600*1000;
