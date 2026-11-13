@@ -1082,7 +1082,6 @@ function renderHome(el){
   if(!isCoach&&myId()) h+='<div class="foot" id="meLine" style="margin:4px 4px 0">أهلاً <b style="color:var(--label)">'+esc(pname(myId()))+'</b> · <a href="#" style="color:var(--tint)" onclick="event.preventDefault();askMe()">تغيير</a></div>';
   var vs=voteSession();
   var voteH=vs?'<div class="card" style="margin-top:10px"><div class="cell tap ind" id="voteCard" onclick="openVote(\''+vs.id+'\')">'+tile('#D4A93C','star',true)+'<div class="body"><div class="t">صوّت لأفضل لاعب في التمرين</div><div class="s">'+(myId()&&vs.votes[myId()]?'صوتك: '+esc(pname(vs.votes[myId()]))+' — اضغط للتغيير':'التصويت مفتوح حتى '+fmtWhen(voteEnd(vs)))+'</div></div>'+chev()+'</div></div>':'';
-  var voteTopAt=h.length;
   h+=gh('التمرين القادم');
   if(os){
     h+='<div class="card cell tap" id="upcomingCard" style="display:block;padding:0" onclick="'+(isCoach?'go(\'session\')':'openSessionDetail(\''+os.id+'\')')+'">'+upcomingCard(os)+'</div>'+(isCoach?'':'<div class="foot">اضغط لعرض التشكيلة</div>');
@@ -1098,7 +1097,12 @@ function renderHome(el){
     if(vs&&vs.id===last.id){ h+=voteH; voteH=''; }
   }
 
-  if(voteH) h=h.slice(0,voteTopAt)+voteH+h.slice(voteTopAt);
+  // التصويت لتمرين غير المعروض أعلاه: نعرض التمرين نفسه والتصويت تحته
+  if(voteH){
+    h+=gh('تمرين '+niceDate(vs.date),lnk('التفاصيل','openSessionDetail(\''+vs.id+'\')'));
+    h+='<div class="card cell tap" id="voteSessCard" style="display:block;padding:0" onclick="openSessionDetail(\''+vs.id+'\')">'+(vs.status==='done'?scoreCard(vs,niceDate(vs.date)):upcomingCard(vs))+'</div>'+voteH;
+    voteH='';
+  }
   var top=function(key,lbl,unit,color,icon,filled){
     var arr=vals(st).filter(function(x){return x[key]>0&&P(x.id);}).sort(function(a,b){return b[key]-a[key];});
     if(!arr.length)return '';
