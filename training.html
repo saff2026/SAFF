@@ -218,6 +218,10 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .ci-seg button.on.ci-ok{background:#34C759;color:#fff;}
 .ci-seg button.on.ci-late{background:#FF9500;color:#fff;}
 .ci-seg button.on.ci-abs{background:#FF3B30;color:#fff;}
+.av-wrap{position:relative;display:inline-flex;flex:none;}
+.av-wrap .avatar{box-shadow:0 0 0 1px var(--sep),0 2px 6px rgba(0,0,0,.08);}
+.av-wrap .mini{position:absolute;bottom:-3px;left:-4px;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 0 0 2px var(--card);}
+.av-wrap .mini svg.i.xs{width:11px;height:11px;}
 /* كبسولات */
 .caps{display:flex;gap:8px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none;}
 .caps::-webkit-scrollbar{display:none;}
@@ -1060,7 +1064,7 @@ function renderHome(el){
     var arr=vals(st).filter(function(x){return x[key]>0&&P(x.id);}).sort(function(a,b){return b[key]-a[key];});
     if(!arr.length)return '';
     var x=arr[0];
-    return '<div class="cell tap ind" onclick="openPlayer(\''+x.id+'\')">'+tile(color,icon,filled)+'<div class="body"><div class="t">'+esc(pname(x.id))+'</div><div class="s">'+lbl+'</div></div><span class="v strong num">'+x[key]+'</span><span class="v small">'+unit+'</span></div>';
+    return '<div class="cell tap ind toprow" onclick="openPlayer(\''+x.id+'\')"><span class="av-wrap">'+avatar(x.id,true)+'<span class="mini" style="background:'+color+'">'+(filled?icF(icon,'xs'):ic(icon,'xs'))+'</span></span>'+'<div class="body"><div class="t">'+esc(pname(x.id))+'</div><div class="s">'+lbl+'</div></div><span class="v strong num">'+x[key]+'</span><span class="v small">'+unit+'</span></div>';
   };
   var tops=top('goals','الهدّاف','هدف','var(--tint)','ball')+top('assists','المايسترو','صناعة','#0A84FF','assist')+top('mvp','أكثر من نال أفضل لاعب','مرة','#D4A93C','star',true);
   if(tops) h+=gh('أبرز اللاعبين',lnk('عرض الكل','go(\'stats\')'))+'<div class="card">'+tops+'</div>';
