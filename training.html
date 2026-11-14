@@ -1204,7 +1204,7 @@ function colorPick(t,cur){return '<div class="swatches" id="ns_col'+t+'">'+TEAM_
 // التقييمات تظهر للاعبين بعد إنهاء التمرين، أو قبله إذا نشرها مجلس الإدارة
 function ratingsVisible(s){return !!s&&(s.status==='done'||!!s.ratingsPub);}
 function rateCls(r){return r>=7.5?'hi':r>=5.5?'mid':'lo';}
-function setRatingsPub(on){var s=openSession();if(!s)return;put('sessions/'+s.id+'/ratingsPub',on?Date.now():null);toast(on?'⭐ نُشرت التقييمات للاعبين':'أُخفيت التقييمات عن اللاعبين');}
+function setRatingsPub(on){var s=openSession();if(!s)return;put('sessions/'+s.id+'/ratingsPub',on?Date.now():null);toast(on?'⭐ تم تسليم التقييم — يظهر للاعبين على التشكيلة':'أُلغي التسليم — التقييمات مخفية عن اللاعبين');}
 function upcomingCard(s){
   var d=parseD(s.date), day='', dm='';
   try{day=d.toLocaleDateString(AR_LOC,{weekday:'long'});dm=d.toLocaleDateString(AR_LOC,{day:'numeric',month:'long'});}catch(e){day=s.date;}
@@ -1681,13 +1681,13 @@ function renderSession(el){
 
   var parts=participants(s).filter(function(id){return P(id);});
   if(C){
-    h+=gh('تقييم اللاعبين',parts.length?(s.ratingsPub?lnk('إخفاء','setRatingsPub(false)','rpubOff'):lnk('نشر للاعبين','setRatingsPub(true)','rpubOn','upl')):'');
+    h+=gh('تقييم اللاعبين',parts.length?(s.ratingsPub?lnk('إلغاء التسليم','setRatingsPub(false)','rpubOff'):lnk('تسليم التقييم','setRatingsPub(true)','rpubOn','check')):'');
     if(parts.length){
       var order=parts.slice().sort(function(a,b){var ta=teamOf(s,a),tb=teamOf(s,b);return ((ta?ta.t:'C')+pname(a)).localeCompare((tb?tb.t:'C')+pname(b),'ar');});
       h+='<div class="card">'+order.map(function(id){var r=s.ratings[id],tm=teamOf(s,id);
         return '<div class="cell rrow"><span class="dot '+(tm?tm.t:'N')+'"></span><div class="body"><div class="t">'+esc(pname(id))+'</div></div><span class="rv num">'+(typeof r==='number'?r:'—')+'</span><div class="stepper"><button onclick="rate(\''+id+'\',-0.5)" aria-label="إنقاص">−</button><span class="sp"></span><button onclick="rate(\''+id+'\',0.5)" aria-label="زيادة">+</button></div></div>';}).join('')+
         '</div><div class="foot">التقييم من 10. أول ضغطة تبدأ من 5، وكل ضغطة نصف درجة. يُحفظ تلقائياً.</div>'+
-        (s.ratingsPub?'<div class="rpub on" id="rpubNote">✓ التقييمات منشورة للاعبين — أي تعديل يظهر لهم مباشرة</div>':'<div class="rpub" id="rpubNote">التقييمات مخفية عن اللاعبين حتى تضغط «نشر للاعبين» أو تنهي التمرين.</div>');
+        (s.ratingsPub?'<div class="rpub on" id="rpubNote">✓ تم تسليم التقييم — يظهر للاعبين على التشكيلة، وأي تعديل يظهر لهم مباشرة</div>':'<div class="rpub" id="rpubNote">التقييمات مخفية عن اللاعبين حتى تضغط «تسليم التقييم» أو تنهي التمرين.</div>');
     }else h+=emptyBox('people','القائمة فارغة','أضف اللاعبين لقائمة التمرين أولاً.');
 
     var am=voteWinner(s)||autoMvp(s), vt=voteTally(s), vk=Object.keys(vt).sort(function(a,b){return vt[b]-vt[a];});
