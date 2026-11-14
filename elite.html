@@ -580,6 +580,21 @@ body.v2 .ico-tile{border-radius:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.
 body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
+/* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
+var BUILD='20261114204350';
+(function(){
+  function check(){
+    if(BUILD==='dev'||!window.fetch)return;
+    var u=location.pathname+'?v='+Date.now();
+    fetch(u,{cache:'no-store'}).then(function(r){return r.ok?r.text():'';}).then(function(t){
+      var m=/var BUILD='([^']+)'/.exec(t||''); if(!m||m[1]===BUILD)return;
+      var k='saff_reload_'+m[1]; try{ if(sessionStorage.getItem(k))return; sessionStorage.setItem(k,'1'); }catch(e){}
+      location.reload();
+    }).catch(function(){});
+  }
+  window.addEventListener('load',function(){setTimeout(check,1500);});
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden) check(); });
+})();
 /* الوضع الداكن: تلقائي (حسب الجوال) أو فاتح أو داكن — يُحفظ في هذا الجوال فقط */
 function themeMode(){try{var m=localStorage.getItem('saff_el_theme');return m==='light'||m==='dark'?m:'auto';}catch(e){return 'auto';}}
 function applyTheme(mode){
