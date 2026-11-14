@@ -588,7 +588,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261114213103';
+var BUILD='20261114215036';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -982,8 +982,8 @@ function voteInner(sid){
   if(!voteOpen(s)){ setModal(h+'<div class="card"><div class="empty"><div class="ei">'+icF('star')+'</div><b>التصويت مغلق</b>'+(s.status==='done'?'انتهى التصويت بإنهاء التمرين.':Date.now()>=voteEnd(s)?'انتهى التصويت.':'يفتح '+fmtWhen(voteStart(s))+' ويستمر 12 ساعة.')+'</div></div>'); return; }
   if(!me){
     var notIn=myId()&&parts.indexOf(myId())<0;
-    h+='<div class="foot" style="text-align:center;margin:0 0 12px">'+(notIn?'اسمك ('+esc(pname(myId()))+') مو ضمن لاعبي هذا التمرين. إذا كان خطأ اختر اسمك:':'<b class="vnote">لابد من إدخال الاسم للتمكن من التصويت لأفضل لاعب</b><br>اختر اسمك مرة وحدة، والجوال يتذكّره.')+'</div>';
-    h+='<select class="field" id="voteMe">'+meOptions(myId())+'</select><div class="m-foot"><button class="btn" id="voteMeOk" onclick="var v=document.getElementById(\'voteMe\').value;if(!v){toast(\'⚠️ اختر اسمك\');return;}lsSet(\'saff_tr_me\',v);voteInner(\''+sid+'\')">متابعة</button></div>';
+    h+='<div class="foot" style="text-align:center;margin:0 0 12px">'+(notIn?'<b class="vnote">التصويت للاعبي هذا التمرين فقط</b><br>اسمك ('+esc(pname(myId()))+') مو ضمن لاعبي هذا التمرين. إذا كان خطأ اختر اسمك:':'<b class="vnote">لابد من إدخال الاسم للتمكن من التصويت لأفضل لاعب</b><br>اختر اسمك مرة وحدة، والجوال يتذكّره.')+'</div>';
+    h+='<select class="field" id="voteMe"><option value="">— اختر اسمك —</option>'+parts.map(function(id){return '<option value="'+id+'">'+esc(pname(id))+'</option>';}).join('')+'</select><div class="m-foot"><button class="btn" id="voteMeOk" onclick="var v=document.getElementById(\'voteMe\').value;if(!v){toast(\'⚠️ اختر اسمك\');return;}lsSet(\'saff_tr_me\',v);voteInner(\''+sid+'\')">متابعة</button></div>';
     setModal(h); return;
   }
   var mine=s.votes[me], n=Object.keys(voteTally(s)).length?Object.keys(s.votes).length:0;
@@ -993,7 +993,8 @@ function voteInner(sid){
   h+='<div class="foot" style="text-align:center">صوّت <span class="num">'+Object.keys(s.votes).length+'</span> لاعب حتى الآن. التصويت مفتوح حتى '+fmtWhen(voteEnd(s))+'، والنتيجة تظهر بعدها.<br><b class="attrnote">الطاقات تتعدّل بعد انتهاء تصويت أفضل لاعب.</b></div>';
   setModal(h);
 }
-function castVote(sid,pid){var s=S.sessions[sid],me=myId(); if(!s||!me||!voteOpen(s))return; putVote('sessions/'+sid+'/votes/'+me,pid); toast('تم تصويتك لـ '+pname(pid));}
+function inSess(s,id){return !!id&&participants(s).indexOf(id)>=0;}
+function castVote(sid,pid){var s=S.sessions[sid],me=myId(); if(!s||!me||!voteOpen(s))return; if(!inSess(s,me)){toast('⚠️ التصويت للاعبي هذا التمرين فقط');return;} if(!inSess(s,pid))return; putVote('sessions/'+sid+'/votes/'+me,pid); toast('تم تصويتك لـ '+pname(pid));}
 function goalCount(s){var g={},a={};vals(s.goals).forEach(function(x){if(x.s)g[x.s]=(g[x.s]||0)+1;if(x.a)a[x.a]=(a[x.a]||0)+1;});return {g:g,a:a};}
 // تصويت اللاعبين على أفضل لاعب
 var VOTE_AFTER=2*3600*1000, VOTE_LEN=12*3600*1000;
@@ -1034,7 +1035,7 @@ function settleVotes(){
     putMany(m);
   });
 }
-function voteTally(s){var t={};Object.keys(s.votes||{}).forEach(function(v){var c=s.votes[v];if(c&&P(c)&&c!==v)t[c]=(t[c]||0)+1;});return t;}
+function voteTally(s){var t={},pp={};participants(s).forEach(function(id){pp[id]=1;});Object.keys(s.votes||{}).forEach(function(v){var c=s.votes[v];if(c&&P(c)&&c!==v&&pp[v]&&pp[c])t[c]=(t[c]||0)+1;});return t;}
 function voteWinner(s){var t=voteTally(s),ids=Object.keys(t);if(!ids.length)return null;var gl=goalCount(s);
   ids.sort(function(a,b){return (t[b]-t[a])||((s.ratings[b]||0)-(s.ratings[a]||0))||((gl.g[b]||0)-(gl.g[a]||0));});return ids[0];}
 function mvpOf(s){return s.mvp||voteWinner(s)||autoMvp(s);}
@@ -1323,7 +1324,7 @@ function renderHome(el){
 
   if(!isCoach&&myId()) h+='<div class="foot" id="meLine" style="margin:4px 4px 0">أهلاً <b style="color:var(--label)">'+esc(pname(myId()))+'</b> · <a href="#" style="color:var(--tint)" onclick="event.preventDefault();askMe()">تغيير</a></div>';
   var vs=voteSession();
-  var voteH=vs?'<div class="card" style="margin-top:10px"><div class="cell tap ind" id="voteCard" onclick="openVote(\''+vs.id+'\')">'+tile('#D4A93C','star',true)+'<div class="body"><div class="t">صوّت لأفضل لاعب في التمرين</div><div class="s">'+(!myId()?'التصويت مفتوح حتى '+fmtWhen(voteEnd(vs))+'<br><span class="vnote" id="voteNote">لابد من إدخال الاسم للتمكن من التصويت لأفضل لاعب</span>':vs.votes[myId()]?'صوتك: '+esc(pname(vs.votes[myId()]))+' — اضغط للتغيير':'التصويت مفتوح حتى '+fmtWhen(voteEnd(vs)))+'</div></div>'+chev()+'</div></div>':'';
+  var voteH=vs?'<div class="card" style="margin-top:10px"><div class="cell tap ind" id="voteCard" onclick="openVote(\''+vs.id+'\')">'+tile('#D4A93C','star',true)+'<div class="body"><div class="t">صوّت لأفضل لاعب في التمرين</div><div class="s">'+(!myId()?'التصويت مفتوح حتى '+fmtWhen(voteEnd(vs))+'<br><span class="vnote" id="voteNote">لابد من إدخال الاسم للتمكن من التصويت لأفضل لاعب</span>':!inSess(vs,myId())?'التصويت مفتوح حتى '+fmtWhen(voteEnd(vs))+'<br><span class="vnote" id="voteNote">التصويت للاعبي هذا التمرين فقط</span>':vs.votes[myId()]?'صوتك: '+esc(pname(vs.votes[myId()]))+' — اضغط للتغيير':'التصويت مفتوح حتى '+fmtWhen(voteEnd(vs)))+'</div></div>'+chev()+'</div></div>':'';
   h+=gh(os&&Date.now()>=startTs(os)?'التمرين الحالي':'التمرين القادم');
   if(os){
     if(sessLabel(os)) h+='<div class="sesslbl" id="sessLbl">'+esc(sessLabel(os))+'</div>';
@@ -1770,7 +1771,7 @@ function renderSession(el){
         '<div class="small muted" style="margin-bottom:10px">'+(s.mvp?'تم اختياره يدوياً.':(vk.length&&am===voteWinner(s))?'الاختيار الحالي حسب تصويت اللاعبين: <b style="color:var(--label)">'+esc(pname(am))+'</b>':am?'الاقتراح التلقائي حسب أعلى تقييم: <b style="color:var(--label)">'+esc(pname(am))+'</b>':'يُقترح تلقائياً بعد التقييم، أو اختره بنفسك.')+'</div>';
       var vlist=Object.keys(s.votes||{}).filter(function(v){return s.votes[v];}).sort(function(x,y){return pname(s.votes[x]).localeCompare(pname(s.votes[y]),'ar')||pname(x).localeCompare(pname(y),'ar');});
       h+='<div class="vwho" id="voteWho"><div class="vwho-h"><b>من صوّت لمين</b><span class="num">'+vlist.length+'</span>'+(vlist.length?'<span style="flex:1"></span><button class="lnk red" id="voteClearAll" onclick="clearVotes()">مسح كل التصويت</button>':'')+'</div>'+
-        (vlist.length?vlist.map(function(v){var c=s.votes[v];return '<div class="vrow" data-v="'+v+'"><span class="vfrom">'+esc(pname(v))+'</span><span class="varr">←</span><b class="vto">'+esc(pname(c))+'</b>'+(c===v?'<span class="vbad">لنفسه، لا يُحتسب</span>':'')+'<span style="flex:1"></span><button class="vdel" aria-label="مسح الصوت" onclick="delVote(\''+v+'\')">'+ic('trash','s')+'</button></div>';}).join(''):'<div class="small muted">لا توجد أصوات بعد.</div>')+'</div>';
+        (vlist.length?vlist.map(function(v){var c=s.votes[v];return '<div class="vrow" data-v="'+v+'"><span class="vfrom">'+esc(pname(v))+'</span><span class="varr">←</span><b class="vto">'+esc(pname(c))+'</b>'+(!inSess(s,v)?'<span class="vbad">ليس من لاعبي التمرين، لا يُحتسب</span>':c===v?'<span class="vbad">لنفسه، لا يُحتسب</span>':'')+'<span style="flex:1"></span><button class="vdel" aria-label="مسح الصوت" onclick="delVote(\''+v+'\')">'+ic('trash','s')+'</button></div>';}).join(''):'<div class="small muted">لا توجد أصوات بعد.</div>')+'</div>';
       var byR=parts.slice().sort(function(a,b){return (typeof s.ratings[b]==='number'?s.ratings[b]:-1)-(typeof s.ratings[a]==='number'?s.ratings[a]:-1)||pname(a).localeCompare(pname(b),'ar');});
       h+='<select class="field" id="mvpSel" onchange="setMvp(this.value||null)"><option value="">تلقائي (تصويت اللاعبين ثم التقييم)'+(am?' — '+esc(pname(am)):'')+'</option>'+
         byR.map(function(id){var r=s.ratings[id];return '<option value="'+id+'"'+(s.mvp===id?' selected':'')+'>'+esc(pname(id))+(typeof r==='number'?' ('+r+')':'')+'</option>';}).join('')+'</select>';
