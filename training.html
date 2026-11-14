@@ -150,8 +150,10 @@ svg.i.f{fill:currentColor;stroke:none;}
 /* التاريخ والوقت: كل واحد نصف العرض بالضبط (الآيفون يعطيها عرضاً أدنى خاصاً بها) */
 .dt-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;}
 .dt-row>div{min-width:0;}
-.dt-row .field{-webkit-appearance:none;appearance:none;display:block;min-width:0;max-width:100%;width:100%;box-sizing:border-box;text-align:center;}
-.dt-row .field::-webkit-date-and-time-value{text-align:center;margin:0;}
+.dt-row .field{-webkit-appearance:none;appearance:none;display:flex;align-items:center;justify-content:center;min-width:0;max-width:100%;width:100%;box-sizing:border-box;text-align:center;height:46px;line-height:46px;padding-top:0;padding-bottom:0;}
+/* الآيفون يرسم التاريخ والوقت أعلى الخانة: نوسّطه عمودياً وأفقياً */
+.dt-row .field::-webkit-date-and-time-value{text-align:center;margin:0;line-height:46px;min-height:46px;display:flex;align-items:center;justify-content:center;}
+.dt-row .field::-webkit-datetime-edit{line-height:46px;padding:0;}
 
 /* ============ حقول ============ */
 .field{width:100%;height:46px;background:var(--fill2);border:none;border-radius:12px;padding:0 14px;font-size:17px;outline:none;color:var(--label);transition:box-shadow .2s;}
