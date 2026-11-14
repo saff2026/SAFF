@@ -594,7 +594,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261114222306';
+var BUILD='20261114223940';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -938,7 +938,7 @@ var askedMe=false;
 function maybeAskMe(){
   if(askedMe)return; askedMe=true;
   if(!isCoach&&playersArr().length&&!lsGet('saff_el_tour')){ setTimeout(function(){openTour(true);},300); return; } // أول زيارة: جولة سريعة ثم اختيار الاسم
-  if(isCoach||!playersArr().length||myId()||lsGet('saff_el_me_skip'))return;
+  if(isCoach||!playersArr().length||myId()||meSkipped())return;
   setTimeout(function(){askMe();},300);
 }
 /* ---------- جولة سريعة للزوار الجدد ---------- */
@@ -991,7 +991,7 @@ function tourPlace(){
 function tourDone(){
   lsSet('saff_el_tour','1'); var o=document.getElementById('tourOv'); if(o){o.className='';o.innerHTML='';}
   window.removeEventListener('resize',tourPlace); window.removeEventListener('scroll',tourPlace,true);
-  if(tourFirst&&!isCoach&&playersArr().length&&!myId()&&!lsGet('saff_el_me_skip')) setTimeout(function(){askMe();},350);
+  if(tourFirst&&!isCoach&&playersArr().length&&!myId()&&!meSkipped()) setTimeout(function(){askMe();},350);
 }
 /* ---------- دخول اللاعب: الاسم من القائمة + كلمة سر من 4 أرقام ---------- */
 function pinHash(id,pin){var x=ROOT+'|'+id+'|'+pin+'|saff',h1=0x811c9dc5,h2=5381;for(var i=0;i<x.length;i++){var c=x.charCodeAt(i);h1=Math.imul(h1^c,16777619)>>>0;h2=(Math.imul(h2,33)+c)>>>0;}return h1.toString(16)+'.'+h2.toString(16);}
@@ -1013,7 +1013,7 @@ function pinBox(){
 function askMe(){
   var h=mh('تسجيل الدخول')+'<div style="text-align:center;margin:4px 0 14px"><div class="empty" style="padding:0"><div class="ei">'+ic('people')+'</div></div><div class="small muted">اختر اسمك وادخل كلمة السر، والجوال يتذكّرك.</div><div class="small vnote" style="margin-top:8px">لابد من إدخال الاسم للتمكن من التصويت لأفضل لاعب</div></div>'+
     loginForm(playersArr().sort(function(a,b){return a.name.localeCompare(b.name,'ar');}).map(function(p){return p.id;}))+
-    '<div class="m-foot"><button class="btn gray" id="meSkip" onclick="lsSet(\'saff_el_me_skip\',\'1\');logoutMe();closeModal();render()">أنا زائر</button><button class="btn" id="meOk" onclick="saveMe()">دخول</button></div>';
+    '<div class="m-foot"><button class="btn gray" id="meSkip" onclick="meSkip();logoutMe();closeModal();render()">أنا زائر</button><button class="btn" id="meOk" onclick="saveMe()">دخول</button></div>';
   openModal(h);
   _meAfter=function(v){closeModal(); toast('أهلاً '+pname(v)); render();};
 }
@@ -1024,9 +1024,12 @@ function saveMe(){
   if(hasPin(v)){ if(h!==S.pins[v]){toast('❌ كلمة السر غلط');i1.value='';i1.focus();return;} }
   else{ var i2=document.getElementById('mePin2'); if(!i2||i2.value!==p){toast('⚠️ كلمتا السر غير متطابقتين');if(i2){i2.value='';i2.focus();}return;}
     lsSet('saff_el_me',v); lsSet('saff_el_meh',h); putVote('pins/'+v,h); S.pins[v]=h; }
-  lsSet('saff_el_me',v); lsSet('saff_el_meh',h); lsDel('saff_el_me_skip');
+  lsSet('saff_el_me',v); lsSet('saff_el_meh',h); meSkip(true);
   var f=_meAfter; _meAfter=null; if(f)f(v);
 }
+// «أنا زائر» لهذه الزيارة فقط: كل ما فتح التطبيق من جديد يُطلب منه تسجيل الدخول
+function meSkip(off){lsDel('saff_el_me_skip');try{if(off)sessionStorage.removeItem('saff_el_me_skip');else sessionStorage.setItem('saff_el_me_skip','1');}catch(e){}}
+function meSkipped(){try{return sessionStorage.getItem('saff_el_me_skip')==='1';}catch(e){return false;}}
 function logoutMe(){lsDel('saff_el_me');lsDel('saff_el_meh');}
 function myId(){var v=lsGet('saff_el_me'); if(!v||!P(v))return null; var h=S.pins&&S.pins[v]; return h&&lsGet('saff_el_meh')===h?v:null;}
 function resetPin(id){askConfirm('إعادة تعيين كلمة سر <b>'+esc(pname(id))+'</b>؟ يختار كلمة سر جديدة أول ما يدخل.',function(){put('pins/'+id,null);toast('تمت إعادة التعيين');},'إعادة تعيين');}
@@ -1380,6 +1383,7 @@ function renderHome(el){
   var ps=playersArr(), ds=doneSessions(), st=computeStats(), os=openSession(), h='';
 
   if(!isCoach&&myId()) h+='<div class="foot" id="meLine" style="margin:4px 4px 0">أهلاً <b style="color:var(--label)">'+esc(pname(myId()))+'</b> · <a href="#" style="color:var(--tint)" onclick="event.preventDefault();askMe()">تغيير</a> · <a href="#" id="meOut" style="color:var(--tint)" onclick="event.preventDefault();logoutMe();render()">خروج</a></div>';
+  else if(!isCoach&&playersArr().length) h+='<div class="foot" id="guestLine" style="margin:4px 4px 0">أنت زائر، ولا يمكنك التصويت لأفضل لاعب · <a href="#" id="guestLogin" style="color:var(--tint);font-weight:700" onclick="event.preventDefault();askMe()">تسجيل الدخول</a></div>';
   var vs=voteSession();
   var voteH=vs?'<div class="card" style="margin-top:10px"><div class="cell tap ind" id="voteCard" onclick="openVote(\''+vs.id+'\')">'+tile('#D4A93C','star',true)+'<div class="body"><div class="t">صوّت لأفضل لاعب في التمرين</div><div class="s">'+(!myId()?'التصويت مفتوح حتى '+fmtWhen(voteEnd(vs))+'<br><span class="vnote" id="voteNote">لابد من إدخال الاسم للتمكن من التصويت لأفضل لاعب</span>':!inSess(vs,myId())?'التصويت مفتوح حتى '+fmtWhen(voteEnd(vs))+'<br><span class="vnote" id="voteNote">التصويت للاعبي هذا التمرين فقط</span>':vs.votes[myId()]?'صوتك: '+esc(pname(vs.votes[myId()]))+' — اضغط للتغيير':'التصويت مفتوح حتى '+fmtWhen(voteEnd(vs)))+'</div></div>'+chev()+'</div></div>':'';
   h+=gh(os&&Date.now()>=startTs(os)?'التمرين الحالي':'التمرين القادم');
