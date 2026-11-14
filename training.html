@@ -385,6 +385,14 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .m-h .side{width:30px;flex:none;}
 .m-x{width:30px;height:30px;border-radius:50%;border:none;background:var(--fill);color:var(--label2);display:inline-flex;align-items:center;justify-content:center;flex:none;}
 .m-foot{display:flex;gap:10px;margin-top:22px;}
+.joker{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:800;color:#5a3d00;background:linear-gradient(135deg,#F6E3A1,#D9AE45);box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 2px 6px rgba(201,162,74,.35);white-space:nowrap;}
+.joker.big{font-size:15px;padding:4px 14px;}
+.pc-ph{position:relative;flex:none;}
+.pc-joker{position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);display:flex;justify-content:center;z-index:1;}
+.pc-joker .joker{font-size:11px;padding:2px 7px;}
+.tgl{width:51px;height:31px;border-radius:16px;background:var(--fill);position:relative;flex:none;transition:background .2s;}
+.tgl i{position:absolute;top:2px;right:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.25);transition:right .2s;}
+.tgl.on{background:#34C759;} .tgl.on i{right:22px;}
 .gh.foldable h2{cursor:pointer;display:flex;align-items:center;gap:8px;-webkit-user-select:none;user-select:none;}
 .gh .fchev{display:inline-flex;color:var(--label3);transform:rotate(-90deg);transition:transform .2s;}
 .gh.folded .fchev{transform:rotate(0deg);}
@@ -598,6 +606,7 @@ var firebaseConfig = {
 };
 // اسم المجلد داخل قاعدة البيانات
 var ROOT = "training";
+var FEAT_JOKER = false; // وسام الجوكر: يُفعَّل في تمرين نخبة السبت فقط
 
 /* ===================================================================== */
 
@@ -1066,10 +1075,13 @@ var TITLES={home:'تمرين ساف الأسبوعي',players:'اللاعبون'
 /* ---------- بطاقة اللاعب ---------- */
 function starsHTML(n,cls){n=clamp(+n||0,0,5);return '<span class="stars '+(cls||'')+'" aria-label="'+n+' من 5">'+'★'.repeat(n)+'<span class="off">'+'★'.repeat(5-n)+'</span></span>';}
 function starPick(id,key,val){return '<div class="starpick" id="'+id+'">'+[1,2,3,4,5].map(function(i){return '<button type="button" class="'+(i<=val?'on':'')+'" data-v="'+i+'" onclick="pf.p.'+key+'='+i+';this.parentNode.querySelectorAll(\'button\').forEach(function(b){b.classList.toggle(\'on\',+b.dataset.v<='+i+')})" aria-label="'+i+'">★</button>';}).join('')+'</div>';}
+// وسام الجوكر: يمنحه مجلس الإدارة لمن يلعب في مراكز كثيرة
+function isJoker(p){return FEAT_JOKER&&!!(p&&p.joker);}
+function jokerBadge(big){return '<span class="joker'+(big?' big':'')+'" title="الجوكر: يلعب في مراكز كثيرة">🃏 الجوكر</span>';}
 function cardHTML(p){
   var o=ovr(p), tr=lastTrend(p.id);
   return '<div class="pcard" onclick="openPlayer(\''+p.id+'\')">'+
-    '<div class="pc-top">'+photoHTML(p,'pc-photo')+
+    '<div class="pc-top">'+(isJoker(p)?'<div class="pc-ph">'+photoHTML(p,'pc-photo')+'<div class="pc-joker">'+jokerBadge()+'</div></div>':photoHTML(p,'pc-photo'))+
     '<div><div class="ovr '+tier(o)+'"><b class="num">'+o+'</b></div>'+
     (tr?'<div class="trend '+(tr>0?'up':'dn')+'">'+(tr>0?'▲ ':'▼ ')+Math.abs(tr)+'</div>':'')+'</div></div>'+
     '<div class="pc-name">'+esc(p.name)+'</div>'+
@@ -1244,6 +1256,7 @@ function openPlayerForm(id){
   h+='<span class="lbl">العمر</span><input class="field num" id="f_age" type="number" inputmode="numeric" min="5" max="60" value="'+esc(p.age)+'">';
   h+='<div class="hstack" style="align-items:flex-start"><div class="grow"><span class="lbl">نجوم المهارة</span>'+starPick('f_sm','sm',p.sm||3)+'</div></div>';
   h+='<span class="lbl">القدم المفضلة</span><div class="seg" id="f_foot">'+['R','L','B'].map(function(k){return '<button type="button" class="'+(p.foot===k?'on':'')+'" onclick="pf.p.foot=\''+k+'\';this.parentNode.querySelectorAll(\'button\').forEach(function(b){b.classList.remove(\'on\')});this.classList.add(\'on\')">'+FOOT[k]+'</button>';}).join('')+'</div>';
+  if(FEAT_JOKER) h+='<div class="card" style="margin-top:14px"><div class="cell tap" id="f_joker" onclick="pf.p.joker=!pf.p.joker;this.querySelector(\'.tgl\').classList.toggle(\'on\',!!pf.p.joker)"><div class="body"><div class="t">وسام الجوكر 🃏</div><div class="s">يلعب في مراكز كثيرة — يظهر للجميع في بطاقته</div></div><span class="tgl'+(p.joker?' on':'')+'"><i></i></span></div></div>';
   h+='<span class="lbl">خصائص فنية <span style="opacity:.7">(تساعد في التشكيلة ولا تؤثر على التقييم)</span></span><div class="chips" id="f_traits">'+TRAITS.map(function(x){var on=!!(p.traits||{})[x[0]];return '<span class="chip trait'+(on?' on':'')+'" data-k="'+x[0]+'" onclick="pf.p.traits=pf.p.traits||{};pf.p.traits[\''+x[0]+'\']=!pf.p.traits[\''+x[0]+'\'];this.classList.toggle(\'on\')">'+x[1]+'</span>';}).join('')+'</div>';
   h+='<span class="lbl">نجوم القدم الضعيفة</span>'+starPick('f_wf','wf',p.wf||3);
   h+='<span class="lbl">مراكزه بالترتيب <span style="opacity:.7">(الأول هو الأساسي)</span></span><div class="card prefs" id="f_prefs">'+
@@ -1464,7 +1477,7 @@ function savePlayer(){
   var nv={}; Object.keys(p.never||{}).forEach(function(k){if(p.never[k]&&POS[k]&&pr.indexOf(k)<0)nv[k]=true;});
   var dup=playersArr().filter(function(x){return x.id!==pf.id&&x.name===p.name;});
   if(dup.length){toast('⚠️ يوجد لاعب بنفس الاسم');return;}
-  var id=pf.id||uid('p'); var tr={}; TRAITS.forEach(function(x){if((p.traits||{})[x[0]])tr[x[0]]=true;}); var rec={name:p.name,age:p.age,foot:p.foot,traits:tr,sm:clamp(+p.sm||3,1,5),wf:clamp(+p.wf||3,1,5),pos:p.pos,pos2:p.pos2,pos3:p.pos3,pos4:p.pos4,never:nv,attrs:p.attrs,created:p.created||Date.now()}; if(p.carry)rec.carry=p.carry; if(photoSrc(p))rec.photo=p.photo;
+  var id=pf.id||uid('p'); var tr={}; TRAITS.forEach(function(x){if((p.traits||{})[x[0]])tr[x[0]]=true;}); var rec={joker:FEAT_JOKER&&p.joker?true:null,name:p.name,age:p.age,foot:p.foot,traits:tr,sm:clamp(+p.sm||3,1,5),wf:clamp(+p.wf||3,1,5),pos:p.pos,pos2:p.pos2,pos3:p.pos3,pos4:p.pos4,never:nv,attrs:p.attrs,created:p.created||Date.now()}; if(p.carry)rec.carry=p.carry; if(photoSrc(p))rec.photo=p.photo;
   put('players/'+id,rec); closeModal(); toast(pf.id?'تم حفظ التعديلات':'تمت إضافة '+p.name);
 }
 function deletePlayer(id){
@@ -1482,7 +1495,7 @@ function openPlayerInner(id){
   var p=P(id), st=computeStats()[id], o=ovr(p);
   var h=mh('');
   if(isCoach) h=h.replace('<span class="side"></span>','<button class="m-edit" id="editPlayer" onclick="openPlayerForm(\''+id+'\')">'+ic('pencil','xs')+'تعديل</button>');
-  h+='<div class="prof">'+ring(o,POS[p.pos].ar,photoSrc(p))+'<div class="nm">'+esc(p.name)+'</div><div class="mt">'+(p.age?esc(p.age)+' سنة · ':'')+'القدم: '+(FOOT[p.foot]||'—')+'</div><div class="mt" style="display:flex;gap:16px;justify-content:center;margin-top:8px"><span>المهارة '+starsHTML(p.sm,'big')+'</span><span>القدم الضعيفة '+starsHTML(p.wf,'big')+'</span></div>'+(isCoach&&traitsOf(p).length?'<div class="chips" id="profTraits" style="justify-content:center;gap:6px;margin-top:10px">'+traitsOf(p).map(function(k){return '<span class="tag on">'+TRAITS.filter(function(x){return x[0]===k;})[0][1]+'</span>';}).join('')+'</div>':'')+'</div>';
+  h+='<div class="prof">'+ring(o,POS[p.pos].ar,photoSrc(p))+'<div class="nm">'+esc(p.name)+'</div>'+(isJoker(p)?'<div id="profJoker" style="margin:6px 0 4px">'+jokerBadge(true)+'<div class="small muted" style="margin-top:6px">يلعب في مراكز كثيرة</div></div>':'')+'<div class="mt">'+(p.age?esc(p.age)+' سنة · ':'')+'القدم: '+(FOOT[p.foot]||'—')+'</div><div class="mt" style="display:flex;gap:16px;justify-content:center;margin-top:8px"><span>المهارة '+starsHTML(p.sm,'big')+'</span><span>القدم الضعيفة '+starsHTML(p.wf,'big')+'</span></div>'+(isCoach&&traitsOf(p).length?'<div class="chips" id="profTraits" style="justify-content:center;gap:6px;margin-top:10px">'+traitsOf(p).map(function(k){return '<span class="tag on">'+TRAITS.filter(function(x){return x[0]===k;})[0][1]+'</span>';}).join('')+'</div>':'')+'</div>';
   h+='<div class="card sgrid" style="margin-top:16px">'+
     '<div><b class="num">'+st.apps+'</b><span>تمرين</span></div><div><b class="num">'+st.goals+'</b><span>هدف</span></div><div><b class="num">'+st.assists+'</b><span>صناعة</span></div>'+
     '<div><b class="num">'+st.mvp+'</b><span>أفضل لاعب</span></div><div><b class="num">'+(st.avg==null?'—':st.avg)+'</b><span>معدل التقييم</span></div><div><b class="num ltr" style="font-size:18px">'+st.w+'-'+st.d+'-'+st.l+'</b><span>فوز-تعادل-خسارة</span></div></div>'+(st.late?'<div class="foot" style="text-align:center;color:var(--orange)">تأخّر '+st.late+' مرة · مجموع '+st.lateMin+' دقيقة</div>':'');
