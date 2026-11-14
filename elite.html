@@ -1042,6 +1042,7 @@ function voteInner(sid){
   if(!voteOpen(s)){ setModal(h+'<div class="card"><div class="empty"><div class="ei">'+icF('star')+'</div><b>التصويت مغلق</b>'+(s.status==='done'?'انتهى التصويت بإنهاء التمرين.':Date.now()>=voteEnd(s)?'انتهى التصويت.':'يفتح '+fmtWhen(voteStart(s))+' ويستمر 12 ساعةً.')+'</div></div>'); return; }
   if(!me){
     var notIn=myId()&&parts.indexOf(myId())<0;
+    if(notIn){ setModal(h+'<div class="card"><div class="empty" id="noVote"><div class="ei">'+icF('star')+'</div><b>ما لك تصويت في هذا التمرين</b>التصويت للاعبي التمرين فقط.</div></div>'); return; }
     h+='<div class="foot" style="text-align:center;margin:0 0 12px">'+(notIn?'<b class="vnote">التصويت للاعبي هذا التمرين فقط</b><br>اسمك ('+esc(pname(myId()))+') مو ضمن لاعبي هذا التمرين. إذا كان خطأ اختر اسمك:':'<b class="vnote">لابد من إدخال الاسم للتمكن من التصويت لأفضل لاعب</b><br>اختر اسمك وادخل كلمة السر، والجوال يتذكّرك.')+'</div>';
     h+=loginForm(parts)+'<div class="m-foot"><button class="btn" id="meOk" onclick="saveMe()">دخول</button></div>';
     setModal(h); _meAfter=function(){voteInner(sid);}; return;
@@ -1385,7 +1386,7 @@ function renderHome(el){
   if(!isCoach&&myId()) h+='<div class="foot" id="meLine" style="margin:4px 4px 0">أهلاً <b style="color:var(--label)">'+esc(pname(myId()))+'</b> · <a href="#" style="color:var(--tint)" onclick="event.preventDefault();askMe()">تغيير</a> · <a href="#" id="meOut" style="color:var(--tint)" onclick="event.preventDefault();logoutMe();render()">خروج</a></div>';
   else if(!isCoach&&playersArr().length) h+='<div class="foot" id="guestLine" style="margin:4px 4px 0">أنت زائر، ولا يمكنك التصويت لأفضل لاعب · <a href="#" id="guestLogin" style="color:var(--tint);font-weight:700" onclick="event.preventDefault();askMe()">تسجيل الدخول</a></div>';
   var vs=voteSession();
-  var voteH=vs?'<div class="card" style="margin-top:10px"><div class="cell tap ind" id="voteCard" onclick="openVote(\''+vs.id+'\')">'+tile('#D4A93C','star',true)+'<div class="body"><div class="t">صوّت لأفضل لاعب في التمرين</div><div class="s">'+(!myId()?'التصويت مفتوح حتى '+fmtWhen(voteEnd(vs))+'<br><span class="vnote" id="voteNote">لابد من إدخال الاسم للتمكن من التصويت لأفضل لاعب</span>':!inSess(vs,myId())?'التصويت مفتوح حتى '+fmtWhen(voteEnd(vs))+'<br><span class="vnote" id="voteNote">التصويت للاعبي هذا التمرين فقط</span>':vs.votes[myId()]?'صوتك: '+esc(pname(vs.votes[myId()]))+' — اضغط للتغيير':'التصويت مفتوح حتى '+fmtWhen(voteEnd(vs)))+'</div></div>'+chev()+'</div></div>':'';
+  var voteH=vs?'<div class="card" style="margin-top:10px"><div class="cell tap ind" id="voteCard" onclick="openVote(\''+vs.id+'\')">'+tile('#D4A93C','star',true)+'<div class="body"><div class="t">صوّت لأفضل لاعب في التمرين</div><div class="s">'+(!myId()?'التصويت مفتوح حتى '+fmtWhen(voteEnd(vs))+'<br><span class="vnote" id="voteNote">لابد من إدخال الاسم للتمكن من التصويت لأفضل لاعب</span>':!inSess(vs,myId())?'التصويت مفتوح حتى '+fmtWhen(voteEnd(vs))+'<br><span class="vnote" id="voteNote">ما لك تصويت في هذا التمرين</span>':vs.votes[myId()]?'صوتك: '+esc(pname(vs.votes[myId()]))+' — اضغط للتغيير':'التصويت مفتوح حتى '+fmtWhen(voteEnd(vs)))+'</div></div>'+chev()+'</div></div>':'';
   h+=gh(os&&Date.now()>=startTs(os)?'التمرين الحالي':'التمرين القادم');
   if(os){
     if(sessLabel(os)) h+='<div class="sesslbl" id="sessLbl">'+esc(sessLabel(os))+'</div>';
