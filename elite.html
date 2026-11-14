@@ -385,14 +385,21 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .m-h .side{width:30px;flex:none;}
 .m-x{width:30px;height:30px;border-radius:50%;border:none;background:var(--fill);color:var(--label2);display:inline-flex;align-items:center;justify-content:center;flex:none;}
 .m-foot{display:flex;gap:10px;margin-top:22px;}
-.tour{text-align:center;padding:8px 6px 0;position:relative}
-.tour-skip{position:absolute;top:-6px;left:0;background:none;border:none;color:var(--label2);font-size:15px;cursor:pointer}
-.tour-ic{width:116px;height:116px;margin:26px auto 22px;border-radius:34px;display:flex;align-items:center;justify-content:center;font-size:60px;background:linear-gradient(140deg,#16A066,#0A5C3A);box-shadow:0 18px 40px rgba(10,92,58,.35)}
-.tour-t{font-size:25px;font-weight:900;margin-bottom:12px}
-.tour-p{font-size:17px;line-height:1.7;color:var(--label2);min-height:88px;padding:0 6px}
-.tour-dots{display:flex;justify-content:center;gap:7px;margin:18px 0 4px}
-.tour-dots i{width:8px;height:8px;border-radius:4px;background:var(--fill);transition:width .25s,background .25s}
-.tour-dots i.on{width:24px;background:var(--tint)}
+#tourOv{position:fixed;inset:0;z-index:2000;display:none}
+#tourOv.on{display:block}
+.tour-hole{position:fixed;box-shadow:0 0 0 9999px rgba(0,0,0,.62);border:3px solid #E6CC78;transition:all .35s cubic-bezier(.2,.8,.2,1);pointer-events:none;animation:tourGlow 1.6s ease-in-out infinite}
+@keyframes tourGlow{0%,100%{outline:0 solid rgba(230,204,120,.0)}50%{outline:6px solid rgba(230,204,120,.35)}}
+.tour-bub{position:fixed;left:14px;right:14px;max-width:460px;margin:0 auto;background:var(--card,#fff);color:var(--label);border-radius:20px;padding:16px 16px 12px;box-shadow:0 18px 50px rgba(0,0,0,.4);transition:top .35s,bottom .35s}
+.tour-bub.mid{top:50%;transform:translateY(-50%)}
+.tour-bub.below:before,.tour-bub.above:after{content:'';position:absolute;left:var(--ax,50%);width:22px;height:22px;background:inherit;transform:rotate(45deg);border-radius:4px}
+.tour-bub.below:before{top:-9px} .tour-bub.above:after{bottom:-9px}
+.tour-hd{display:flex;align-items:center;gap:10px}
+.tour-ic{font-size:26px;width:44px;height:44px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:linear-gradient(140deg,#16A066,#0A5C3A);flex:none}
+.tour-t{font-size:19px;font-weight:900;flex:1}
+.tour-n{font-size:13px;color:var(--label2)}
+.tour-p{font-size:16px;line-height:1.65;color:var(--label2);margin:10px 2px 12px}
+.tour-ft{display:flex;align-items:center;gap:8px}
+.tour-skip{background:none;border:none;color:var(--label2);font-size:15px;cursor:pointer}
 .rpub{margin:8px 4px 0;font-size:13px;color:var(--label2)} .rpub.on{color:var(--green);font-weight:700}
 .rtag{min-width:42px;text-align:center;padding:4px 8px;border-radius:10px;font-size:15px;margin-inline-start:8px}
 .rtag.hi{background:rgba(52,199,89,.16);color:#1E9E4A}.rtag.mid{background:rgba(255,204,0,.18);color:#A07800}.rtag.lo{background:rgba(255,59,48,.14);color:#D33}
@@ -881,30 +888,55 @@ function maybeAskMe(){
   setTimeout(function(){askMe();},300);
 }
 /* ---------- جولة سريعة للزوار الجدد ---------- */
-function tourSlides(){
+/* ---------- جولة سريعة: تأشّر على مكان كل ميزة في الصفحة ---------- */
+function tourSteps(){
   var app=document.title;
   return [
-   ['👋','أهلاً بك في '+app,'كل تمرينك صار في جوالك: التشكيلة، النتيجة، التصويت، وإحصائيات كل لاعب.'],
-   ['🔴','النتيجة مباشرة','تابع النتيجة والأهداف ودقيقة كل هدف لحظة بلحظة من الصفحة الرئيسية.'],
-   ['🧩','التشكيلة والفرق','اضغط على التمرين في الرئيسية وشوف فريقك ومركزك قبل لا توصل.'],
-   ['⭐','صوّت لأفضل لاعب','يفتح التصويت بعد ساعتين من بداية التمرين. لابد من إدخال اسمك للتمكن من التصويت.'],
-   ['📊','ملفك وإحصائياتك','طاقاتك تتطوّر مع كل تمرين حسب تقييمك وأهدافك'+(FEAT_JOKER?'، وفيه أوسمة مثل 🃏 الجوكر.':'.')+' وتقدر تشوف الهدّافين والأرشيف.'],
-   ['📲','ثبّته على جوالك','من Safari اضغط مشاركة ⬆︎ ثم «إضافة إلى الشاشة الرئيسية». وجرّب الوضع الداكن من زر 🌙 فوق.']
+   {sel:null, ic:'👋', t:'أهلاً بك في '+app, p:'جولة سريعة نوريك فيها مكان كل شي في التطبيق.'},
+   {sel:'#upcomingCard', ic:'🔴', t:'التمرين', p:'هنا موعد التمرين، وأثناءه تتابع النتيجة مباشرة. اضغط عليه وتشوف التشكيلة ومركزك والمسجّلين.'},
+   {sel:'#voteCard', ic:'⭐', t:'صوّت لأفضل لاعب', p:'يفتح بعد ساعتين من بداية التمرين. لابد من إدخال اسمك للتمكن من التصويت.'},
+   {sel:'.tab[data-t=players]', ic:'👥', t:'اللاعبون', p:'بطاقة كل لاعب: تقييمه وطاقاته'+(FEAT_JOKER?' وأوسمته مثل 🃏 الجوكر':'')+'. اضغط على أي لاعب لملفه.'},
+   {sel:'.tab[data-t=archive]', ic:'🗂️', t:'الأرشيف', p:'كل التمارين السابقة بنتائجها وتشكيلاتها وتقييماتها.'},
+   {sel:'.tab[data-t=stats]', ic:'📊', t:'الإحصائيات', p:'الهدّافين وصنّاع الأهداف وأفضل لاعب — تتحدّث أول ما تنتهي المباراة.'},
+   {sel:'#themeBtn', ic:'🌙', t:'الوضع الداكن', p:'من هنا تغيّر المظهر: فاتح أو داكن أو حسب جوالك.'},
+   {sel:null, ic:'📲', t:'ثبّته على جوالك', p:'من Safari اضغط مشاركة ⬆︎ ثم «إضافة إلى الشاشة الرئيسية»، ويصير عندك كتطبيق.'}
   ];
 }
-var tourI=0, tourFirst=false;
-function openTour(first){tourI=0;tourFirst=!!first;openModal('');tourInner();}
+var tourI=0, tourFirst=false, tourList=[];
+function openTour(first){
+  tourFirst=!!first; closeModal(); go('home'); window.scrollTo(0,0);
+  // نتجاهل الخطوات اللي عنصرها مو موجود الحين (مثلاً بطاقة التصويت قبل فتحه)
+  tourList=tourSteps().filter(function(x){return !x.sel||document.querySelector(x.sel);});
+  tourI=0; var o=document.getElementById('tourOv'); if(!o){o=document.createElement('div');o.id='tourOv';document.body.appendChild(o);}
+  o.className='on'; window.addEventListener('resize',tourPlace); window.addEventListener('scroll',tourPlace,true); tourInner();
+}
 function tourInner(){
-  var sl=tourSlides(), x=sl[tourI], last=tourI===sl.length-1;
-  var h='<div class="tour" id="tour"><button class="lnk tour-skip" id="tourSkip" onclick="tourDone()">تخطّي</button>'+
-    '<div class="tour-ic">'+x[0]+'</div><h2 class="tour-t">'+esc(x[1])+'</h2><p class="tour-p">'+esc(x[2])+'</p>'+
-    '<div class="tour-dots">'+sl.map(function(_,i){return '<i class="'+(i===tourI?'on':'')+'"></i>';}).join('')+'</div>'+
-    '<div class="m-foot">'+(tourI>0?'<button class="btn gray" id="tourBack" onclick="tourI--;tourInner()">السابق</button>':'')+
-    '<button class="btn" id="tourNext" onclick="'+(last?'tourDone()':'tourI++;tourInner()')+'">'+(last?'يلا نبدأ 🚀':'التالي')+'</button></div></div>';
-  setModal(h);
+  var o=document.getElementById('tourOv'); if(!o)return;
+  var x=tourList[tourI], last=tourI===tourList.length-1, n=tourList.length;
+  o.innerHTML='<div class="tour-hole" id="tourHole"></div><div class="tour-bub" id="tour">'+
+    '<div class="tour-hd"><span class="tour-ic">'+x.ic+'</span><b class="tour-t">'+esc(x.t)+'</b><span class="tour-n num">'+(tourI+1)+'/'+n+'</span></div>'+
+    '<p class="tour-p">'+esc(x.p)+'</p>'+
+    '<div class="tour-ft"><button class="lnk tour-skip" id="tourSkip" onclick="tourDone()">تخطّي</button><span style="flex:1"></span>'+
+    (tourI>0?'<button class="btn gray sm" id="tourBack" onclick="tourI--;tourInner()">السابق</button>':'')+
+    '<button class="btn sm" id="tourNext" onclick="'+(last?'tourDone()':'tourI++;tourInner()')+'">'+(last?'يلا نبدأ 🚀':'التالي')+'</button></div></div>';
+  var el=x.sel&&document.querySelector(x.sel);
+  if(el&&!el.closest('.tabbar,.nav')){ var r=el.getBoundingClientRect(); if(r.top<90||r.bottom>innerHeight-260) window.scrollTo({top:window.scrollY+r.top-110}); }
+  tourPlace();
+}
+function tourPlace(){
+  var o=document.getElementById('tourOv'); if(!o||!o.classList.contains('on'))return;
+  var x=tourList[tourI], hole=document.getElementById('tourHole'), bub=document.getElementById('tour'); if(!x||!hole||!bub)return;
+  var el=x.sel&&document.querySelector(x.sel), W=innerWidth, H=innerHeight, pad=6;
+  if(!el){ hole.style.cssText='left:50%;top:42%;width:0;height:0;'; bub.className='tour-bub mid'; bub.style.top=''; bub.style.bottom=''; return; }
+  var r=el.getBoundingClientRect();
+  hole.style.cssText='left:'+(r.left-pad)+'px;top:'+(r.top-pad)+'px;width:'+(r.width+pad*2)+'px;height:'+(r.height+pad*2)+'px;border-radius:'+Math.min(22,r.height/2+pad)+'px';
+  var below=r.top+r.height/2<H/2; bub.className='tour-bub '+(below?'below':'above');
+  if(below){bub.style.top=(r.bottom+pad+14)+'px';bub.style.bottom='';} else {bub.style.bottom=(H-r.top+pad+14)+'px';bub.style.top='';}
+  var ax=Math.max(26,Math.min(W-26,r.left+r.width/2)); bub.style.setProperty('--ax',(ax-12)+'px');
 }
 function tourDone(){
-  lsSet('saff_el_tour','1'); closeModal();
+  lsSet('saff_el_tour','1'); var o=document.getElementById('tourOv'); if(o){o.className='';o.innerHTML='';}
+  window.removeEventListener('resize',tourPlace); window.removeEventListener('scroll',tourPlace,true);
   if(tourFirst&&!isCoach&&playersArr().length&&!myId()&&!lsGet('saff_el_me_skip')) setTimeout(function(){askMe();},350);
 }
 function askMe(){
@@ -1007,11 +1039,13 @@ function lateBadge(s,pid,tap){
 function computeStats(){
   var st={};
   playersArr().forEach(function(p){st[p.id]={id:p.id,apps:0,goals:0,assists:0,mvp:0,rSum:0,rN:0,w:0,d:0,l:0,ratings:[],late:0,lateMin:0};});
-  doneSessions().slice().reverse().forEach(function(s){
-    var sc=scoreOf(s), m=mvpOf(s);
+  // التمارين المنتهية + التمرين الحالي إذا ضغطت «نهاية المباراة» (الإحصائيات تتحدّث فوراً)
+  var ss=doneSessions().slice().reverse(), os=openSession(); if(os&&liveState(os)==='ended') ss.push(os);
+  ss.forEach(function(s){
+    var fin=s.status==='done', sc=scoreOf(s), m=fin?mvpOf(s):null; // أفضل لاعب يُحسب بعد قفل التصويت
     participants(s).forEach(function(id){
       var x=st[id]; if(!x)return; x.apps++;
-      var r=s.ratings[id]; if(typeof r==='number'){x.rSum+=r;x.rN++;x.ratings.push({sid:s.id,date:s.date,r:r});}
+      var r=s.ratings[id]; if(typeof r==='number'&&ratingsVisible(s)){x.rSum+=r;x.rN++;x.ratings.push({sid:s.id,date:s.date,r:r});}
       var tm=teamOf(s,id); if(tm){var my=sc[tm.t],op=sc[tm.t==='A'?'B':'A']; if(my>op)x.w++;else if(my<op)x.l++;else x.d++;}
     });
     vals(s.goals).forEach(function(g){ if(g.s&&st[g.s])st[g.s].goals++; if(g.a&&st[g.a])st[g.a].assists++; });
