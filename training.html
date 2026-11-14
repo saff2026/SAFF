@@ -385,6 +385,22 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .m-h .side{width:30px;flex:none;}
 .m-x{width:30px;height:30px;border-radius:50%;border:none;background:var(--fill);color:var(--label2);display:inline-flex;align-items:center;justify-content:center;flex:none;}
 .m-foot{display:flex;gap:10px;margin-top:22px;}
+.tmcard{padding:16px 18px 18px;text-align:center;}
+.tm-top{display:flex;align-items:center;justify-content:space-between;}
+.tm-half{display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:15px;color:var(--label2);}
+.tmcard.run .tm-half{color:var(--label);}
+.tm-dot{width:9px;height:9px;border-radius:50%;background:#FF3B30;display:inline-block;animation:tmPulse 1.2s infinite;}
+@keyframes tmPulse{0%,100%{opacity:1}50%{opacity:.25}}
+.tm-clock{font-size:58px;font-weight:800;letter-spacing:1px;line-height:1.1;margin:8px 0 4px;direction:ltr;font-variant-numeric:tabular-nums;}
+.tm-hist{font-size:13px;color:var(--label2);margin:4px 0 2px;}
+.tm-btns{display:flex;gap:10px;margin-top:12px;}
+.tm-btns .btn{flex:1;height:44px;border-radius:22px;font-size:16px;}
+.tm-btns .btn[disabled]{opacity:.4;pointer-events:none;}
+.tm-reset{font-size:13px;}
+.tm-live{display:flex;align-items:center;justify-content:center;gap:7px;margin:8px 4px 0;font-size:14px;font-weight:600;color:var(--label);}
+.tm-live .num{direction:ltr;font-variant-numeric:tabular-nums;}
+.gmin{font-size:12px;font-weight:700;color:var(--label2);margin-inline-start:4px;}
+.gmin small{font-size:10px;}
 .joker{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:800;color:#5a3d00;background:linear-gradient(135deg,#F6E3A1,#D9AE45);box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 2px 6px rgba(201,162,74,.35);white-space:nowrap;}
 .joker.big{font-size:15px;padding:4px 14px;}
 .pc-ph{position:relative;flex:none;}
@@ -1147,7 +1163,7 @@ function renderHome(el){
   var voteH=vs?'<div class="card" style="margin-top:10px"><div class="cell tap ind" id="voteCard" onclick="openVote(\''+vs.id+'\')">'+tile('#D4A93C','star',true)+'<div class="body"><div class="t">صوّت لأفضل لاعب في التمرين</div><div class="s">'+(myId()&&vs.votes[myId()]?'صوتك: '+esc(pname(vs.votes[myId()]))+' — اضغط للتغيير':'التصويت مفتوح حتى '+fmtWhen(voteEnd(vs)))+'</div></div>'+chev()+'</div></div>':'';
   h+=gh(os&&Date.now()>=startTs(os)?'التمرين الحالي':'التمرين القادم');
   if(os){
-    h+='<div class="card cell tap" id="upcomingCard" style="display:block;padding:0" onclick="'+(isCoach?'go(\'session\')':'openSessionDetail(\''+os.id+'\')')+'">'+upcomingCard(os)+'</div>'+(isCoach?'':'<div class="foot">اضغط لعرض التشكيلة</div>');
+    h+='<div class="card cell tap" id="upcomingCard" style="display:block;padding:0" onclick="'+(isCoach?'go(\'session\')':'openSessionDetail(\''+os.id+'\')')+'">'+upcomingCard(os)+'</div>'+(tmActive(os)?'<div class="tm-live" id="tmLive">'+(tmOf(os).run?'<i class="tm-dot"></i>':'⏸ ')+tmLabel(tmOf(os))+' · <span class="num" data-tm="'+os.id+'">'+tmFmt(tmElapsed(tmOf(os)))+'</span>'+(tmOf(os).run?'':' (متوقف)')+'</div>':'')+(isCoach?'':'<div class="foot">اضغط لعرض التشكيلة</div>');
     if(vs){ h+=voteH; voteH=''; }
   }else{
     h+='<div class="card"><div class="empty"><div class="ei">'+ic('ball')+'</div><b>لا يوجد تمرين قادم</b>'+(isCoach?'<button class="btn sm" style="margin-top:12px" onclick="go(\'session\')">'+ic('plus','xs')+'إنشاء تمرين</button>':'سيظهر هنا عندما يُنشئ مجلس الإدارة تمريناً')+'</div></div>';
@@ -1561,6 +1577,7 @@ function renderSession(el){
 
   h+=rotationHTML(s,C);
 
+  var tmH=C?gh('المؤقت')+timerHTML(s):'';
   if(C){
     goalH=gh('النتيجة',lnk('هدف','openGoal()','addGoal','plus'));
     goalH+='<div class="card">'+scoreCard(s)+goalsHTML(s,C)+'</div><div class="foot">النتيجة تظهر للاعبين بعد انتهاء التمرين.</div>';
@@ -1596,9 +1613,9 @@ function renderSession(el){
   }
   // قبل البداية: القائمة والتشكيلة فوق · أثناء التمرين: التحضير والأهداف فوق · بعد ساعتين: القائمة والتشكيلة آخر شي
   var rest=h;
-  h=post?head+'<div id="liveTop">'+ciH+goalH+'</div>'+rest+'<div id="lineupEnd">'+mid+'</div>'
-    :started?head+'<div id="liveTop">'+ciH+goalH+'</div>'+mid+rest
-    :head+mid+ciH+goalH+rest;
+  h=post?head+'<div id="liveTop">'+tmH+ciH+goalH+'</div>'+rest+'<div id="lineupEnd">'+mid+'</div>'
+    :started?head+'<div id="liveTop">'+tmH+ciH+goalH+'</div>'+mid+rest
+    :head+tmH+mid+ciH+goalH+rest;
   el.innerHTML=h;
   foldSections(el);
 }
@@ -2274,7 +2291,7 @@ function goalsHTML(s,C){
   if(!gs.length)return '<div class="cell"><div class="body" style="text-align:center"><div class="s">لم تُسجَّل أهداف بعد</div></div></div>';
   var col=function(t){var xs=gs.filter(function(g){return g.t===t;});
     return '<div class="gcol '+t+'">'+xs.map(function(g){
-      return '<div class="gl gitem"><span class="gi">'+ic('ball','xs')+'</span><div class="gb"><div class="gn">'+(g.s?esc(pname(g.s)):'غير محدد')+'</div>'+(g.a?'<div class="ga">صناعة: '+esc(pname(g.a))+'</div>':'')+'</div>'+
+      return '<div class="gl gitem"><span class="gi">'+ic('ball','xs')+'</span><div class="gb"><div class="gn">'+(g.s?esc(pname(g.s)):'غير محدد')+(g.m?' <span class="gmin num">'+g.m+'′'+(g.h===2?' <small>ش2</small>':'')+'</span>':'')+'</div>'+(g.a?'<div class="ga">صناعة: '+esc(pname(g.a))+'</div>':'')+'</div>'+
         (C?'<button class="m-x gx" onclick="delGoal(\''+s.id+'\',\''+g._k+'\')" aria-label="حذف الهدف">'+ic('x','xs')+'</button>':'')+'</div>';}).join('')+'</div>';};
   return '<div class="gcols">'+col('A')+col('B')+'</div>';
 }
@@ -2526,10 +2543,43 @@ function renderGoalModal(first){
   h+='<div class="m-foot"><button class="btn" id="g_save" onclick="saveGoal()">تسجيل الهدف</button></div>';
   if(first)openModal(h);else setModal(h);
 }
+/* ---------- مؤقّت المباراة (شوطان) — محفوظ في قاعدة البيانات ---------- */
+function tmOf(s){var t=(s&&s.timer)||{};return {half:t.half===2?2:1,run:!!t.run,st:+t.st||0,acc:+t.acc||0,done:!!t.done,halves:tmHalves(t.halves)};}
+// Firebase يحفظ القوائم أحياناً ككائن {"0":…} فنقرأ الشكلين
+function tmHalves(h){if(Array.isArray(h))return h.map(function(x){return +x||0;});if(h&&typeof h==='object')return Object.keys(h).sort(function(a,b){return a-b;}).map(function(k){return +h[k]||0;});return [];}
+function tmElapsed(t){return Math.max(0,t.acc+(t.run?Date.now()-t.st:0));}
+function tmFmt(ms){var sec=Math.floor(ms/1000),m=Math.floor(sec/60),x=sec%60;return (m<10?'0':'')+m+':'+(x<10?'0':'')+x;}
+function tmActive(s){var t=tmOf(s);return !t.done&&(t.run||t.acc>0);}
+function tmSave(s,t){put('sessions/'+s.id+'/timer',t);}
+function tmStart(){var s=openSession();if(!s)return;var t=tmOf(s);if(t.run||t.done)return;t.run=true;t.st=Date.now();tmSave(s,t);}
+function tmPause(){var s=openSession();if(!s)return;var t=tmOf(s);if(!t.run)return;t.acc=tmElapsed(t);t.run=false;t.st=0;tmSave(s,t);}
+function tmEndHalf(){
+  var s=openSession();if(!s)return;var t=tmOf(s);if(t.done)return;
+  askConfirm('<b>إنهاء '+(t.half===1?'الشوط الأول':'الشوط الثاني')+'؟</b><br><span class="small">وقته: <span class="num">'+tmFmt(tmElapsed(t))+'</span></span>',function(){
+    var s2=openSession();if(!s2)return;var u=tmOf(s2);u.halves[u.half-1]=tmElapsed(u);u.run=false;u.st=0;u.acc=0;
+    if(u.half===1){u.half=2;toast('انتهى الشوط الأول — اضغط «ابدأ» للشوط الثاني');}else{u.done=true;toast('انتهت المباراة');}
+    tmSave(s2,u);},'إنهاء');
+}
+function tmReset(){var s=openSession();if(!s)return;askConfirm('<b>تصفير المؤقت؟</b><br><span class="small">يرجع للشوط الأول من الصفر.</span>',function(){var s2=openSession();if(s2)put('sessions/'+s2.id+'/timer',null);},'تصفير');}
+function tmLabel(t){return t.done?'انتهت المباراة':t.half===1?'الشوط الأول':'الشوط الثاني';}
+function timerHTML(s){
+  var t=tmOf(s), el=tmElapsed(t);
+  var btns=t.done?'<button class="btn gray sm" id="tmReset" onclick="tmReset()">'+ic('undo','s')+'تصفير</button>':
+    (t.run?'<button class="btn gray sm" id="tmPause" onclick="tmPause()">⏸ إيقاف مؤقت</button>':'<button class="btn sm" id="tmStart" onclick="tmStart()">▶ '+(el>0?'استئناف':'ابدأ')+'</button>')+
+    '<button class="btn danger sm" id="tmEnd" onclick="tmEndHalf()"'+(el>0?'':' disabled')+'>⏹ إنهاء الشوط</button>';
+  var hist=t.halves.map(function(ms,i){return (i?'الشوط الثاني ':'الشوط الأول ')+'<span class="num">'+tmFmt(ms)+'</span>';}).join(' · ');
+  return '<div class="card tmcard'+(t.run?' run':'')+'" id="tmCard"><div class="tm-top"><span class="tm-half">'+(t.run?'<i class="tm-dot"></i>':'')+tmLabel(t)+'</span>'+(!t.done&&(t.run||el>0)?'<button class="lnk tm-reset" onclick="tmReset()">تصفير</button>':'')+'</div>'+
+    (t.done?'':'<div class="tm-clock num" data-tm="'+s.id+'">'+tmFmt(el)+'</div>')+
+    (hist?'<div class="tm-hist">'+hist+'</div>':'')+
+    '<div class="tm-btns">'+btns+'</div></div>';
+}
+// تحديث الأرقام كل ثانية بدون إعادة رسم الصفحة
+setInterval(function(){document.querySelectorAll('[data-tm]').forEach(function(e){var s=S.sessions[e.getAttribute('data-tm')];if(!s)return;var t=tmOf(s);var v=(e.getAttribute('data-tm-pre')||'')+tmFmt(tmElapsed(t));if(e.textContent!==v)e.textContent=v;});},1000);
 function saveGoal(){
   var s=openSession(), g=window._g;
   var a=document.getElementById('g_a').value; if(a===g.s)a='';
   var rec={t:g.t,at:Date.now()}; if(g.s)rec.s=g.s; if(a)rec.a=a;
+  var tm=tmOf(s); if(tmActive(s)){rec.h=tm.half; rec.m=Math.floor(tmElapsed(tm)/60000)+1;} // دقيقة الهدف
   put('sessions/'+s.id+'/goals/'+uid('g'),rec); closeModal(); toast('هدف لـ '+s.teams[g.t].name);
 }
 function delGoal(sid,gk){askConfirm('<b>حذف هذا الهدف؟</b>',function(){put('sessions/'+sid+'/goals/'+gk,null);},'حذف');}
