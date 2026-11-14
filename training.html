@@ -1536,7 +1536,9 @@ function renderSession(el){
   h+=gh('التشكيلة',C?lnk('صورة','lineupImage()','lineupImg','down')+lnk('توزيع','autoBalance()','autoBal','scale')+lnk('قيود','openLocks()','lockBtn','lock')+lnk('مسح','clearLineup()','clearL'):'');
   if(C){ var bp=BAL_PRI[s.balPri]?s.balPri:'mix';
     h+='<div class="balpri"><span class="small muted">أولوية التوزيع التلقائي</span><div class="seg" id="balPri">'+['str','mix','pos'].map(function(k){return '<button class="'+(bp===k?'on':'')+'" id="bp-'+k+'" onclick="setBalPri(\''+k+'\')">'+BAL_PRI[k].l+'</button>';}).join('')+'</div>'+
-      '<div class="foot" style="margin:6px 2px 10px">'+{str:'أهم شيء أن قوة الفريقين متقاربة جداً، حتى لو لعب بعضهم في مركزه الثاني.',mix:'يوازن بين تقارب القوة ولعب كل لاعب في مراكزه.',pos:'أهم شيء أن أكثر عدد يلعب في مركزه الأساسي (الأول)، حتى لو زاد فرق القوة قليلاً.'}[bp]+'</div></div>'; }
+      '<div class="foot" style="margin:6px 2px 10px">'+{str:'أهم شيء أن قوة الفريقين متقاربة جداً، حتى لو لعب بعضهم في مركزه الثاني.',mix:'يوازن بين تقارب القوة ولعب كل لاعب في مراكزه.',pos:'أهم شيء أن أكثر عدد يلعب في مركزه الأساسي (الأول)، حتى لو زاد فرق القوة قليلاً.'}[bp]+'</div>'+
+      '<span class="small muted">البدلاء</span><div class="seg" id="subsMode"><button class="'+(s.noSubs?'':'on')+'" id="subs-on" onclick="setSubsMode(false)">بديل لكل فريق</button><button class="'+(s.noSubs?'on':'')+'" id="subs-off" onclick="setSubsMode(true)">بدون بدلاء</button></div>'+
+      '<div class="foot" style="margin:6px 2px 10px">'+(s.noSubs?'كل فريق يلعب بعدد الخطة فقط، والزائد يبقى في الاحتياط.':'كل فريق له بديل، ويرتاح كل لاعب مرة وحدة.')+'</div></div>'; }
   h+='<div class="card pad"><div class="teams-h2"><div class="th"><div class="tn"><span class="dot A"></span>'+esc(s.teams.A.name)+'</div><div class="thr">'+formBtn(s,'A',C)+'<span class="tag on num">القوة '+(sA||'—')+'</span></div></div><div class="th B"><div class="tn">'+esc(s.teams.B.name)+'<span class="dot B"></span></div><div class="thr"><span class="tag on num">القوة '+(sB||'—')+'</span>'+formBtn(s,'B',C)+'</div></div></div>';
   h+='<div class="balance"><i style="width:'+(sA/tot*100)+'%;background:var(--teamA)"></i><i style="width:'+(sB/tot*100)+'%;background:#C7C7CC"></i></div>';
   h+=pitchHTML(s,C);
@@ -1644,7 +1646,7 @@ function undoCheckin(pid){var s=openSession(); if(!s)return; askConfirm('<b>إل
 function attDropdown(s,ps){
   var n=ps.filter(function(p){return s.att[p.id];}).length, open=!!ui.attOpen, mx=maxList(s), full=n>=mx;
   var h='<div class="card"><div class="cell tap ind" id="attToggle" onclick="ui.attOpen=!ui.attOpen;render()">'+tile('var(--tint)','people')+
-    '<div class="body"><div class="t">اختيار اللاعبين</div><div class="s" style="'+(n>mx?'color:var(--red)':'')+'"><span class="num">'+n+'</span> من <span class="num">'+mx+'</span> لاعب ('+s.size+' لكل فريق + بديل)</div></div>'+
+    '<div class="body"><div class="t">اختيار اللاعبين</div><div class="s" style="'+(n>mx?'color:var(--red)':'')+'"><span class="num">'+n+'</span> من <span class="num">'+mx+'</span> لاعب ('+s.size+' لكل فريق '+(s.noSubs?'والزائد احتياط':'+ بديل')+')</div></div>'+
     '<span class="ddchev" style="transform:rotate('+(open?'90deg':'-90deg')+')">'+ic('chev','s')+'</span></div>';
   if(open){
     GROUPS.forEach(function(g){
@@ -1801,7 +1803,7 @@ function rotationHTML(s,C){
   var any=['A','B'].some(function(t){return subsOf(s,t).length;});
   h+=gh('ترتيب التبديل');
   if(C) h+='<div class="seg" style="margin-bottom:10px">'+[['att','هجوم ← دفاع'],['def','دفاع ← هجوم'],['best','الأنسب للمراكز']].map(function(o){return '<button class="'+(dir===o[0]?'on':'')+'" id="rot-'+o[0]+'" onclick="put(\'sessions/'+s.id+'/rotDir\',\''+o[0]+'\')">'+o[1]+'</button>';}).join('')+'</div>';
-  if(!any){ return h+'<div class="card"><div class="cell"><div class="body"><div class="s">لا يوجد بدلاء. '+(C?'أضف بديلاً لكل فريق من الأسفل أو اضغط «توزيع».':'')+'</div></div></div></div>'; }
+  if(!any){ return h+'<div class="card"><div class="cell"><div class="body"><div class="s">'+(s.noSubs?'بدون بدلاء — كل اللاعبين يلعبون طول التمرين.':'لا يوجد بدلاء. '+(C?'أضف بديلاً لكل فريق من الأسفل أو اضغط «توزيع».':''))+'</div></div></div></div>'; }
   ['A','B'].forEach(function(t){
     var plan=rotationPlan(s,t,dir);
     h+='<div class="foot" style="margin:12px 4px 6px;font-weight:600;color:var(--label);display:flex;align-items:center;gap:6px"><span class="dot '+t+'"></span>'+esc(s.teams[t].name)+'</div>';
@@ -2250,7 +2252,7 @@ function pitchHTML(s,C){
       var badge=fin&&typeof rr==='number'?'<span class="ov rt num '+(rr>=7.5?'hi':rr>=5.5?'mid':'lo')+'">'+rr+'</span>':'';
       h+='<div class="tok '+t+' click subtok" data-pid="'+id+'" style="top:'+top+'%;left:89%" onclick="'+(C?'openSubPicker(\''+t+'\')':'openPlayer(\''+id+'\')')+'"><span class="subtag">بديل</span><div class="sh">'+face+badge+'</div><div class="nm">'+esc(shortName(id))+'</div></div>';
     });
-    if(C&&!subsOf(s,t).filter(function(id){return P(id);}).length) h+='<div class="tok '+t+' click empty subtok" id="addSub-'+t+'" style="top:'+(t==='A'?91:9)+'%;left:89%" onclick="openSubPicker(\''+t+'\')"><span class="subtag">بديل</span><div class="sh">'+ic('plus','xs')+'</div></div>';
+    if(C&&!s.noSubs&&!subsOf(s,t).filter(function(id){return P(id);}).length) h+='<div class="tok '+t+' click empty subtok" id="addSub-'+t+'" style="top:'+(t==='A'?91:9)+'%;left:89%" onclick="openSubPicker(\''+t+'\')"><span class="subtag">بديل</span><div class="sh">'+ic('plus','xs')+'</div></div>';
   });
   return h+'</div>';
 }
@@ -2337,10 +2339,11 @@ function lineupSig(slA,slB,subA,subB){var f=function(o){return Object.keys(o||{}
 function curSig(s){return lineupSig(s.teams.A.slots,s.teams.B.slots,s.teams.A.subs,s.teams.B.subs);}
 var BAL_PRI={str:{s:25,f:1,l:'قوة متقاربة'},mix:{s:1,f:1,l:'متوازن'},pos:{s:0.05,f:4,pb:8,l:'المراكز الأساسية'}};
 var BAL_LIMIT=250000; // حتى هذا العدد يجرّب كل الاحتمالات
-function balanceSolve(s,pri){
+function balanceSolve(s,pri,noSubs){
+  if(noSubs===undefined)noSubs=!!s.noSubs;
   var locks=locksOf(s), apart=apartOf(s);
   var ids=attendees(s).filter(function(id){return P(id)&&!(s.absent||{})[id];});
-  var sl={A:slotsOf(s,'A'),B:slotsOf(s,'B')}, cap={A:sl.A.length+1,B:sl.B.length+1};
+  var sl={A:slotsOf(s,'A'),B:slotsOf(s,'B')}, cap={A:sl.A.length+(noSubs?0:1),B:sl.B.length+(noSubs?0:1)};
   if(ids.length>cap.A+cap.B){ // أكثر من المسموح: يُستبعد الأضعف (غير المثبّت)
     ids.sort(function(a,b){return (locks[b]?1:0)-(locks[a]?1:0)||ovr(P(b))-ovr(P(a));}); ids=ids.slice(0,cap.A+cap.B); }
   var PW=BAL_PRI[pri||s.balPri]||BAL_PRI.mix; // وزن القوة مقابل المراكز حسب اختيار المدرب
@@ -2418,17 +2421,25 @@ function balanceSolve(s,pri){
   var subA={},subB={}; ea.bench.forEach(function(id){subA[id]=true;}); eb.bench.forEach(function(id){subB[id]=true;});
   return {slotsA:ea.asg,slotsB:eb.asg,subA:subA,subB:subB,cost:best.c,evals:evals,total:exhaustive?total:evals,exhaustive:exhaustive,ms:Date.now()-t0,left:attendees(s).filter(function(id){return P(id)&&!(s.absent||{})[id]&&best.A.indexOf(id)<0&&best.B.indexOf(id)<0;})};
 }
-function autoBalance(pri){
-  var s=openSession(); if(!s)return; pri=BAL_PRI[pri]?pri:(BAL_PRI[s.balPri]?s.balPri:'mix');
+function autoBalance(pri,noSubs){
+  var s=openSession(); if(!s)return; pri=BAL_PRI[pri]?pri:(BAL_PRI[s.balPri]?s.balPri:'mix'); if(typeof noSubs!=='boolean')noSubs=!!s.noSubs;
   var ids=attendees(s).filter(function(id){return P(id)&&!(s.absent||{})[id];});
   if(ids.length<2){toast('⚠️ أضف لاعبين على الأقل لقائمة التمرين');return;}
-  var r=balanceSolve(s,pri), b='sessions/'+s.id+'/', m={};
+  var r=balanceSolve(s,pri,noSubs), b='sessions/'+s.id+'/', m={};
   var nA=Object.keys(r.subA).length, nB=Object.keys(r.subB).length;
   m[b+'teams/A/slots']=r.slotsA; m[b+'teams/B/slots']=r.slotsB;
   m[b+'teams/A/subs']=nA?r.subA:null; m[b+'teams/B/subs']=nB?r.subB:null;
   m[b+'bal']={n:r.total,all:r.exhaustive,sig:lineupSig(r.slotsA,r.slotsB,r.subA,r.subB),at:Date.now(),pri:pri}; m[b+'balPri']=pri;
   putMany(m);
-  toast('تم التوزيع — '+(r.exhaustive?'جرّبت كل الاحتمالات ('+fmtNum(r.total)+')':'قارنت '+fmtNum(r.total)+' توزيع')+(nA+nB?(nA===nB?' مع بديل لكل فريق':' مع '+(nA+nB)+' بدلاء'):''));
+  toast('تم التوزيع — '+(r.exhaustive?'جرّبت كل الاحتمالات ('+fmtNum(r.total)+')':'قارنت '+fmtNum(r.total)+' توزيع')+(nA+nB?(nA===nB?' مع بديل لكل فريق':' مع '+(nA+nB)+' بدلاء'):(noSubs?' بدون بدلاء':''))+(r.left.length?' — '+r.left.length+' في الاحتياط':''));
+}
+function setSubsMode(off){
+  var s=openSession(); if(!s||!!s.noSubs===off)return;
+  var auto=!slotPlayers(s,'A').length&&!slotPlayers(s,'B').length||(s.bal&&s.bal.sig===curSig(s));
+  if(auto&&attendees(s).length>=2){ put('sessions/'+s.id+'/noSubs',off||null); autoBalance(null,off); return; }
+  var m={}; m['sessions/'+s.id+'/noSubs']=off||null;
+  if(off){ m['sessions/'+s.id+'/teams/A/subs']=null; m['sessions/'+s.id+'/teams/B/subs']=null; }
+  putMany(m); toast(off?'بدون بدلاء — البدلاء انتقلوا للاحتياط':'مع بدلاء — اضغط «توزيع» أو أضف بديلاً لكل فريق');
 }
 function setBalPri(k){
   var s=openSession(); if(!s||!BAL_PRI[k])return;
