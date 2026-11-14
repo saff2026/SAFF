@@ -218,8 +218,8 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .fbtn .caret{font-size:9px;color:var(--label2);}
 .fbtn:active{transform:scale(.95);}
 .pteam{position:absolute;left:12px;z-index:1;font-size:11px;font-weight:800;padding:2px 9px;border-radius:9px;pointer-events:none;line-height:1.5;max-width:28%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.pteam.B{top:12px;background:rgba(255,255,255,.94);color:#0A5C33;}
-.pteam.A{bottom:12px;background:#0A7D4F;color:#fff;box-shadow:0 0 0 1.5px rgba(255,255,255,.65);}
+.pteam.B{top:12px;background:var(--teamB);color:var(--teamBfg);opacity:.96;}
+.pteam.A{bottom:12px;background:var(--teamA);color:var(--teamAfg);box-shadow:0 0 0 1.5px rgba(255,255,255,.65);}
 .teams-h2{display:flex;justify-content:space-between;gap:10px;margin-bottom:12px;}
 .teams-h2 .th{display:flex;flex-direction:column;gap:7px;min-width:0;max-width:50%;}
 .teams-h2 .th.B{align-items:flex-end;}
@@ -306,8 +306,8 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .tok.click{cursor:pointer;}
 .tok .sh{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;position:relative;box-shadow:0 4px 10px rgba(0,0,0,.22);transition:transform .15s;}
 .tok.click:active .sh{transform:scale(.9);}
-.tok.A .sh{background:#0A7D4F;color:#fff;border:2px solid #fff;}
-.tok.B .sh{background:#fff;color:#0A7D4F;border:2px solid #0A7D4F;}
+.tok.A .sh{background:var(--teamA);color:var(--teamAfg);border:2px solid #fff;}
+.tok.B .sh{background:var(--teamB);color:var(--teamBfg);border:2px solid var(--teamBbd,#0A7D4F);}
 .tok.empty .sh{background:rgba(255,255,255,.18);border:1.5px dashed rgba(255,255,255,.85);color:#fff;box-shadow:none;}
 .tok .ov{position:absolute;top:-6px;left:-12px;min-width:24px;height:18px;padding:0 5px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#FBE38E,#D9AE3F);color:#2b2000;font-size:10.5px;font-weight:800;border-radius:9px;box-shadow:0 2px 6px rgba(0,0,0,.25),0 0 0 1.5px rgba(255,255,255,.9);line-height:1;}
 .tok .ov.rt.hi{background:linear-gradient(145deg,#4ADE80,#16A34A);color:#fff;}
@@ -385,6 +385,10 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .m-h .side{width:30px;flex:none;}
 .m-x{width:30px;height:30px;border-radius:50%;border:none;background:var(--fill);color:var(--label2);display:inline-flex;align-items:center;justify-content:center;flex:none;}
 .m-foot{display:flex;gap:10px;margin-top:22px;}
+.vnote{color:var(--orange);font-weight:700;}
+.swatches{display:flex;flex-wrap:wrap;gap:10px;margin:2px 0 6px}
+.sw{width:36px;height:36px;border-radius:50%;border:none;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.18);cursor:pointer;position:relative}
+.sw.on{box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--tint)}
 .livepill{display:inline-flex;align-items:center;gap:6px;padding:3px 12px;border-radius:999px;background:rgba(255,59,48,.18);color:#fff;font-weight:800;font-size:13px}
 .livepill.end{background:rgba(255,255,255,.18)}
 .tm-final{font-size:54px;font-weight:900;margin:8px 0 4px;direction:rtl;unicode-bidi:isolate}
@@ -518,7 +522,7 @@ body.v2 #pg-home .card.tap:has(.score) .score, body.v2 #ov .card:has(.score) .sc
 body.v2 #pg-home .card.tap:has(.score) .meta, body.v2 #ov .card:has(.score) .meta, body.v2 #pg-home .card.tap:has(.score) .score .meta, body.v2 #ov .card:has(.score) .score .meta{color:rgba(255,255,255,.72)!important;}
 body.v2 #pg-home .card.tap:has(.score) .nums i, body.v2 #ov .card:has(.score) .nums i{color:rgba(255,255,255,.45);}
 body.v2 #pg-home .card.tap:has(.score) .dot.B, body.v2 #ov .card:has(.score) .dot.B{box-shadow:none;}
-body.v2 #pg-home .card.tap:has(.score) .dot.A, body.v2 #ov .card:has(.score) .dot.A{background:#5BE49B;box-shadow:0 0 0 3px rgba(255,255,255,.18);}
+body.v2 #pg-home .card.tap:has(.score) .dot.A, body.v2 #ov .card:has(.score) .dot.A{background:var(--teamAcard,#5BE49B);box-shadow:0 0 0 3px rgba(255,255,255,.18);}
 body.v2 #pg-home .card.tap:has(.score) .cell .t, body.v2 #ov .card:has(.score) .cell .t{color:#fff;}body.v2 #pg-home .card.tap:has(.score) .cell .s, body.v2 #ov .card:has(.score) .cell .s{color:rgba(255,255,255,.7);}
 body.v2 #pg-home .card.tap:has(.score) .cell+.cell:before, body.v2 #ov .card:has(.score) .cell+.cell:before{background:rgba(255,255,255,.14);}
 body.v2 #pg-home .card.tap:has(.score) .gx, body.v2 #ov .card:has(.score) .gx{background:rgba(255,255,255,.15);color:#fff;}
@@ -865,9 +869,9 @@ function maybeAskMe(){
   setTimeout(function(){askMe();},300);
 }
 function askMe(){
-  var h=mh('أهلاً بك')+'<div style="text-align:center;margin:4px 0 16px"><div class="empty" style="padding:0"><div class="ei">'+ic('people')+'</div></div><div class="small muted">اختر اسمك مرة وحدة، والجوال يتذكّره.</div></div>'+
+  var h=mh('أهلاً بك')+'<div style="text-align:center;margin:4px 0 16px"><div class="empty" style="padding:0"><div class="ei">'+ic('people')+'</div></div><div class="small muted">اختر اسمك مرة وحدة، والجوال يتذكّره.</div><div class="small vnote" style="margin-top:8px">لابد من إدخال الاسم للتمكن من التصويت لأفضل لاعب</div></div>'+
     '<select class="field" id="meSel">'+meOptions(myId())+'</select>'+
-    '<div class="m-foot"><button class="btn gray" id="meSkip" onclick="lsSet(\'saff_el_me_skip\',\'1\');closeModal()">أنا زائر</button><button class="btn" id="meOk" onclick="saveMe()">تم</button></div>';
+    '<div class="m-foot"><button class="btn gray" id="meSkip" onclick="lsSet(\'saff_el_me_skip\',\'1\');lsDel(\'saff_el_me\');closeModal();render()">أنا زائر</button><button class="btn" id="meOk" onclick="saveMe()">تم</button></div>';
   openModal(h);
 }
 function saveMe(){var v=document.getElementById('meSel').value; if(!v){toast('⚠️ اختر اسمك من القائمة');return;} lsSet('saff_el_me',v); lsDel('saff_el_me_skip'); closeModal(); toast('أهلاً '+pname(v)); render();}
@@ -881,7 +885,7 @@ function voteInner(sid){
   if(!voteOpen(s)){ setModal(h+'<div class="card"><div class="empty"><div class="ei">'+icF('star')+'</div><b>التصويت مغلق</b>'+(s.status==='done'?'انتهى التصويت بإنهاء التمرين.':Date.now()>=voteEnd(s)?'انتهى التصويت.':'يفتح '+fmtWhen(voteStart(s))+' ويستمر 12 ساعة.')+'</div></div>'); return; }
   if(!me){
     var notIn=myId()&&parts.indexOf(myId())<0;
-    h+='<div class="foot" style="text-align:center;margin:0 0 12px">'+(notIn?'اسمك ('+esc(pname(myId()))+') مو ضمن لاعبي هذا التمرين. إذا كان خطأ اختر اسمك:':'مين أنت؟ اختر اسمك مرة وحدة، والجوال يتذكّره.')+'</div>';
+    h+='<div class="foot" style="text-align:center;margin:0 0 12px">'+(notIn?'اسمك ('+esc(pname(myId()))+') مو ضمن لاعبي هذا التمرين. إذا كان خطأ اختر اسمك:':'<b class="vnote">لابد من إدخال الاسم للتمكن من التصويت لأفضل لاعب</b><br>اختر اسمك مرة وحدة، والجوال يتذكّره.')+'</div>';
     h+='<select class="field" id="voteMe">'+meOptions(myId())+'</select><div class="m-foot"><button class="btn" id="voteMeOk" onclick="var v=document.getElementById(\'voteMe\').value;if(!v){toast(\'⚠️ اختر اسمك\');return;}lsSet(\'saff_el_me\',v);voteInner(\''+sid+'\')">متابعة</button></div>';
     setModal(h); return;
   }
@@ -1142,14 +1146,30 @@ function lateSummaryHTML(s){
   if(abs.length)h+='<div class="cell"><div class="body"><div class="t" style="color:var(--red)">الغائبون ('+abs.length+')</div><div class="s">'+abs.map(function(id){return esc(pname(id));}).join('، ')+'</div></div></div>';
   return h+'</div>';
 }
+/* ---------- ألوان الفرق (يختارها مجلس الإدارة لكل تمرين) ---------- */
+var TEAM_COLORS=[['#0A7D4F','أخضر'],['#FFFFFF','أبيض'],['#E5484D','أحمر'],['#1E6FD9','أزرق'],['#F5C518','أصفر'],['#F08A24','برتقالي'],['#7E57C2','بنفسجي'],['#36B3E5','سماوي'],['#1C1C1E','أسود'],['#8E8E93','رمادي']];
+function teamColor(s,t){var c=s&&s.teams&&s.teams[t]&&s.teams[t].color;return /^#[0-9A-Fa-f]{6}$/.test(c||'')?c.toUpperCase():(t==='A'?'#0A7D4F':'#FFFFFF');}
+function isLightColor(c){var r=parseInt(c.substr(1,2),16),g=parseInt(c.substr(3,2),16),b=parseInt(c.substr(5,2),16);return (0.299*r+0.587*g+0.114*b)>170;}
+function teamFg(s,t){var c=teamColor(s,t);if(t==='B'&&c==='#FFFFFF')return '#0A7D4F';return isLightColor(c)?'#1C1C1E':'#FFFFFF';}
+function teamVarsCss(s){
+  var A=teamColor(s,'A'),B=teamColor(s,'B');
+  return '--teamA:'+A+';--teamB:'+B+';--teamAfg:'+teamFg(s,'A')+';--teamBfg:'+teamFg(s,'B')+
+    ';--teamBbd:'+(isLightColor(B)?(B==='#FFFFFF'?'#0A7D4F':'rgba(0,0,0,.35)'):'#FFFFFF')+
+    ';--teamBbar:'+(B==='#FFFFFF'?'#C7C7CC':B)+';--teamAcard:'+(A==='#0A7D4F'?'#5BE49B':A)+';';
+}
+function teamVars(s){return ' style="'+teamVarsCss(s)+'"';}
+function applyTeamVars(){var s=openSession()||doneSessions()[0];var r=document.documentElement;teamVarsCss(s).split(';').forEach(function(kv){var i=kv.indexOf(':');if(i>0)r.style.setProperty(kv.slice(0,i),kv.slice(i+1));});}
+// إذا اسم الفريق لون (مثل «الأخضر») يتغيّر مع اللون المختار، والاسم اللي كتبته بنفسك يبقى
+function nsColorName(t,cname){var el=document.getElementById(t==='A'?'ns_a':'ns_b');if(!el)return;var names=TEAM_COLORS.map(function(c){return 'ال'+c[1];});var v=el.value.trim();if(!v||names.indexOf(v)>=0)el.value='ال'+cname;}
+function colorPick(t,cur){return '<div class="swatches" id="ns_col'+t+'">'+TEAM_COLORS.map(function(c){return '<button type="button" class="sw'+(c[0]===cur?' on':'')+'" data-c="'+c[0]+'" title="'+c[1]+'" aria-label="'+c[1]+'" style="background:'+c[0]+'" onclick="nsColorName(\''+t+'\',\''+c[1]+'\');window._ns.c'+t+'=\''+c[0]+'\';this.parentNode.querySelectorAll(\'.sw\').forEach(function(b){b.classList.toggle(\'on\',b===event.currentTarget)});document.getElementById(\'ns_dot'+t+'\').style.background=\''+c[0]+'\'"></button>';}).join('')+'</div>';}
 function upcomingCard(s){
   var d=parseD(s.date), day='', dm='';
   try{day=d.toLocaleDateString(AR_LOC,{weekday:'long'});dm=d.toLocaleDateString(AR_LOC,{day:'numeric',month:'long'});}catch(e){day=s.date;}
-  return '<div class="score"><div class="tm"><span class="dot A"></span>'+esc(s.teams.A.name)+'</div><div style="text-align:center"><div style="font-size:22px;font-weight:700">'+day+'</div><div class="meta" style="margin-top:4px;font-size:14px">'+dm+'</div><div class="meta" style="margin-top:2px">الساعة '+fmtStart(s)+'</div></div><div class="tm"><span class="dot B"></span>'+esc(s.teams.B.name)+'</div></div>';
+  return '<div class="score"'+teamVars(s)+'><div class="tm"><span class="dot A"></span>'+esc(s.teams.A.name)+'</div><div style="text-align:center"><div style="font-size:22px;font-weight:700">'+day+'</div><div class="meta" style="margin-top:4px;font-size:14px">'+dm+'</div><div class="meta" style="margin-top:2px">الساعة '+fmtStart(s)+'</div></div><div class="tm"><span class="dot B"></span>'+esc(s.teams.B.name)+'</div></div>';
 }
 function scoreCard(s,meta){
   var sc=scoreOf(s);
-  return '<div class="score"><div class="tm"><span class="dot A"></span>'+esc(s.teams.A.name)+'</div><div><div class="nums num">'+numsHTML(sc)+'</div>'+(meta?'<div class="meta" style="margin-top:6px">'+meta+'</div>':'')+'</div><div class="tm"><span class="dot B"></span>'+esc(s.teams.B.name)+'</div></div>';
+  return '<div class="score"'+teamVars(s)+'><div class="tm"><span class="dot A"></span>'+esc(s.teams.A.name)+'</div><div><div class="nums num">'+numsHTML(sc)+'</div>'+(meta?'<div class="meta" style="margin-top:6px">'+meta+'</div>':'')+'</div><div class="tm"><span class="dot B"></span>'+esc(s.teams.B.name)+'</div></div>';
 }
 
 /* ---------- التنقل ---------- */
@@ -1166,6 +1186,7 @@ function migratePositions(){
 }
 function render(){
   if(!ready)return;
+  applyTeamVars();
   if(isCoach) setTimeout(settleVotes,0);
   document.body.classList.toggle('v2',(S.settings||{}).design!=='classic');
   if(isCoach&&playersArr().some(function(p){return p._mig&&!migTried[p.id];})){ setTimeout(migratePositions,0); }
@@ -1188,7 +1209,7 @@ function renderHome(el){
 
   if(!isCoach&&myId()) h+='<div class="foot" id="meLine" style="margin:4px 4px 0">أهلاً <b style="color:var(--label)">'+esc(pname(myId()))+'</b> · <a href="#" style="color:var(--tint)" onclick="event.preventDefault();askMe()">تغيير</a></div>';
   var vs=voteSession();
-  var voteH=vs?'<div class="card" style="margin-top:10px"><div class="cell tap ind" id="voteCard" onclick="openVote(\''+vs.id+'\')">'+tile('#D4A93C','star',true)+'<div class="body"><div class="t">صوّت لأفضل لاعب في التمرين</div><div class="s">'+(myId()&&vs.votes[myId()]?'صوتك: '+esc(pname(vs.votes[myId()]))+' — اضغط للتغيير':'التصويت مفتوح حتى '+fmtWhen(voteEnd(vs)))+'</div></div>'+chev()+'</div></div>':'';
+  var voteH=vs?'<div class="card" style="margin-top:10px"><div class="cell tap ind" id="voteCard" onclick="openVote(\''+vs.id+'\')">'+tile('#D4A93C','star',true)+'<div class="body"><div class="t">صوّت لأفضل لاعب في التمرين</div><div class="s">'+(!myId()?'<span class="vnote" id="voteNote">لابد من إدخال الاسم للتمكن من التصويت لأفضل لاعب</span>':vs.votes[myId()]?'صوتك: '+esc(pname(vs.votes[myId()]))+' — اضغط للتغيير':'التصويت مفتوح حتى '+fmtWhen(voteEnd(vs)))+'</div></div>'+chev()+'</div></div>':'';
   h+=gh(os&&Date.now()>=startTs(os)?'التمرين الحالي':'التمرين القادم');
   if(os){
     h+='<div class="card cell tap" id="upcomingCard" style="display:block;padding:0" onclick="'+(isCoach?'go(\'session\')':'openSessionDetail(\''+os.id+'\')')+'">'+(liveState(os)?scoreCard(os,liveMeta(os)):upcomingCard(os))+'</div>'+(tmActive(os)?'<div class="tm-live" id="tmLive">'+(tmOf(os).run?'<i class="tm-dot"></i>':'⏸ ')+tmLabel(tmOf(os))+' · <span class="num" data-tm="'+os.id+'">'+tmFmt(tmElapsed(tmOf(os)))+'</span>'+(tmOf(os).run?'':' (متوقف)')+'</div>':'')+(isCoach?'':'<div class="foot">اضغط لعرض التشكيلة</div>');
@@ -1597,7 +1618,7 @@ function renderSession(el){
       '<span class="small muted">البدلاء</span><div class="seg" id="subsMode"><button class="'+(s.noSubs?'':'on')+'" id="subs-on" onclick="setSubsMode(false)">بديل لكل فريق</button><button class="'+(s.noSubs?'on':'')+'" id="subs-off" onclick="setSubsMode(true)">بدون بدلاء</button></div>'+
       '<div class="foot" style="margin:6px 2px 10px">'+(s.noSubs?'كل فريق يلعب بعدد الخطة فقط، والزائد يبقى في الاحتياط.':'كل فريق له بديل، ويرتاح كل لاعب مرة وحدة.')+'</div></div>'; }
   h+='<div class="card pad"><div class="teams-h2"><div class="th"><div class="tn"><span class="dot A"></span>'+esc(s.teams.A.name)+'</div><div class="thr">'+formBtn(s,'A',C)+'<span class="tag on num">القوة '+(sA||'—')+'</span></div></div><div class="th B"><div class="tn">'+esc(s.teams.B.name)+'<span class="dot B"></span></div><div class="thr"><span class="tag on num">القوة '+(sB||'—')+'</span>'+formBtn(s,'B',C)+'</div></div></div>';
-  h+='<div class="balance"><i style="width:'+(sA/tot*100)+'%;background:var(--teamA)"></i><i style="width:'+(sB/tot*100)+'%;background:#C7C7CC"></i></div>';
+  h+='<div class="balance"><i style="width:'+(sA/tot*100)+'%;background:var(--teamA)"></i><i style="width:'+(sB/tot*100)+'%;background:var(--teamBbar,#C7C7CC)"></i></div>';
   h+=pitchHTML(s,C);
   h+=benchHTML(s,C);
   h+=(C?'<div class="foot" style="margin:12px 2px 0">اضغط على أي مركز في الملعب لاختيار لاعب.</div>':'')+'</div>';
@@ -2055,18 +2076,18 @@ function drawLineup(s,logo,ph){
   // أسماء الفريقين على الملعب
   var pill=function(txt,x,y,bg,fg,font,padX,h){c.font=font;var tw=c.measureText(txt).width,w=tw+padX*2;rrect(c,x-w/2,y-h/2,w,h,h/2);c.fillStyle=bg;c.fill();c.fillStyle=fg;c.fillText(txt,x,y+2);return w;};
   var cornerPill=function(txt,y,bg,fg){c.font='800 28px '+IMG_FONT;var w=c.measureText(txt).width+48;pill(txt,PX+34+w/2,y,bg,fg,'800 28px '+IMG_FONT,24,50);};
-  cornerPill(s.teams.B.name,PY+58,'rgba(255,255,255,.94)','#0A5C33');
-  cornerPill(s.teams.A.name,PY+PH-58,'#0A7D4F','#fff');
+  cornerPill(s.teams.B.name,PY+58,teamColor(s,'B'),teamFg(s,'B'));
+  cornerPill(s.teams.A.name,PY+PH-58,teamColor(s,'A'),teamFg(s,'A'));
   // اللاعبون
   var big=isBig(s), R=big?31:38, nameF=(big?'700 20px ':'700 24px ')+IMG_FONT;
   var drawP=function(pid,t,cx,cy,r,isSub){
     var p=P(pid);
     c.save(); c.shadowColor='rgba(0,0,0,.35)'; c.shadowBlur=18; c.shadowOffsetY=6;
-    c.beginPath(); c.arc(cx,cy,r+5,0,Math.PI*2); c.fillStyle=t==='A'?'#0A7D4F':'#fff'; c.fill(); c.restore();
+    c.beginPath(); c.arc(cx,cy,r+5,0,Math.PI*2); c.fillStyle=teamColor(s,t); c.fill(); c.restore();
     c.save(); c.beginPath(); c.arc(cx,cy,r,0,Math.PI*2); c.clip();
     var im=ph[pid];
     if(im){var sc=Math.max(2*r/im.naturalWidth,2*r/im.naturalHeight),iw=im.naturalWidth*sc,ih=im.naturalHeight*sc;c.drawImage(im,cx-iw/2,cy-ih/2,iw,ih);}
-    else{c.fillStyle=t==='A'?'#0F8F5B':'#F2F5F3';c.fillRect(cx-r,cy-r,2*r,2*r);c.fillStyle=t==='A'?'#fff':'#0A7D4F';c.font='800 '+Math.round(r*.95)+'px '+IMG_FONT;c.fillText(p.name.trim().charAt(0),cx,cy+3);}
+    else{c.fillStyle=teamColor(s,t);c.fillRect(cx-r,cy-r,2*r,2*r);c.fillStyle=teamFg(s,t);c.font='800 '+Math.round(r*.95)+'px '+IMG_FONT;c.fillText(p.name.trim().charAt(0),cx,cy+3);}
     c.restore();
     c.save(); c.shadowColor='rgba(0,0,0,.3)'; c.shadowBlur=8;
     pill(shortName(pid),cx,cy+r+(big?19:22),'rgba(4,21,16,.8)','#fff',nameF,12,big?28:34); c.restore();
@@ -2124,6 +2145,8 @@ function showShareImg(url,name,title){
 }
 // يقصّ النص بنقاط إذا كان أطول من المساحة
 function fitTxt(c,t,w){t=String(t);if(c.measureText(t).width<=w)return t;while(t.length>1&&c.measureText(t+'…').width>w)t=t.slice(0,-1);return t+'…';}
+// لون الفريق على خلفية البوستر الخضراء (الأخضر الافتراضي نخليه أفتح ليبان)
+function posterTeamColor(s,t){var c=teamColor(s,t);return c==='#0A7D4F'?'#2FD28A':c;}
 function drawPoster(kind,s,logo,ph){
   var W=1080, H=4200, P0=72, R=W-P0;
   var cv=document.createElement('canvas'); cv.width=W; cv.height=H; var c=cv.getContext('2d');
@@ -2138,7 +2161,7 @@ function drawPoster(kind,s,logo,ph){
     c.restore();
   };
   var rowBox=function(y,h){rrect(c,P0,y,W-2*P0,h,12);c.fillStyle=PST.row;c.fill();c.strokeStyle=PST.rowEdge;c.lineWidth=1;c.stroke();};
-  var shead=function(y,label,dot){ c.font=F(800,25); var x=R; if(dot){c.beginPath();c.arc(R-10,y,10,0,Math.PI*2);c.fillStyle=dot==='A'?'#2FD28A':'#fff';c.fill();x=R-32;}
+  var shead=function(y,label,dot){ c.font=F(800,25); var x=R; if(dot){c.beginPath();c.arc(R-10,y,10,0,Math.PI*2);c.fillStyle=posterTeamColor(s,dot);c.fill();x=R-32;}
     txt(label,x,y,F(800,25),PST.gold); var lw=c.measureText(label).width; c.fillStyle=PST.line; c.fillRect(P0,y,x-lw-22-P0,1.5); return y+44; };
   var pill=function(xRight,y,big,small,fg,bg,edge){ c.font=F(900,30); var bw=c.measureText(big).width; c.font=F(700,19); var sw=small?c.measureText(small).width+8:0; var w=bw+sw+44,h=52;
     rrect(c,xRight-w,y-h/2,w,h,h/2); c.fillStyle=bg; c.fill(); if(edge){c.strokeStyle=edge;c.lineWidth=1.5;c.stroke();}
@@ -2163,9 +2186,9 @@ function drawPoster(kind,s,logo,ph){
     rrect(c,W/2-scW/2,cy-50,scW,100,16); c.fillStyle=PST.gold; c.fill();
     txt(sA+'  –  '+sB,W/2,cy+4,F(900,64),'#0A2C20','center');
     c.font=F(800,40); var colW=W/2-scW/2-P0-40;
-    c.beginPath();c.arc(R-34,cy,12,0,Math.PI*2);c.fillStyle='#2FD28A';c.fill();
+    c.beginPath();c.arc(R-34,cy,12,0,Math.PI*2);c.fillStyle=posterTeamColor(s,'A');c.fill();
     txt(fitTxt(c,s.teams.A.name,colW-30),R-58,cy+2,F(800,40),'#fff');
-    c.beginPath();c.arc(P0+34,cy,12,0,Math.PI*2);c.fillStyle='#fff';c.fill();
+    c.beginPath();c.arc(P0+34,cy,12,0,Math.PI*2);c.fillStyle=posterTeamColor(s,'B');c.fill();
     c.font=F(800,40); txt(fitTxt(c,s.teams.B.name,colW-30),P0+58,cy+2,F(800,40),'#fff','left');
     y+=150+56;
     // الأهداف: كل فريق في جهته
@@ -2233,7 +2256,7 @@ function drawPoster(kind,s,logo,ph){
       if(!rows.length)return;
       y=shead(y,s.teams[t].name+'  ·  '+rows.length+' لاعب',t);
       rows.forEach(function(x,i){ rowBox(y,80); var cy5=y+40;
-        circleImg(x.id,R-26-30,cy5,30,t==='A'?'#2FD28A':'#fff');
+        circleImg(x.id,R-26-30,cy5,30,posterTeamColor(s,t));
         c.font=F(800,31); txt(fitTxt(c,pname(x.id),520),R-26-60-24,cy5+2,F(800,31),'#fff');
         pill(P0+26+(x.sub?150:200),cy5,x.sub?'بديل':POS[x.pos].ar,'',x.sub?'#2b2000':PST.gold,x.sub?PST.gold:'rgba(230,204,120,.12)',x.sub?null:'rgba(230,204,120,.34)');
         y+=80+10; });
@@ -2287,7 +2310,7 @@ function setTeamForm(t,fk){
   putMany(m); toast('خطة '+s.teams[t].name+': '+fk);
 }
 function pitchHTML(s,C){
-  var h='<div class="pitch'+(isBig(s)?' big':'')+'"><div class="ln frame"></div><div class="ln mid"></div><div class="ln circ"></div><div class="ln boxT"></div><div class="ln boxB"></div><div class="pteam B">'+esc(s.teams.B.name)+'</div><div class="pteam A">'+esc(s.teams.A.name)+'</div>';
+  var h='<div class="pitch'+(isBig(s)?' big':'')+'"'+teamVars(s)+'><div class="ln frame"></div><div class="ln mid"></div><div class="ln circ"></div><div class="ln boxT"></div><div class="ln boxB"></div><div class="pteam B">'+esc(s.teams.B.name)+'</div><div class="pteam A">'+esc(s.teams.A.name)+'</div>';
   ['A','B'].forEach(function(t){
     var sl=slotsOf(s,t);
     sl.forEach(function(x){
@@ -2329,12 +2352,14 @@ function goalsHTML(s,C){
 function openNewSession(editId){
   if(!isCoach)return;
   var nd=nextSessDefaults();
-  var s=editId?S.sessions[editId]:{date:nd.date,time:nd.time,size:nd.size,formation:FORMS[nd.size]?Object.keys(FORMS[nd.size])[0]:'2-3-1',teams:{A:{name:'الأخضر'},B:{name:'الأبيض'}}};
-  window._ns={size:s.size,fA:teamForm(s,'A')||s.formation,fB:teamForm(s,'B')||s.formation};
+  var lastS=sessArr().slice().sort(function(a,b){return startTs(b)-startTs(a);})[0];
+  var s=editId?S.sessions[editId]:{date:nd.date,time:nd.time,size:nd.size,formation:FORMS[nd.size]?Object.keys(FORMS[nd.size])[0]:'2-3-1',teams:{A:{name:'الأخضر',color:lastS?teamColor(lastS,'A'):undefined},B:{name:'الأبيض',color:lastS?teamColor(lastS,'B'):undefined}}};
+  window._ns={size:s.size,fA:teamForm(s,'A')||s.formation,fB:teamForm(s,'B')||s.formation,cA:teamColor(s,'A'),cB:teamColor(s,'B')};
   var h=mh(editId?'إعدادات التمرين':'تمرين جديد');
   h+='<div class="dt-row"><div><span class="lbl">تاريخ التمرين</span><input class="field" type="date" id="ns_date" value="'+esc(s.date)+'"></div><div><span class="lbl">وقت البداية</span><input class="field" type="time" id="ns_time" value="'+esc(s.time||'20:00')+'"></div></div>';
   h+='<span class="lbl">عدد اللاعبين في كل فريق</span><div class="seg" id="ns_size">'+Object.keys(FORMS).map(function(n){return '<button type="button" class="num'+(+n===+window._ns.size?' on':'')+'" onclick="nsSize('+n+')">'+n+'</button>';}).join('')+'</div>';
-  h+='<div class="hstack"><div class="grow"><span class="lbl"><span class="dot A"></span> الفريق الأول</span><input class="field" id="ns_a" maxlength="20" value="'+esc(s.teams.A.name)+'"></div><div class="grow"><span class="lbl"><span class="dot B"></span> الفريق الثاني</span><input class="field" id="ns_b" maxlength="20" value="'+esc(s.teams.B.name)+'"></div></div>';
+  h+='<div class="hstack"><div class="grow"><span class="lbl"><span class="dot A" id="ns_dotA" style="background:'+teamColor(s,'A')+'"></span> الفريق الأول</span><input class="field" id="ns_a" maxlength="20" value="'+esc(s.teams.A.name)+'"></div><div class="grow"><span class="lbl"><span class="dot B" id="ns_dotB" style="background:'+teamColor(s,'B')+'"></span> الفريق الثاني</span><input class="field" id="ns_b" maxlength="20" value="'+esc(s.teams.B.name)+'"></div></div>';
+  h+='<span class="lbl">لون الفريق الأول</span>'+colorPick('A',teamColor(s,'A'))+'<span class="lbl">لون الفريق الثاني</span>'+colorPick('B',teamColor(s,'B'));
   h+='<div class="m-foot"><button class="btn" id="ns_save" onclick="saveSessionSettings('+(editId?'\''+editId+'\'':'null')+')">'+(editId?'حفظ':'إنشاء التمرين')+'</button></div>';
   openModal(h); nsRenderForms();
 }
@@ -2353,13 +2378,13 @@ function saveSessionSettings(editId){
   if(editId){
     var s=clone(S.sessions[editId]), old=S.sessions[editId];
     var chg={A:s.size!==t.size||teamForm(old,'A')!==t.fA, B:s.size!==t.size||teamForm(old,'B')!==t.fB};
-    s.date=date; s.time=time; s.size=t.size; s.formation=t.fA; s.teams.A.formation=t.fA; s.teams.B.formation=t.fB; s.teams.A.name=an; s.teams.B.name=bn;
+    s.date=date; s.time=time; s.size=t.size; s.formation=t.fA; s.teams.A.formation=t.fA; s.teams.B.formation=t.fB; s.teams.A.name=an; s.teams.B.name=bn; s.teams.A.color=t.cA; s.teams.B.color=t.cB;
     ['A','B'].forEach(function(tm){ if(!chg[tm])return; var ids=slotPlayers(old,tm).filter(function(id){return P(id);}); s.teams[tm].slots=assignSlots(ids.map(P),slotsOf(s,tm)); });
     put('sessions/'+editId,stripSess(s));
   }else{
     if(openSession()){toast('⚠️ يوجد تمرين مفتوح بالفعل');return;}
     var id=uid('s');
-    put('sessions/'+id,{date:date,time:time,size:t.size,formation:t.fA,teams:{A:{name:an,formation:t.fA,slots:{}},B:{name:bn,formation:t.fB,slots:{}}},att:{},goals:{},ratings:{},status:'open',created:Date.now()});
+    put('sessions/'+id,{date:date,time:time,size:t.size,formation:t.fA,teams:{A:{name:an,formation:t.fA,slots:{},color:t.cA},B:{name:bn,formation:t.fB,slots:{},color:t.cB}},att:{},goals:{},ratings:{},status:'open',created:Date.now()});
     toast('تم إنشاء التمرين — اختر اللاعبين ثم وزّع الفريقين');
   }
   closeModal();
