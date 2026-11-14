@@ -20,6 +20,7 @@ CHANGES = [
     ('icon-saff-192.png', 'icon-elite-192.png?v=2', 2),       # أيقونة الشاشة الرئيسية
     ("loadImg('saff-white.png')", "loadImg('ball.png?v=2')", 2),  # صور المشاركة
     ('الاتحاد السعودي لكرة القدم · ', '', 1),             # تذييل صور المشاركة
+    ('var FEAT_JOKER = false;', 'var FEAT_JOKER = true;', 1),  # وسام الجوكر لنخبة السبت فقط
 ]
 
 for old, new, at_least in CHANGES:
