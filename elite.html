@@ -385,6 +385,14 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .m-h .side{width:30px;flex:none;}
 .m-x{width:30px;height:30px;border-radius:50%;border:none;background:var(--fill);color:var(--label2);display:inline-flex;align-items:center;justify-content:center;flex:none;}
 .m-foot{display:flex;gap:10px;margin-top:22px;}
+.livepill{display:inline-flex;align-items:center;gap:6px;padding:3px 12px;border-radius:999px;background:rgba(255,59,48,.18);color:#fff;font-weight:800;font-size:13px}
+.livepill.end{background:rgba(255,255,255,.18)}
+.tm-final{font-size:54px;font-weight:900;margin:8px 0 4px;direction:rtl;unicode-bidi:isolate}
+.endmatch{margin-top:10px;height:46px;border-radius:23px;background:#1C1C1E;color:#fff}
+.latesum{margin-top:10px}
+.latesum .lrow{display:flex;justify-content:space-between;padding:6px 0;border-bottom:.5px solid var(--sep);font-size:15px}
+.latesum .lrow:last-child{border-bottom:none}
+.latesum .lrow b{color:var(--orange)}
 .tmcard{padding:16px 18px 18px;text-align:center;}
 .tm-top{display:flex;align-items:center;justify-content:space-between;}
 .tm-half{display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:15px;color:var(--label2);}
@@ -1114,6 +1122,26 @@ function ring(val,label,src){
 }
 function rBadge(r){ if(typeof r!=='number')return '<span class="rb r-no">—</span>'; return '<span class="rb num '+(r>=7.5?'r-hi':r>=5.5?'r-mid':'r-lo')+'">'+r+'</span>'; }
 function numsHTML(sc){return '<span>'+sc.A+'</span><i>–</i><span>'+sc.B+'</span>';}
+// حالة المباراة للجميع: مباشر / انتهت المباراة (قبل حفظ التمرين في الأرشيف)
+function liveState(s){
+  if(!s||s.status==='done')return '';
+  if(s.matchEnd||tmOf(s).done)return 'ended';
+  if(Date.now()>=startTs(s)||tmActive(s)||Object.keys(s.goals||{}).length)return 'live';
+  return '';
+}
+function liveMeta(s){var st=liveState(s);return st==='ended'?'<span class="livepill end">انتهت المباراة</span>':'<span class="livepill"><i class="tm-dot"></i>مباشر</span>';}
+// قائمة المتأخرين والغائبين بعد اكتمال التحضير
+function lateSummaryHTML(s){
+  var exp=attendees(s).filter(function(id){return P(id);}); if(!exp.length)return '';
+  var none=exp.filter(function(id){return !ciStatus(s,id);});
+  if(none.length)return '';
+  var late=exp.filter(function(id){return ciStatus(s,id)==='late';}).map(function(id){return {id:id,m:s.checkin[id]?lateMin(s,s.checkin[id]):0};}).sort(function(a,b){return b.m-a.m;});
+  var abs=exp.filter(function(id){return ciStatus(s,id)==='abs';});
+  var h='<div class="card latesum" id="lateSum"><div class="cell"><div class="body"><div class="t">✅ اكتمل التحضير</div><div class="s">في الوقت <b class="num">'+(exp.length-late.length-abs.length)+'</b> · متأخر <b class="num">'+late.length+'</b> · غاب <b class="num">'+abs.length+'</b></div></div></div>';
+  h+='<div class="cell"><div class="body"><div class="t" style="color:var(--orange)">المتأخرون ('+late.length+')</div>'+(late.length?late.map(function(x){return '<div class="lrow"><span>'+esc(pname(x.id))+'</span><b class="num">'+(x.m>0?x.m+' د':'متأخر')+'</b></div>';}).join(''):'<div class="s">ما فيه أحد تأخر 👏</div>')+'</div></div>';
+  if(abs.length)h+='<div class="cell"><div class="body"><div class="t" style="color:var(--red)">الغائبون ('+abs.length+')</div><div class="s">'+abs.map(function(id){return esc(pname(id));}).join('، ')+'</div></div></div>';
+  return h+'</div>';
+}
 function upcomingCard(s){
   var d=parseD(s.date), day='', dm='';
   try{day=d.toLocaleDateString(AR_LOC,{weekday:'long'});dm=d.toLocaleDateString(AR_LOC,{day:'numeric',month:'long'});}catch(e){day=s.date;}
@@ -1163,7 +1191,7 @@ function renderHome(el){
   var voteH=vs?'<div class="card" style="margin-top:10px"><div class="cell tap ind" id="voteCard" onclick="openVote(\''+vs.id+'\')">'+tile('#D4A93C','star',true)+'<div class="body"><div class="t">صوّت لأفضل لاعب في التمرين</div><div class="s">'+(myId()&&vs.votes[myId()]?'صوتك: '+esc(pname(vs.votes[myId()]))+' — اضغط للتغيير':'التصويت مفتوح حتى '+fmtWhen(voteEnd(vs)))+'</div></div>'+chev()+'</div></div>':'';
   h+=gh(os&&Date.now()>=startTs(os)?'التمرين الحالي':'التمرين القادم');
   if(os){
-    h+='<div class="card cell tap" id="upcomingCard" style="display:block;padding:0" onclick="'+(isCoach?'go(\'session\')':'openSessionDetail(\''+os.id+'\')')+'">'+upcomingCard(os)+'</div>'+(tmActive(os)?'<div class="tm-live" id="tmLive">'+(tmOf(os).run?'<i class="tm-dot"></i>':'⏸ ')+tmLabel(tmOf(os))+' · <span class="num" data-tm="'+os.id+'">'+tmFmt(tmElapsed(tmOf(os)))+'</span>'+(tmOf(os).run?'':' (متوقف)')+'</div>':'')+(isCoach?'':'<div class="foot">اضغط لعرض التشكيلة</div>');
+    h+='<div class="card cell tap" id="upcomingCard" style="display:block;padding:0" onclick="'+(isCoach?'go(\'session\')':'openSessionDetail(\''+os.id+'\')')+'">'+(liveState(os)?scoreCard(os,liveMeta(os)):upcomingCard(os))+'</div>'+(tmActive(os)?'<div class="tm-live" id="tmLive">'+(tmOf(os).run?'<i class="tm-dot"></i>':'⏸ ')+tmLabel(tmOf(os))+' · <span class="num" data-tm="'+os.id+'">'+tmFmt(tmElapsed(tmOf(os)))+'</span>'+(tmOf(os).run?'':' (متوقف)')+'</div>':'')+(isCoach?'':'<div class="foot">اضغط لعرض التشكيلة</div>');
     if(vs){ h+=voteH; voteH=''; }
   }else{
     h+='<div class="card"><div class="empty"><div class="ei">'+ic('ball')+'</div><b>لا يوجد تمرين قادم</b>'+(isCoach?'<button class="btn sm" style="margin-top:12px" onclick="go(\'session\')">'+ic('plus','xs')+'إنشاء تمرين</button>':'سيظهر هنا عندما يُنشئ مجلس الإدارة تمريناً')+'</div></div>';
@@ -1555,7 +1583,7 @@ function renderSession(el){
   var head=h, ciH='', goalH=''; h='';
   if(C){
     var ciN=Object.keys(s.checkin).filter(function(id){return P(id)&&!s.absent[id];}), ciLate=ciN.filter(function(id){return isLate(s,id);}).length, ciAbs=Object.keys(s.absent).filter(function(id){return s.absent[id]&&P(id);}).length;
-    ciH=gh('التحضير')+'<div class="card"><div class="cell tap ind" id="checkinBtn" onclick="openCheckin()">'+tile('#FF9500','check')+'<div class="body"><div class="t">التحضير</div><div class="s">البداية '+fmtStart(s)+' · حضر <span class="num">'+ciN.length+'</span> من <span class="num">'+att.length+'</span>'+(ciLate?' · <span style="color:var(--orange)">'+ciLate+' متأخر</span>':'')+(ciAbs?' · <span style="color:var(--red)">'+ciAbs+' غاب</span>':'')+'</div></div>'+chev()+'</div></div>';
+    ciH=gh('التحضير')+'<div class="card"><div class="cell tap ind" id="checkinBtn" onclick="openCheckin()">'+tile('#FF9500','check')+'<div class="body"><div class="t">التحضير</div><div class="s">البداية '+fmtStart(s)+' · حضر <span class="num">'+ciN.length+'</span> من <span class="num">'+att.length+'</span>'+(ciLate?' · <span style="color:var(--orange)">'+ciLate+' متأخر</span>':'')+(ciAbs?' · <span style="color:var(--red)">'+ciAbs+' غاب</span>':'')+'</div></div>'+chev()+'</div></div>'+lateSummaryHTML(s);
     var ps=playersArr().sort(function(a,b){return a.name.localeCompare(b.name,'ar');});
     h+=gh('قائمة اللاعبين في التمرين',(ps.length<=maxList(s)?lnk('الكل','attAll(true)','attAll'):'')+lnk('إفراغ','attAll(false)','attNone'));
     h+=ps.length?attDropdown(s,ps):emptyBox('people','لا يوجد لاعبون','أضف لاعبين أولاً من تبويب «اللاعبون».');
@@ -1580,7 +1608,7 @@ function renderSession(el){
   var tmH=C?gh('المؤقت')+timerHTML(s):'';
   if(C){
     goalH=gh('النتيجة',lnk('هدف','openGoal()','addGoal','plus'));
-    goalH+='<div class="card">'+scoreCard(s)+goalsHTML(s,C)+'</div><div class="foot">النتيجة تظهر للاعبين بعد انتهاء التمرين.</div>';
+    goalH+='<div class="card">'+scoreCard(s)+goalsHTML(s,C)+'</div><div class="foot">النتيجة تظهر للاعبين مباشرة في الرئيسية.</div>';
   }
   // قبل وقت التمرين: التحضير والأهداف تحت. بعد بدايته: فوق
   var started=Date.now()>=startTs(s);
@@ -1667,6 +1695,7 @@ function checkinInner(){
   var cnt={ok:0,late:0,abs:0,none:0}; exp.forEach(function(p){var st=ciStatus(s,p.id); cnt[st||'none']++;});
   var h=mh('التحضير');
   h+='<div class="card"><div class="cell"><div class="body"><div class="t">بداية التمرين '+fmtStart(s)+'</div><div class="s">في الوقت <b class="num">'+cnt.ok+'</b> · متأخر <b class="num">'+cnt.late+'</b> · غاب <b class="num">'+cnt.abs+'</b> · بدون <b class="num">'+cnt.none+'</b></div><div class="s" style="margin-top:4px">اختر لكل لاعب حالته، واضغطها مرة ثانية لإلغائها.</div></div></div></div>';
+  h+=lateSummaryHTML(s);
   h+=gh('<span style="font-size:17px">قائمة اللاعبين في التمرين</span>')+(exp.length?'<div class="card">'+exp.map(row).join('')+'</div>':'<div class="card"><div class="cell"><div class="body"><div class="s">لم تُحدَّد قائمة اللاعبين بعد.</div></div></div></div>');
   setModal(h);
 }
@@ -1974,6 +2003,7 @@ function loadImg(src){return new Promise(function(res){if(!src)return res(null);
 function rrect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
 var IMG_FONT='"Tajawal","SF Arabic",-apple-system,"Segoe UI",sans-serif';
 function lineupImage(sid){
+  if(!isCoach)return; // تنزيل الصور لمجلس الإدارة فقط
   var s=sid?S.sessions[sid]:openSession(); if(!s)return;
   var ids=teamPlayers(s,'A').concat(teamPlayers(s,'B')).filter(function(id){return P(id);});
   if(!ids.length){toast('⚠️ وزّع الفريقين أولاً');return;}
@@ -2560,18 +2590,29 @@ function tmEndHalf(){
     if(u.half===1){u.half=2;toast('انتهى الشوط الأول — اضغط «ابدأ» للشوط الثاني');}else{u.done=true;toast('انتهت المباراة');}
     tmSave(s2,u);},'إنهاء');
 }
-function tmReset(){var s=openSession();if(!s)return;askConfirm('<b>تصفير المؤقت؟</b><br><span class="small">يرجع للشوط الأول من الصفر.</span>',function(){var s2=openSession();if(s2)put('sessions/'+s2.id+'/timer',null);},'تصفير');}
-function tmLabel(t){return t.done?'انتهت المباراة':t.half===1?'الشوط الأول':'الشوط الثاني';}
+function endMatch(){
+  var s=openSession();if(!s)return;var sc=scoreOf(s);
+  askConfirm('<b>نهاية المباراة؟</b><br><span class="small">النتيجة النهائية: '+esc(s.teams.A.name)+' <span class="num">'+sc.A+' – '+sc.B+'</span> '+esc(s.teams.B.name)+'<br>يوقف المؤقت، ويظهر للاعبين «انتهت المباراة». التقييم وحفظ التمرين في الأرشيف تكملها بعدين.</span>',function(){
+    var s2=openSession();if(!s2)return;var t=tmOf(s2);
+    if(!t.done&&(t.run||t.acc>0)){t.halves[t.half-1]=tmElapsed(t);}
+    t.run=false;t.st=0;t.acc=0;t.done=true;
+    var m={};m['sessions/'+s2.id+'/timer']=t;m['sessions/'+s2.id+'/matchEnd']=Date.now();putMany(m);toast('🏁 انتهت المباراة');},'نهاية المباراة');
+}
+function undoEndMatch(){var s=openSession();if(!s)return;var t=tmOf(s);t.done=false;var m={};m['sessions/'+s.id+'/timer']=t;m['sessions/'+s.id+'/matchEnd']=null;putMany(m);toast('رجعت المباراة');}
+function tmReset(){var s=openSession();if(!s)return;askConfirm('<b>تصفير المؤقت؟</b><br><span class="small">يرجع للشوط الأول من الصفر.</span>',function(){var s2=openSession();if(s2){var m={};m['sessions/'+s2.id+'/timer']=null;m['sessions/'+s2.id+'/matchEnd']=null;putMany(m);}},'تصفير');}
+function tmLabel(t){return t.done?'انتهت المباراة 🏁':t.half===1?'الشوط الأول':'الشوط الثاني';}
 function timerHTML(s){
   var t=tmOf(s), el=tmElapsed(t);
-  var btns=t.done?'<button class="btn gray sm" id="tmReset" onclick="tmReset()">'+ic('undo','s')+'تصفير</button>':
+  var ended=t.done||!!s.matchEnd;
+  var btns=ended?'<button class="btn gray sm" id="undoEnd" onclick="undoEndMatch()">'+ic('undo','s')+'رجّع المباراة</button>':
     (t.run?'<button class="btn gray sm" id="tmPause" onclick="tmPause()">⏸ إيقاف مؤقت</button>':'<button class="btn sm" id="tmStart" onclick="tmStart()">▶ '+(el>0?'استئناف':'ابدأ')+'</button>')+
     '<button class="btn danger sm" id="tmEnd" onclick="tmEndHalf()"'+(el>0?'':' disabled')+'>⏹ إنهاء الشوط</button>';
   var hist=t.halves.map(function(ms,i){return (i?'الشوط الثاني ':'الشوط الأول ')+'<span class="num">'+tmFmt(ms)+'</span>';}).join(' · ');
-  return '<div class="card tmcard'+(t.run?' run':'')+'" id="tmCard"><div class="tm-top"><span class="tm-half">'+(t.run?'<i class="tm-dot"></i>':'')+tmLabel(t)+'</span>'+(!t.done&&(t.run||el>0)?'<button class="lnk tm-reset" onclick="tmReset()">تصفير</button>':'')+'</div>'+
-    (t.done?'':'<div class="tm-clock num" data-tm="'+s.id+'">'+tmFmt(el)+'</div>')+
+  var endBtn=ended?'':'<button class="btn block endmatch" id="endMatch" onclick="endMatch()">🏁 نهاية المباراة</button>';
+  return '<div class="card tmcard'+(t.run?' run':'')+'" id="tmCard"><div class="tm-top"><span class="tm-half">'+(t.run?'<i class="tm-dot"></i>':'')+(ended?'انتهت المباراة 🏁':tmLabel(t))+'</span>'+(!ended&&(t.run||el>0)?'<button class="lnk tm-reset" onclick="tmReset()">تصفير</button>':'')+'</div>'+
+    (ended?'<div class="tm-final num">'+scoreOf(s).A+' – '+scoreOf(s).B+'</div>':'<div class="tm-clock num" data-tm="'+s.id+'">'+tmFmt(el)+'</div>')+
     (hist?'<div class="tm-hist">'+hist+'</div>':'')+
-    '<div class="tm-btns">'+btns+'</div></div>';
+    '<div class="tm-btns">'+btns+'</div>'+endBtn+'</div>';
 }
 // تحديث الأرقام كل ثانية بدون إعادة رسم الصفحة
 setInterval(function(){document.querySelectorAll('[data-tm]').forEach(function(e){var s=S.sessions[e.getAttribute('data-tm')];if(!s)return;var t=tmOf(s);var v=(e.getAttribute('data-tm-pre')||'')+tmFmt(tmElapsed(t));if(e.textContent!==v)e.textContent=v;});},1000);
@@ -2646,12 +2687,13 @@ function sessionDetailInner(id){
   var m=mvpOf(s), gl=goalCount(s);
   var h=mh(niceDate(s.date));
   var done=s.status==='done';
+  var lv=liveState(s);
   if(!done){ m=null; gl={g:{},a:{}}; }
-  h+=done?'<div class="card">'+scoreCard(s,niceDate(s.date))+goalsHTML(s,false)+'</div>':'<div class="card">'+upcomingCard(s)+'</div>';
+  h+=done?'<div class="card">'+scoreCard(s,niceDate(s.date))+goalsHTML(s,false)+'</div>':lv?'<div class="card" id="liveCard">'+scoreCard(s,liveMeta(s))+goalsHTML(s,false)+'</div>'+(tmActive(s)?'<div class="tm-live">'+(tmOf(s).run?'<i class="tm-dot"></i>':'⏸ ')+tmLabel(tmOf(s))+' · <span class="num" data-tm="'+s.id+'">'+tmFmt(tmElapsed(tmOf(s)))+'</span></div>':''):'<div class="card">'+upcomingCard(s)+'</div>';
   if(isCoach) h+='<button class="btn tinted block" id="shareSess" style="margin-top:12px" onclick="openShare(\''+s.id+'\')">'+ic('upl','s')+'مشاركة '+(done?'ملخص التمرين':'التشكيلة')+'</button>';
   if(done&&voteOpen(s)) h+='<div class="card" style="margin-top:12px"><div class="cell tap ind" onclick="openVote(\''+s.id+'\')">'+tile('#D4A93C','star',true)+'<div class="body"><div class="t">التصويت لأفضل لاعب مفتوح</div><div class="s">حتى '+fmtWhen(voteEnd(s))+' — النتيجة تظهر بعدها</div></div>'+chev()+'</div></div>';
   else if(m) h+='<div class="card" style="margin-top:12px"><div class="mvp" onclick="openPlayer(\''+m+'\')"><div class="medal">'+icF('star')+'</div><div class="grow"><div class="k">أفضل لاعب في التمرين</div><div class="n">'+esc(pname(m))+'</div></div>'+rBadge(s.ratings[m])+'</div></div>';
-  h+=gh('التشكيلة',!done?lnk('صورة','lineupImage(\''+s.id+'\')','lineupImg2','down'):'')+'<div class="card pad">'+pitchHTML(s,false)+'</div>';
+  h+=gh('التشكيلة',!done&&isCoach?lnk('صورة','lineupImage(\''+s.id+'\')','lineupImg2','down'):'')+'<div class="card pad">'+pitchHTML(s,false)+'</div>';
   if(!done&&isCoach) h+=rotationHTML(s,false);
   ([]).forEach(function(t){
     var ids=teamPlayers(s,t).filter(function(x){return x;});
