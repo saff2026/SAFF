@@ -388,6 +388,10 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .nm-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:10px}.nm-row>div{min-width:0}
 .sesslbl{margin:-4px 4px 8px;font-weight:800;font-size:15px;color:var(--tint)}
 .attrnote{color:var(--tint);font-weight:700}
+.vwho{margin:0 0 12px;border:1px solid var(--sep);border-radius:14px;padding:10px 12px}
+.vwho-h{display:flex;align-items:center;gap:8px;font-size:15px;margin-bottom:6px}.vwho-h .num{background:var(--fill,rgba(120,120,128,.16));border-radius:999px;padding:1px 9px;font-size:13px}
+.vrow{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--sep);font-size:15px}.vfrom{color:var(--label2)}.varr{color:var(--label3,#999)}.vbad{font-size:12px;color:var(--orange)}
+.vdel{background:none;border:none;color:#FF3B30;cursor:pointer;padding:4px;display:flex}.vwho .lnk{background:none;border:none;font-size:14px;font-weight:600;cursor:pointer;color:#FF3B30}
 .vend{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;margin:0 0 10px;font-size:14px;color:var(--label2)}
 .vend span{white-space:nowrap}
 .vend .field{width:150px;flex:none;height:40px;margin:0;padding:0 8px;text-align:center;font-size:16px}
@@ -1764,6 +1768,9 @@ function renderSession(el){
       h+='<div class="card pad">'+(voteOpen(s)?'<div class="small" style="margin-bottom:8px">تصويت اللاعبين مفتوح: <b class="num">'+Object.keys(s.votes).length+'</b> صوت'+(vk.length?' — '+vk.slice(0,3).map(function(id){return esc(shortName(id))+' ('+vt[id]+')';}).join('، '):'')+'</div>':'<div class="small muted" style="margin-bottom:8px">يفتح تصويت اللاعبين '+fmtWhen(voteStart(s))+' ويقفل '+fmtWhen(voteEnd(s))+'</div>')+
         '<div class="vend" id="voteEndRow"><span>يقفل التصويت الساعة</span><input type="time" class="field" id="voteEndIn" value="'+(function(){var d=new Date(voteEnd(s));return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');})()+'" onchange="setVoteEnd(this.value)">'+(s.voteEndAt?'<button class="lnk" id="voteEndReset" onclick="resetVoteEnd()">الافتراضي</button>':'')+'</div>'+
         '<div class="small muted" style="margin-bottom:10px">'+(s.mvp?'تم اختياره يدوياً.':(vk.length&&am===voteWinner(s))?'الاختيار الحالي حسب تصويت اللاعبين: <b style="color:var(--label)">'+esc(pname(am))+'</b>':am?'الاقتراح التلقائي حسب أعلى تقييم: <b style="color:var(--label)">'+esc(pname(am))+'</b>':'يُقترح تلقائياً بعد التقييم، أو اختره بنفسك.')+'</div>';
+      var vlist=Object.keys(s.votes||{}).filter(function(v){return s.votes[v];}).sort(function(x,y){return pname(s.votes[x]).localeCompare(pname(s.votes[y]),'ar')||pname(x).localeCompare(pname(y),'ar');});
+      h+='<div class="vwho" id="voteWho"><div class="vwho-h"><b>من صوّت لمين</b><span class="num">'+vlist.length+'</span>'+(vlist.length?'<span style="flex:1"></span><button class="lnk red" id="voteClearAll" onclick="clearVotes()">مسح كل التصويت</button>':'')+'</div>'+
+        (vlist.length?vlist.map(function(v){var c=s.votes[v];return '<div class="vrow" data-v="'+v+'"><span class="vfrom">'+esc(pname(v))+'</span><span class="varr">←</span><b class="vto">'+esc(pname(c))+'</b>'+(c===v?'<span class="vbad">لنفسه، لا يُحتسب</span>':'')+'<span style="flex:1"></span><button class="vdel" aria-label="مسح الصوت" onclick="delVote(\''+v+'\')">'+ic('trash','s')+'</button></div>';}).join(''):'<div class="small muted">لا توجد أصوات بعد.</div>')+'</div>';
       var byR=parts.slice().sort(function(a,b){return (typeof s.ratings[b]==='number'?s.ratings[b]:-1)-(typeof s.ratings[a]==='number'?s.ratings[a]:-1)||pname(a).localeCompare(pname(b),'ar');});
       h+='<select class="field" id="mvpSel" onchange="setMvp(this.value||null)"><option value="">تلقائي (تصويت اللاعبين ثم التقييم)'+(am?' — '+esc(pname(am)):'')+'</option>'+
         byR.map(function(id){var r=s.ratings[id];return '<option value="'+id+'"'+(s.mvp===id?' selected':'')+'>'+esc(pname(id))+(typeof r==='number'?' ('+r+')':'')+'</option>';}).join('')+'</select>';
@@ -2771,6 +2778,8 @@ function rate(pid,d){
   var r=s.ratings[pid]; r=(typeof r==='number')?clamp(r+d,1,10):5;
   put('sessions/'+s.id+'/ratings/'+pid,r);
 }
+function delVote(v){var s=openSession(); if(!s||!s.votes[v])return; askConfirm('مسح صوت <b>'+esc(pname(v))+'</b> (صوّت لـ '+esc(pname(s.votes[v]))+')؟ يقدر يصوّت من جديد ما دام التصويت مفتوح.',function(){put('sessions/'+s.id+'/votes/'+v,null);toast('تم مسح الصوت');},'حذف');}
+function clearVotes(){var s=openSession(); if(!s)return; var n=Object.keys(s.votes||{}).length; if(!n)return; askConfirm('مسح كل التصويت (<b class="num">'+n+'</b> صوت) لهذا التمرين؟ لا يمكن التراجع.',function(){put('sessions/'+s.id+'/votes',null);toast('تم مسح كل التصويت');},'حذف');}
 function setMvp(pid){var s=openSession(); if(!s)return; put('sessions/'+s.id+'/mvp',pid);}
 function finishSession(){
   var s=openSession(); if(!s)return;
