@@ -14,11 +14,11 @@ CHANGES = [
     ('var ROOT = "training";', 'var ROOT = "training_elite";', 1),  # قاعدة البيانات
     ("'saff_training_v1'", "'saff_elite_v1'", 1),        # الحفظ على الجهاز
     ('saff_tr_', 'saff_el_', 10),                        # إعدادات الجوال (الدخول، اسمي، الأقسام...)
-    # بدون شعار الاتحاد: كورة بدلاً منه
+    # بدون شعار الاتحاد: شعار «نخبة السبت» (درع ذهبي وكورة) بدلاً منه
     ('<picture><source srcset="saff-white.png" media="(prefers-color-scheme: dark)"><img class="logo" src="saff.png" alt="الاتحاد السعودي لكرة القدم"></picture>',
-     '<img class="logo" src="ball.png?v=2" alt="">', 1),
-    ('icon-saff-192.png', 'icon-elite-192.png?v=2', 2),       # أيقونة الشاشة الرئيسية
-    ("loadImg('saff-white.png')", "loadImg('ball.png?v=2')", 2),  # صور المشاركة
+     '<img class="logo" src="emblem.png?v=3" alt="">', 1),
+    ('icon-saff-192.png', 'icon-elite-192.png?v=3', 2),       # أيقونة الشاشة الرئيسية
+    ("loadImg('saff-white.png')", "loadImg('emblem.png?v=3')", 2),  # صور المشاركة
     ('الاتحاد السعودي لكرة القدم · ', '', 1),             # تذييل صور المشاركة
     ('var FEAT_JOKER = false;', 'var FEAT_JOKER = true;', 1),  # وسام الجوكر لنخبة السبت فقط
 ]
