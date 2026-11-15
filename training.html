@@ -614,7 +614,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261115182056';
+var BUILD='20261115182744';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -1932,7 +1932,7 @@ function saveMyAge(){ var me=myId(); if(!me)return; var v=parseInt(arNum((docume
   putVote('players/'+me+'/age',v); closeModal(); toast('تم تحديث عمرك: '+cnt(v,'سنة')); }
 /* ---------- التأكيد: مين كلّمته من القائمة ومين أكّد (لمجلس الإدارة) ---------- */
 var CONF=[['','لم أكلمه','#8E8E93'],['called','كلّمته','#FF9500'],['yes','أكّد','#34C759'],['no','اعتذر','#FF3B30']];
-function confOf(s,id){var v=((s&&s.conf)||{})[id];return v==='called'||v==='yes'||v==='no'?v:'';}
+function confOf(s,id){ if(s&&s.att&&s.att[id])return 'yes'; var v=((s&&s.conf)||{})[id];return v==='called'||v==='no'?v:''; } // «أكّد» = في قائمة التمرين
 function confPlayers(s){return playersArr().map(function(p){return p.id;});} // كل اللاعبين: «أكّد» يضيفه للقائمة و«اعتذر» يشيله
 function confSum(s){var c={'':0,called:0,yes:0,no:0};confPlayers(s).forEach(function(id){c[confOf(s,id)]++;});return c;}
 function confCardH(s){
@@ -1956,15 +1956,17 @@ function confInner(sid){
   setModal(h);
 }
 function setConf(sid,id,v){ var s=S.sessions[sid]; if(!s)return; applyConf(sid,id,confOf(s,id)===v?null:v); }
-function applyConf(sid,id,nv){ var s=S.sessions[sid]; if(!s)return; nv=nv||null; var m={}; m['sessions/'+sid+'/conf/'+id]=nv;
-  if(nv==='yes'&&!s.att[id]){ // أكّد: يدخل قائمة التمرين مباشرة
-    if(listCount(s)+1>maxList(s)){ toast('⚠️ القائمة مكتملة ('+cnt(maxList(s),'لاعب')+') — سجّلته «أكّد» بدون إضافة'); }
-    else { m['sessions/'+sid+'/att/'+id]=true; if((s.absent||{})[id])m['sessions/'+sid+'/absent/'+id]=null; toast(pname(id)+' انضاف لقائمة التمرين'); } }
-  if(nv==='no'&&s.att[id]){ // اعتذر: يطلع من القائمة ومن التشكيلة
-    m['sessions/'+sid+'/att/'+id]=null; var lp=lineupPath(s,id); if(lp)m[lp]=null; toast(pname(id)+' طلع من قائمة التمرين'); }
+function applyConf(sid,id,nv){ var s=S.sessions[sid]; if(!s)return; nv=nv||''; var m={};
+  if(nv==='yes'){ // أكّد = يدخل قائمة التمرين
+    if(s.att[id])return;
+    if(listCount(s)+1>maxList(s)){ toast('⚠️ القائمة مكتملة: الحد '+cnt(maxList(s),'لاعب')); render(); return; }
+    m['sessions/'+sid+'/att/'+id]=true; m['sessions/'+sid+'/conf/'+id]=null; if((s.absent||{})[id])m['sessions/'+sid+'/absent/'+id]=null;
+  } else { // أي حالة ثانية = مو في القائمة
+    if(s.att[id]){ m['sessions/'+sid+'/att/'+id]=null; var lp=lineupPath(s,id); if(lp)m[lp]=null; }
+    m['sessions/'+sid+'/conf/'+id]=nv||null; }
   putMany(m); }
 function confCopy(sid){ var s=S.sessions[sid]; if(!s)return; var ids=confPlayers(s);
-  var nc=ids.filter(function(id){return !confOf(s,id)&&s.att[id];}), cl=ids.filter(function(id){return confOf(s,id)==='called';});
+  var nc=ids.filter(function(id){return !confOf(s,id);}), cl=ids.filter(function(id){return confOf(s,id)==='called';});
   var t='تأكيد الحضور ⚽\n'+(sessLabel(s)||'تمرين ساف')+' · '+niceDate(s.date)+' · '+fmtStart(s)+'\n'+(cl.length?'\nكلّمناهم وما أكّدوا ('+cl.length+'):\n'+cl.map(function(id,i){return (i+1)+'. '+pname(id);}).join('\n')+'\n':'')+(nc.length?'\nلم نكلّمهم بعد ('+nc.length+'):\n'+nc.map(function(id,i){return (i+1)+'. '+pname(id);}).join('\n'):'');
   var done=function(){toast('تم نسخ الأسماء');};
   var fb=function(){openModal(mh('اللي ما أكّدوا')+'<textarea class="field" id="confText" rows="10" style="height:auto;padding:12px;line-height:1.7">'+esc(t)+'</textarea><div class="foot">انسخ النص والصقه في القروب.</div>');};
@@ -2151,14 +2153,14 @@ function undoCheckin(pid){var s=openSession(); if(!s)return; askConfirm('<b>إل
 function attDropdown(s,ps){
   var n=ps.filter(function(p){return s.att[p.id];}).length, open=!!ui.attOpen, mx=maxList(s), full=n>=mx;
   var h='<div class="card"><div class="cell tap ind" id="attToggle" onclick="ui.attOpen=!ui.attOpen;render()">'+tile('var(--tint)','people')+
-    '<div class="body"><div class="t">اختيار اللاعبين والتأكيد</div><div class="s" style="'+(n>mx?'color:var(--red)':'')+'"><span class="num">'+n+'</span> من '+cnt(mx,'لاعب',1,'span class="num"')+' ('+s.size+' لكل فريق '+(s.noSubs?'والزائد احتياط':'+ بديل')+')</div></div>'+
+    '<div class="body"><div class="t">التأكيد والقائمة</div><div class="s" style="'+(n>mx?'color:var(--red)':'')+'"><span style="color:var(--green)">أكّد</span> <span class="num">'+n+'</span> من '+cnt(mx,'لاعب',1,'span class="num"')+' ('+s.size+' لكل فريق '+(s.noSubs?'والزائد احتياط':'+ بديل')+')</div></div>'+
     '<span class="ddchev" style="transform:rotate('+(open?'90deg':'-90deg')+')">'+ic('chev','s')+'</span></div>';
-  var cs=confSum(s); h=h.replace('</div></div><span class="ddchev"','</div><div class="s" id="confSum">'+(cs.yes?'<span style="color:var(--green)">أكّد '+cs.yes+'</span>':'')+(cs.called?' · <span style="color:var(--orange)">كلّمته '+cs.called+'</span>':'')+(cs.no?' · <span style="color:var(--red)">اعتذر '+cs.no+'</span>':'')+(cs.yes||cs.called||cs.no?'':'لم تسجّل تأكيد أحد بعد')+'</div></div><span class="ddchev"');
+  var cs=confSum(s); h=h.replace('</div></div><span class="ddchev"','</div><div class="s" id="confSum">'+(cs.called?' · <span style="color:var(--orange)">كلّمته '+cs.called+'</span>':'')+(cs.no?' · <span style="color:var(--red)">اعتذر '+cs.no+'</span>':'')+(cs.called||cs.no?'':'')+'</div></div><span class="ddchev"');
   if(open){
-    var F=(ui.attF==null?'all':ui.attF), FL=[['all','الكل'],['in','في القائمة'],['','لم أكلمه'],['called','كلّمته'],['yes','أكّد'],['no','اعتذر']];
+    var F=(ui.attF==null?'all':ui.attF), FL=[['all','الكل'],['yes','أكّد (في القائمة)'],['called','كلّمته'],['','لم أكلمه'],['no','اعتذر']];
     var fcount=function(k){return ps.filter(function(p){return k==='all'?true:k==='in'?!!s.att[p.id]:confOf(s,p.id)===k;}).length;};
     h+='<div class="cell" style="display:block"><div class="chips attfilter" id="attFilter">'+FL.map(function(x){return '<button type="button" class="chip'+(F===x[0]?' on':'')+'" data-f="'+x[0]+'" onclick="ui.attF=\''+x[0]+'\';render()">'+x[1]+' <span class="num">'+fcount(x[0])+'</span></button>';}).join('')+'</div>'+
-      '<div class="small muted" style="line-height:1.6;margin-top:8px">اضغط على اللاعب لإضافته أو شيله. ومن القائمة المنسدلة: <b style="color:var(--green)">أكّد</b> يضيفه، و<b style="color:var(--red)">اعتذر</b> يشيله، و<b style="color:var(--orange)">كلّمته</b> للتذكير.</div></div>';
+      '<div class="small muted" style="line-height:1.6;margin-top:8px"><b style="color:var(--green)">أكّد</b> = في قائمة التمرين. اضغط على اللاعب أو اختر «أكّد» لإضافته، وأي حالة ثانية تشيله من القائمة.</div></div>';
     var passF=function(p){return F==='all'?true:F==='in'?!!s.att[p.id]:confOf(s,p.id)===F;}, shown=0;
     GROUPS.forEach(function(g){
       var gp=ps.filter(function(p){return POS_GROUP[p.pos]===g[0]&&passF(p);}).sort(function(a,b){return POS_ORDER.indexOf(a.pos)-POS_ORDER.indexOf(b.pos)||ovr(b)-ovr(a)||a.name.localeCompare(b.name,'ar');});
@@ -2996,10 +2998,10 @@ function stripSess(s){var o=clone(s);delete o.id;Object.keys(o.goals||{}).forEac
 function toggleAtt(pid){
   var s=openSession(); if(!s)return;
   if(s.att[pid]){
-    var map={}; map['sessions/'+s.id+'/att/'+pid]=null;
+    var map={}; map['sessions/'+s.id+'/att/'+pid]=null; map['sessions/'+s.id+'/conf/'+pid]=null;
     var lp=lineupPath(s,pid); if(lp) map[lp]=null;
     putMany(map);
-  } else if(canAdd(s)) put('sessions/'+s.id+'/att/'+pid,true);
+  } else if(canAdd(s)){ var m2={}; m2['sessions/'+s.id+'/att/'+pid]=true; m2['sessions/'+s.id+'/conf/'+pid]=null; putMany(m2); }
 }
 function attAll(on){
   var s=openSession(); if(!s)return;
