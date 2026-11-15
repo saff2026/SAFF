@@ -1894,7 +1894,9 @@ function setCi(pid,k){
 }
 /* ---------- تحضير اللاعب لنفسه من الملعب (بالموقع الجغرافي) ---------- */
 var CI_BEFORE=90*60000, CI_AFTER=180*60000;
-function fieldLoc(){var f=(S.settings||{}).field; return f&&typeof f.lat==='number'&&typeof f.lng==='number'?f:null;}
+// موقع الملعب الافتراضي (24°49'15.1"N 46°27'40.1"E)، ومجلس الإدارة يقدر يغيّره من صفحة التمرين
+var FIELD_DEFAULT={lat:24.820861,lng:46.461139,r:150};
+function fieldLoc(){var st=S.settings||{}, f=st.field; if(f===undefined||f===null)f=FIELD_DEFAULT; return f&&!f.off&&typeof f.lat==='number'&&typeof f.lng==='number'?f:null;}
 function fieldR(){var f=fieldLoc(); return f&&+f.r>0?+f.r:150;}
 function geoDist(a,b,c,d){var R=6371000,r=Math.PI/180,x=(c-a)*r,y=(d-b)*r,h=Math.sin(x/2)*Math.sin(x/2)+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)*Math.sin(y/2);return 2*R*Math.asin(Math.min(1,Math.sqrt(h)));}
 function fmtDist(m){return m<1000?Math.round(m)+' م':(Math.round(m/100)/10)+' كم';}
@@ -1936,7 +1938,10 @@ function selfCheckin(sid){
   {enableHighAccuracy:true,timeout:20000,maximumAge:0});
 }
 /* مجلس الإدارة: تحديد موقع الملعب ونطاق التحضير */
-function parseLoc(t){t=String(t||'');var m=t.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/)||t.match(/@(-?\d+\.\d+),\s*(-?\d+\.\d+)/)||t.match(/[?&](?:q|ll|query|destination)=(-?\d+\.\d+)(?:,|%2C)\s*(-?\d+\.\d+)/i)||t.match(/(-?\d{1,2}\.\d{3,})\s*[,،]\s*(-?\d{1,3}\.\d{3,})/);
+function parseLoc(t){t=String(t||'');
+  var q=t.replace(/[′’‘]/g,"'").replace(/[″”“]/g,'"').match(/(\d{1,3})\s*°\s*(\d{1,2})\s*'\s*(\d{1,2}(?:\.\d+)?)\s*"?\s*([NS])[\s,،]*(\d{1,3})\s*°\s*(\d{1,2})\s*'\s*(\d{1,2}(?:\.\d+)?)\s*"?\s*([EW])/i);
+  if(q){var la=(+q[1])+(+q[2])/60+(+q[3])/3600, lo=(+q[5])+(+q[6])/60+(+q[7])/3600; if(/s/i.test(q[4]))la=-la; if(/w/i.test(q[8]))lo=-lo; return {lat:la,lng:lo};}
+  var m=t.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/)||t.match(/@(-?\d+\.\d+),\s*(-?\d+\.\d+)/)||t.match(/[?&](?:q|ll|query|destination)=(-?\d+\.\d+)(?:,|%2C)\s*(-?\d+\.\d+)/i)||t.match(/(-?\d{1,2}\.\d{3,})\s*[,،]\s*(-?\d{1,3}\.\d{3,})/);
   if(!m)return null; var a=+m[1],b=+m[2]; if(Math.abs(a)>90||Math.abs(b)>180)return null; return {lat:a,lng:b};}
 function openFieldLoc(){openModal('');fieldLocInner();modalRefresh=fieldLocInner;}
 function fieldLocInner(){
@@ -1947,15 +1952,15 @@ function fieldLocInner(){
   h+=gh('<span style="font-size:16px">أو الصق رابط خرائط قوقل أو الإحداثيات</span>')+'<input class="field" id="fieldTxt" dir="ltr" placeholder="24.7136, 46.6753"><div class="small muted" id="fieldHint" style="margin:8px 4px 0">'+FIELD_HOWTO+'</div><div class="m-foot" style="margin-top:8px"><button class="btn gray" id="fieldSave" onclick="fieldSaveTxt()">حفظ</button></div>';
   h+=gh('<span style="font-size:16px">نطاق التحضير حول الملعب</span>')+'<div class="seg" id="fieldR" style="display:flex">'+[100,150,250,500].map(function(x){return '<button type="button" class="'+(r===x?'on':'')+'" onclick="fieldSetR('+x+')">'+x+' م</button>';}).join('')+'</div>';
   h+='<div class="foot">اللاعب يحضّر نفسه من ساعة ونص قبل التمرين إلى 3 ساعات بعد بدايته، ويُحسب تأخيره تلقائياً.</div>';
-  if(f) h+='<div style="text-align:center;margin-top:10px"><button class="lnk" style="background:none;border:none;color:#FF3B30;font-size:15px;cursor:pointer" id="fieldDel" onclick="askConfirm(\'إلغاء موقع الملعب؟ يتوقف تحضير اللاعبين لأنفسهم.\',function(){put(\'settings/field\',null);},\'حذف\')">إلغاء موقع الملعب</button></div>';
+  if(f) h+='<div style="text-align:center;margin-top:10px"><button class="lnk" style="background:none;border:none;color:#FF3B30;font-size:15px;cursor:pointer" id="fieldDel" onclick="askConfirm(\'إلغاء موقع الملعب؟ يتوقف تحضير اللاعبين لأنفسهم.\',function(){put(\'settings/field\',{off:true});},\'حذف\')">إلغاء موقع الملعب</button></div>';
   setModal(h);
 }
-function fieldSave(loc){ if(!loc)return; put('settings/field',{lat:+loc.lat.toFixed(6),lng:+loc.lng.toFixed(6),r:fieldR()}); toast('تم حفظ موقع الملعب'); }
+function fieldSave(loc){ if(!loc)return; put('settings/field',{lat:+loc.lat.toFixed(6),lng:+loc.lng.toFixed(6),r:fieldLoc()?fieldR():150}); toast('تم حفظ موقع الملعب'); }
 function fieldSaveTxt(){var v=document.getElementById('fieldTxt').value, l=parseLoc(v);
   if(!l){var sh=/share\.google|goo\.gl|maps\.app/i.test(v); var n=document.getElementById('fieldHint'); if(n){n.className='lg-new fhint-bad';n.innerHTML=(sh?'<b>الرابط المختصر ما يحتوي على الإحداثيات.</b><br>':'<b>ما قدرنا نقرأ الموقع.</b><br>')+FIELD_HOWTO;} toast('⚠️ الصق الإحداثيات بدل الرابط المختصر');return;}
   fieldSave(l);}
 var FIELD_HOWTO='في تطبيق خرائط قوقل: اضغط ضغطة طويلة على أرض الملعب، تطلع دبوس أحمر والإحداثيات فوق (مثل <span class="num ltr">24.71360, 46.67530</span>). انسخها والصقها هنا.';
-function fieldSetR(x){var f=fieldLoc(); if(!f){toast('⚠️ حدّد موقع الملعب أولاً');return;} put('settings/field/r',x);}
+function fieldSetR(x){var f=fieldLoc(); if(!f){toast('⚠️ حدّد موقع الملعب أولاً');return;} put('settings/field',{lat:f.lat,lng:f.lng,r:x});}
 function fieldHere(){
   if(!navigator.geolocation){toast('❌ جهازك ما يدعم تحديد الموقع');return;}
   toast('جارٍ تحديد موقعك…');
