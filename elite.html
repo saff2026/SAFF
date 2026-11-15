@@ -2724,7 +2724,7 @@ function drawPoster(kind,s,logo,ph){
     if(rt2.length){
       y=shead(y,'تقييمات اللاعبين');
       var colW=(W-2*P0-20)/2, rh2=78;
-      rt2.forEach(function(id,i){ var col=i%2, row=Math.floor(i/2), x0=col===0?R-colW:P0, yy=y+row*(rh2+10), cyr=yy+rh2/2, v=s.ratings[id];
+      var half2=Math.ceil(rt2.length/2); rt2.forEach(function(id,i){ var col=i<half2?0:1, row=i<half2?i:i-half2, /* ترتيب من فوق لتحت: العمود اليمين ثم اليسار */ x0=col===0?R-colW:P0, yy=y+row*(rh2+10), cyr=yy+rh2/2, v=s.ratings[id];
         rrect(c,x0,yy,colW,rh2,14); c.fillStyle=PST.row; c.fill(); c.strokeStyle=PST.rowEdge; c.lineWidth=1; c.stroke();
         txt(String(i+1),x0+colW-22,cyr+2,F(900,22),i<3?PST.gold:PST.faint,'center');
         circleImg(id,x0+colW-44-28,cyr,28,i===0?PST.gold:null);
