@@ -601,7 +601,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261115111239';
+var BUILD='20261115111516';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -2520,7 +2520,7 @@ function fitTxt(c,t,w){t=String(t);if(c.measureText(t).width<=w)return t;while(t
 // لون الفريق على خلفية البوستر الخضراء (الأخضر الافتراضي نخليه أفتح ليبان)
 function posterTeamColor(s,t){var c=teamColor(s,t);return c==='#0A7D4F'?'#2FD28A':c;}
 function drawPoster(kind,s,logo,ph){
-  var W=1080, H=7000, P0=72, R=W-P0;
+  var W=1080, H=7000, P0=72, R=W-P0, PILLW=150; // عرض موحّد لدوائر الأرقام
   var cv=document.createElement('canvas'); cv.width=W; cv.height=H; var c=cv.getContext('2d');
   c.direction='rtl'; c.textBaseline='middle';
   var F=function(w,sz){return w+' '+sz+'px '+IMG_FONT;};
@@ -2642,7 +2642,8 @@ function drawPoster(kind,s,logo,ph){
         txt(String(i+1),R-26-25,cy3+2,F(900,24),i<3?'#0A2C20':'#fff','center');
         circleImg(id,R-26-50-22-30,cy3,30,null);
         c.font=F(800,32); txt(fitTxt(c,pname(id),560),R-26-50-22-60-20,cy3+2,F(800,32),'#fff');
-        pill(P0+26+150,cy3,String(s.ratings[id]),'',PST.gold,'rgba(230,204,120,.12)','rgba(230,204,120,.34)');
+        rrect(c,P0+26,cy3-26,PILLW,52,26); c.fillStyle='rgba(230,204,120,.12)'; c.fill(); c.strokeStyle='rgba(230,204,120,.34)'; c.lineWidth=1.5; c.stroke();
+        c.save(); c.direction='ltr'; txt(String(s.ratings[id]),P0+26+PILLW/2,cy3+2,F(900,30),PST.gold,'center'); c.restore();
         y+=84+12; });
       y+=40;
     }
@@ -2653,9 +2654,9 @@ function drawPoster(kind,s,logo,ph){
       ups.forEach(function(id){ rowBox(y,80); var cy4=y+40; circleImg(id,R-26-30,cy4,30,null);
         c.font=F(800,30); txt(fitTxt(c,pname(id),560),R-26-60-20,cy4+2,F(800,30),'#fff');
         var d=upd[id].ovrA-upd[id].ovrB, px=P0+26, ph2=52; c.save(); c.direction='ltr';
-        c.font=F(900,30); var t1='+'+d, w1=c.measureText(t1).width; c.font=F(700,20); var t2='→ '+upd[id].ovrA, w2=c.measureText(t2).width; var pw=w1+w2+14+44;
+        c.font=F(900,30); var t1='+'+d, w1=c.measureText(t1).width; c.font=F(700,20); var t2='→ '+upd[id].ovrA, w2=c.measureText(t2).width; var pw=PILLW, tx0=px+(pw-(w1+14+w2))/2;
         rrect(c,px,cy4-ph2/2,pw,ph2,ph2/2); c.fillStyle='rgba(47,210,138,.12)'; c.fill(); c.strokeStyle='rgba(47,210,138,.35)'; c.lineWidth=1.5; c.stroke();
-        c.textAlign='left'; c.fillStyle='#2FD28A'; c.font=F(900,30); c.fillText(t1,px+22,cy4+2); c.font=F(700,20); c.fillStyle='rgba(47,210,138,.85)'; c.fillText(t2,px+22+w1+14,cy4+3); c.restore();
+        c.textAlign='left'; c.fillStyle='#2FD28A'; c.font=F(900,30); c.fillText(t1,tx0,cy4+2); c.font=F(700,20); c.fillStyle='rgba(47,210,138,.85)'; c.fillText(t2,tx0+w1+14,cy4+3); c.restore();
         y+=80+12; });
       y+=40;
     }
