@@ -21,6 +21,7 @@ CHANGES = [
     ("loadImg('saff-white.png')", "loadImg('emblem.png?v=3')", 2),  # صور المشاركة
     ('الاتحاد السعودي لكرة القدم · ', '', 1),             # تذييل صور المشاركة
     ('var FEAT_JOKER = false;', 'var FEAT_JOKER = true;', 1),  # وسام الجوكر لنخبة السبت فقط
+    ('var FEAT_SELFISH = true;', 'var FEAT_SELFISH = false;', 1),  # خاصية «أناني» لتمرين ساف فقط
 ]
 
 for old, new, at_least in CHANGES:

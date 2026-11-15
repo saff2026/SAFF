@@ -696,7 +696,8 @@ var firebaseConfig = {
 };
 // اسم المجلد داخل قاعدة البيانات
 var ROOT = "training_elite";
-var FEAT_JOKER = true; // وسام الجوكر: يُفعَّل في تمرين نخبة السبت فقط
+var FEAT_JOKER = true;
+var FEAT_SELFISH = false; // خاصية «أناني»: في تمرين ساف فقط // وسام الجوكر: يُفعَّل في تمرين نخبة السبت فقط
 
 /* ===================================================================== */
 
@@ -721,8 +722,8 @@ var W = {
   ST:{sho:.5,pac:.2,dri:.15,phy:.15}
 };
 // خصائص فنية: تساعد في التوزيع والمراكز، ولا تؤثر على التقييم
-var TRAITS=[['press','يلعب تحت الضغط'],['stamina','لياقة عالية']];
-var TRAIT_POS={press:['CM','CB'],link:['CM','ST'],stamina:['RB','LB','RW','LW','CM'],leader:[],aerial:['CB','ST'],vision:['CM'],hipress:['ST','RW','LW'],positioning:['CB','LB','RB','GK']};
+var TRAITS=[['press','يلعب تحت الضغط'],['stamina','لياقة عالية']].concat(FEAT_SELFISH?[['selfish','أناني']]:[]);
+var TRAIT_POS={selfish:[],press:['CM','CB'],link:['CM','ST'],stamina:['RB','LB','RW','LW','CM'],leader:[],aerial:['CB','ST'],vision:['CM'],hipress:['ST','RW','LW'],positioning:['CB','LB','RB','GK']};
 function traitsOf(p){var t=p&&p.traits||{};return TRAITS.filter(function(x){return t[x[0]];}).map(function(x){return x[0];});}
 function traitFit(p,pos){return traitsOf(p).filter(function(k){return TRAIT_POS[k].indexOf(pos)>=0;}).length;}
 var FOOT = {R:'اليمنى',L:'اليسرى',B:'كلتاهما'};
