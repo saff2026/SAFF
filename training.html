@@ -275,6 +275,8 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .ovr.t-bronze{background:linear-gradient(145deg,#F2C29A,#C4834F);}
 .pc-num{font-size:22px;font-weight:700;color:var(--label3);}
 .pc-name{margin-top:12px;font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sortrow{gap:10px}.sortrow.cur .t{color:var(--tint);font-weight:800}.sortseg{flex:none;width:190px}.sortseg button{font-size:13px}
+.pc-attrs .at.hl .r span,.pc-attrs .at.hl .r b{color:var(--tint);font-weight:900}
 .pc-meta{font-size:12.5px;color:var(--label2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .pc-attrs{display:grid;grid-template-columns:1fr 1fr;gap:7px 12px;margin-top:12px;}
 .at{font-size:11.5px;color:var(--label2);}
@@ -1302,7 +1304,7 @@ function cardHTML(p){
     '<div class="pc-name">'+esc(p.name)+'</div>'+
     '<div class="pc-meta">'+POS[p.pos].ar+(p.age?' · '+cnt(+p.age||0,'سنة'):'')+'</div>'+
     '<div class="pc-stars"><span>المهارة '+starsHTML(p.sm)+'</span><span>القدم الضعيفة '+starsHTML(p.wf)+'</span></div>'+
-    '<div class="pc-attrs">'+cardAttrs(p).map(function(a){var v=p.attrs[a];return '<div class="at"><div class="r"><span>'+ATTR[a]+'</span><b class="num">'+v+'</b></div><div class="bar"><i class="'+barCls(v)+'" style="width:'+v+'%"></i></div></div>';}).join('')+'</div></div>';
+    '<div class="pc-attrs">'+(function(){var L=cardAttrs(p).slice(),k=SORTS[ui.pSort]&&SORTS[ui.pSort].attr?ui.pSort:null; if(k&&L.indexOf(k)<0){L.pop();L.unshift(k);} return L;})().map(function(a){var v=p.attrs[a];return '<div class="at'+(a===ui.pSort?' hl':'')+'"><div class="r"><span>'+ATTR[a]+'</span><b class="num">'+v+'</b></div><div class="bar"><i class="'+barCls(v)+'" style="width:'+v+'%"></i></div></div>';}).join('')+'</div></div>';
 }
 function tierColor(o){return o>=80?'#D4A93C':o>=70?'#A9B1BB':'#C4834F';}
 function ring(val,label,src){
@@ -1486,8 +1488,9 @@ function renderPlayerGrid(){
     var r;
     if(ui.pSort==='name') r=a.name.localeCompare(b.name,'ar')*(ui.pDir==='desc'?1:-1);
     else if(ui.pSort==='age'){ if(!a.age!==!b.age) return a.age?-1:1; r=((+a.age)-(+b.age))*dir; }
+    else if(SORTS[ui.pSort]&&SORTS[ui.pSort].attr) r=(((a.attrs||{})[ui.pSort]||0)-((b.attrs||{})[ui.pSort]||0))*dir;
     else r=(ovr(a)-ovr(b))*dir;
-    return r||a.name.localeCompare(b.name,'ar');
+    return r||(ovr(b)-ovr(a))||a.name.localeCompare(b.name,'ar');
   });
   if(!playersArr().length){g.innerHTML=emptyBox('people','لا يوجد لاعبون',isCoach?'اضغط زر + في الأعلى لإضافة أول لاعب.':'مجلس الإدارة هو من يضيف اللاعبين.');return;}
   if(ui.pFilter==='todo'){
@@ -1500,11 +1503,14 @@ function renderPlayerGrid(){
 }
 
 var SORTS={ovr:{l:'التقييم',desc:'الأعلى أولاً',asc:'الأقل أولاً'},age:{l:'العمر',desc:'الأكبر أولاً',asc:'الأصغر أولاً'},name:{l:'الاسم',desc:'أ ← ي',asc:'ي ← أ'}};
+// الترتيب حسب كل طاقة (السرعة، التسديد، التمرير…)
+ATTR_KEYS.forEach(function(k){SORTS[k]={l:ATTR[k],desc:'الأعلى أولاً',asc:'الأقل أولاً',attr:true};});
+var SORT_KEYS=['ovr','pac','sho','pas','dri','def','phy','gk','age','name'];
 function openSort(){
-  var h=mh('ترتيب اللاعبين')+'<div class="card">';
-  ['ovr','age','name'].forEach(function(k){ ['desc','asc'].forEach(function(d){ var on=ui.pSort===k&&ui.pDir===d;
-    h+='<div class="cell tap sortopt" data-k="'+k+'" data-d="'+d+'" onclick="ui.pSort=\''+k+'\';ui.pDir=\''+d+'\';closeModal();render()"><div class="body"><div class="t">'+SORTS[k].l+'</div><div class="s">'+SORTS[k][d]+'</div></div>'+(on?'<span style="color:var(--tint);display:inline-flex">'+ic('check','s')+'</span>':'')+'</div>'; }); });
-  openModal(h+'</div>');
+  var h2='<div class="card" id="sortList">'+SORT_KEYS.map(function(k){var S0=SORTS[k];
+    return '<div class="cell sortrow'+(ui.pSort===k?' cur':'')+'" data-k="'+k+'"><div class="body"><div class="t">'+S0.l+'</div></div><div class="seg sortseg">'+['desc','asc'].map(function(d){var on=ui.pSort===k&&ui.pDir===d;
+      return '<button type="button" class="sortopt'+(on?' on':'')+'" data-k="'+k+'" data-d="'+d+'" onclick="ui.pSort=\''+k+'\';ui.pDir=\''+d+'\';closeModal();render()">'+S0[d]+'</button>';}).join('')+'</div></div>';}).join('')+'</div>';
+  openModal(mh('ترتيب اللاعبين')+h2);
 }
 function posOptions(sel,allowNone){
   return (allowNone?'<option value="">لا يوجد</option>':'')+POS_ORDER.map(function(k){return '<option value="'+k+'"'+(sel===k?' selected':'')+'>'+POS[k].ar+'</option>';}).join('');
