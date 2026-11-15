@@ -419,6 +419,7 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .field.pin{text-align:center;letter-spacing:10px;font-size:22px;direction:ltr}
 .lg-new{margin-top:12px;background:rgba(22,160,102,.1);color:var(--label);border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.6}
 .lg-n{margin:8px 4px 0}
+.fhint-bad{background:rgba(255,149,0,.12)!important}
 .pinrow{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin:10px 0 4px;font-size:14px;color:var(--label2)}
 .pinrow .lnk{background:none;border:none;color:#FF3B30;font-size:14px;font-weight:600;cursor:pointer}
 .swatches{display:flex;flex-wrap:wrap;gap:10px;margin:2px 0 6px}
@@ -594,7 +595,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261114225016';
+var BUILD='20261115091957';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -1391,6 +1392,7 @@ function renderHome(el){
   if(os){
     if(sessLabel(os)) h+='<div class="sesslbl" id="sessLbl">'+esc(sessLabel(os))+'</div>';
     h+='<div class="card cell tap" id="upcomingCard" style="display:block;padding:0" onclick="'+(isCoach?'go(\'session\')':'openSessionDetail(\''+os.id+'\')')+'">'+(liveState(os)?scoreCard(os,liveMeta(os)):upcomingCard(os))+'</div>'+(tmActive(os)?'<div class="tm-live" id="tmLive">'+(tmOf(os).run?'<i class="tm-dot"></i>':'⏸ ')+tmLabel(tmOf(os))+' · <span class="num" data-tm="'+os.id+'">'+tmFmt(tmElapsed(tmOf(os)))+'</span>'+(tmOf(os).run?'':' (متوقف)')+'</div>':'')+(isCoach?'':'<div class="foot" id="homeHint">اضغط لعرض '+(liveState(os)||os.ratingsPub?'التشكيلة والأهداف والتقييمات':'التشكيلة')+'</div>');
+    h+=selfCiH(os);
     if(vs){ h+=voteH; voteH=''; }
   }else{
     h+='<div class="card"><div class="empty"><div class="ei">'+ic('ball')+'</div><b>لا يوجد تمرين قادم</b>'+(isCoach?'<button class="btn sm" style="margin-top:12px" onclick="go(\'session\')">'+ic('plus','xs')+'إنشاء تمرين</button>':'سيظهر هنا عندما يُنشئ مجلس الإدارة تمريناً')+'</div></div>';
@@ -1784,7 +1786,7 @@ function renderSession(el){
   var head=h, ciH='', goalH=''; h='';
   if(C){
     var ciN=Object.keys(s.checkin).filter(function(id){return P(id)&&!s.absent[id];}), ciLate=ciN.filter(function(id){return isLate(s,id);}).length, ciAbs=Object.keys(s.absent).filter(function(id){return s.absent[id]&&P(id);}).length;
-    ciH=gh('التحضير')+'<div class="card"><div class="cell tap ind" id="checkinBtn" onclick="openCheckin()">'+tile('#FF9500','check')+'<div class="body"><div class="t">التحضير</div><div class="s">البداية '+fmtStart(s)+' · حضر <span class="num">'+ciN.length+'</span> من <span class="num">'+att.length+'</span>'+(ciLate?' · <span style="color:var(--orange)">'+cnt(ciLate,'متأخر')+'</span>':'')+(ciAbs?' · <span style="color:var(--red)">'+ciAbs+' غاب</span>':'')+'</div></div>'+chev()+'</div></div>'+lateSummaryHTML(s);
+    ciH=gh('التحضير')+'<div class="card"><div class="cell tap ind" id="checkinBtn" onclick="openCheckin()">'+tile('#FF9500','check')+'<div class="body"><div class="t">التحضير</div><div class="s">البداية '+fmtStart(s)+' · حضر <span class="num">'+ciN.length+'</span> من <span class="num">'+att.length+'</span>'+(ciLate?' · <span style="color:var(--orange)">'+cnt(ciLate,'متأخر')+'</span>':'')+(ciAbs?' · <span style="color:var(--red)">'+ciAbs+' غاب</span>':'')+'</div></div>'+chev()+'</div><div class="cell tap ind" id="fieldBtn" onclick="openFieldLoc()">'+tile(fieldLoc()?'#34C759':'#8E8E93','check')+'<div class="body"><div class="t">موقع الملعب (تحضير اللاعب لنفسه)</div><div class="s">'+(fieldLoc()?'محدد · النطاق '+fieldR()+' م':'غير محدد — اضغط لتحديده')+'</div></div>'+chev()+'</div></div>'+lateSummaryHTML(s);
     var ps=playersArr().sort(function(a,b){return a.name.localeCompare(b.name,'ar');});
     h+=gh('قائمة اللاعبين في التمرين',(ps.length<=maxList(s)?lnk('الكل','attAll(true)','attAll'):'')+lnk('إفراغ','attAll(false)','attNone'));
     h+=ps.length?attDropdown(s,ps):emptyBox('people','لا يوجد لاعبون','أضف لاعبين أولاً من تبويب «اللاعبون».');
@@ -1890,13 +1892,83 @@ function setCi(pid,k){
   else { if(!s.checkin[pid]) m[b+'checkin/'+pid]=Date.now(); m[b+'lateSet/'+pid]=(k==='late'); m[b+'absent/'+pid]=null; }
   putMany(m);
 }
+/* ---------- تحضير اللاعب لنفسه من الملعب (بالموقع الجغرافي) ---------- */
+var CI_BEFORE=90*60000, CI_AFTER=180*60000;
+function fieldLoc(){var f=(S.settings||{}).field; return f&&typeof f.lat==='number'&&typeof f.lng==='number'?f:null;}
+function fieldR(){var f=fieldLoc(); return f&&+f.r>0?+f.r:150;}
+function geoDist(a,b,c,d){var R=6371000,r=Math.PI/180,x=(c-a)*r,y=(d-b)*r,h=Math.sin(x/2)*Math.sin(x/2)+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)*Math.sin(y/2);return 2*R*Math.asin(Math.min(1,Math.sqrt(h)));}
+function fmtDist(m){return m<1000?Math.round(m)+' م':(Math.round(m/100)/10)+' كم';}
+function selfCiWindow(s){var n=Date.now(),t=startTs(s);return !!s&&s.status!=='done'&&!s.matchEnd&&n>=t-CI_BEFORE&&n<=t+CI_AFTER;}
+function selfCiH(s){
+  if(isCoach||!s||!selfCiWindow(s))return '';
+  var me=myId(), card=function(icon,color,t,sub,click,id){return '<div class="card" style="margin-top:10px"><div class="cell'+(click?' tap ind':'')+'" id="'+id+'"'+(click?' onclick="'+click+'"':'')+'>'+tile(color,icon)+'<div class="body"><div class="t">'+t+'</div><div class="s">'+sub+'</div></div>'+(click?chev():'')+'</div></div>';};
+  if(!me) return card('check','#FF9500','سجّل حضورك','سجّل دخولك أولاً عشان تحضّر نفسك','askMe()','selfCi');
+  if(!s.att[me]) return '';
+  if((s.absent||{})[me]) return '';
+  if(s.checkin[me]){var lm=lateMin(s,s.checkin[me]), late=isLate(s,me);
+    return card('check','#34C759','✓ تم تحضيرك','وصلت '+fmtClock(s.checkin[me])+(late?' · <span style="color:var(--orange)">متأخر'+(lm>0?' '+cnt(lm,'دقيقة'):'')+'</span>':' · في الوقت'),'','selfCiDone');}
+  if(!fieldLoc()) return card('check','#8E8E93','سجّل حضورك','مجلس الإدارة لم يحدّد موقع الملعب بعد','','selfCiOff');
+  return card('check','#FF9500','سجّل حضورك','اضغط وأنت في الملعب · البداية '+fmtStart(s),'selfCheckin(\''+s.id+'\')','selfCi');
+}
+function geoErrMsg(e){
+  if(e&&e.code===1) return '<b>ما سمحت للتطبيق يعرف موقعك</b><br>في الآيفون: الإعدادات ← الخصوصية والأمان ← خدمات الموقع ← مواقع Safari ← «أثناء الاستخدام»، ثم ارجع واضغط «سجّل حضورك».';
+  return '<b>ما قدرنا نحدد موقعك</b><br>تأكد إن خدمات الموقع شغّالة وحاول مرة ثانية.';
+}
+function selfCheckin(sid){
+  var s=S.sessions[sid], me=myId(); if(!s||!me){askMe();return;}
+  if(!s.att[me]){toast('⚠️ اسمك مو في قائمة هذا التمرين');return;}
+  if(!selfCiWindow(s)){toast('⚠️ التحضير متاح يوم التمرين فقط');return;}
+  var f=fieldLoc(); if(!f){toast('⚠️ موقع الملعب غير محدد');return;}
+  if(!navigator.geolocation){toast('❌ جهازك ما يدعم تحديد الموقع');return;}
+  openModal(mh('سجّل حضورك')+'<div class="card"><div class="empty" id="geoWait"><div class="ei">'+ic('check')+'</div><b>جارٍ تحديد موقعك…</b>إذا سألك الجوال اسمح للتطبيق بمعرفة موقعك.</div></div>');
+  navigator.geolocation.getCurrentPosition(function(pos){
+    var c=pos.coords, d=geoDist(c.latitude,c.longitude,f.lat,f.lng), acc=c.accuracy||0, r=fieldR(), s2=S.sessions[sid];
+    if(!s2||!document.getElementById('geoWait'))return;
+    var box=function(id,icon,t,p,btn){setModal(mh('سجّل حضورك')+'<div class="card"><div class="empty" id="'+id+'"><div class="ei">'+icon+'</div><b>'+t+'</b>'+p+'</div></div>'+(btn||''));};
+    var again='<div class="m-foot"><button class="btn" id="geoAgain" onclick="selfCheckin(\''+sid+'\')">حاول مرة ثانية</button></div>';
+    if(d>r){ box('geoFar',ic('warn'),'أنت بعيد عن الملعب','المسافة بينك وبين الملعب تقريباً <b class="num">'+fmtDist(d)+'</b>. لازم تكون داخل <b class="num">'+fmtDist(r)+'</b> من الملعب عشان تحضّر نفسك.',again); return; }
+    if(acc>Math.max(r,100)){ box('geoWeak',ic('warn'),'إشارة الموقع ضعيفة','دقة موقعك الحين <b class="num">'+fmtDist(acc)+'</b>. اطلع لمكان مفتوح وحاول مرة ثانية.',again); return; }
+    if(s2.checkin[me]){closeModal();return;}
+    var now=Date.now(); putVote('sessions/'+sid+'/checkin/'+me,now); putVote('sessions/'+sid+'/ciGeo/'+me,{d:Math.round(d),a:Math.round(acc)});
+    var lm=lateMin(s2,now);
+    box('geoOk',icF('star'),'تم تحضيرك ✓','وصلت '+fmtClock(now)+(lm>0?' · <span style="color:var(--orange)">متأخر '+cnt(lm,'دقيقة')+'</span>':' · في الوقت 👏'),'<div class="m-foot"><button class="btn" onclick="closeModal()">تم</button></div>');
+  },function(e){ if(!document.getElementById('geoWait'))return; setModal(mh('سجّل حضورك')+'<div class="card"><div class="empty" id="geoErr"><div class="ei">'+ic('warn')+'</div>'+geoErrMsg(e)+'</div></div><div class="m-foot"><button class="btn" onclick="selfCheckin(\''+sid+'\')">حاول مرة ثانية</button></div>'); },
+  {enableHighAccuracy:true,timeout:20000,maximumAge:0});
+}
+/* مجلس الإدارة: تحديد موقع الملعب ونطاق التحضير */
+function parseLoc(t){t=String(t||'');var m=t.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/)||t.match(/@(-?\d+\.\d+),\s*(-?\d+\.\d+)/)||t.match(/[?&](?:q|ll|query|destination)=(-?\d+\.\d+)(?:,|%2C)\s*(-?\d+\.\d+)/i)||t.match(/(-?\d{1,2}\.\d{3,})\s*[,،]\s*(-?\d{1,3}\.\d{3,})/);
+  if(!m)return null; var a=+m[1],b=+m[2]; if(Math.abs(a)>90||Math.abs(b)>180)return null; return {lat:a,lng:b};}
+function openFieldLoc(){openModal('');fieldLocInner();modalRefresh=fieldLocInner;}
+function fieldLocInner(){
+  var f=fieldLoc(), r=fieldR();
+  var h=mh('موقع الملعب');
+  h+='<div class="card"><div class="cell"><div class="body"><div class="t" id="fieldNow">'+(f?'📍 محدد':'لم يُحدَّد بعد')+'</div><div class="s">'+(f?'<span class="num ltr">'+f.lat.toFixed(5)+', '+f.lng.toFixed(5)+'</span> · <a href="https://maps.google.com/?q='+f.lat+','+f.lng+'" target="_blank" rel="noopener" style="color:var(--tint)">افتحه في الخرائط</a>':'اللاعب ما يقدر يحضّر نفسه إلا إذا كان قريب من هذا الموقع يوم التمرين.')+'</div></div></div></div>';
+  h+='<div class="m-foot" style="margin-top:12px"><button class="btn block" id="fieldHere" onclick="fieldHere()">'+ic('check','s')+'استخدم موقعي الحالي (وأنا في الملعب)</button></div>';
+  h+=gh('<span style="font-size:16px">أو الصق رابط خرائط قوقل أو الإحداثيات</span>')+'<input class="field" id="fieldTxt" dir="ltr" placeholder="24.7136, 46.6753"><div class="small muted" id="fieldHint" style="margin:8px 4px 0">'+FIELD_HOWTO+'</div><div class="m-foot" style="margin-top:8px"><button class="btn gray" id="fieldSave" onclick="fieldSaveTxt()">حفظ</button></div>';
+  h+=gh('<span style="font-size:16px">نطاق التحضير حول الملعب</span>')+'<div class="seg" id="fieldR" style="display:flex">'+[100,150,250,500].map(function(x){return '<button type="button" class="'+(r===x?'on':'')+'" onclick="fieldSetR('+x+')">'+x+' م</button>';}).join('')+'</div>';
+  h+='<div class="foot">اللاعب يحضّر نفسه من ساعة ونص قبل التمرين إلى 3 ساعات بعد بدايته، ويُحسب تأخيره تلقائياً.</div>';
+  if(f) h+='<div style="text-align:center;margin-top:10px"><button class="lnk" style="background:none;border:none;color:#FF3B30;font-size:15px;cursor:pointer" id="fieldDel" onclick="askConfirm(\'إلغاء موقع الملعب؟ يتوقف تحضير اللاعبين لأنفسهم.\',function(){put(\'settings/field\',null);},\'حذف\')">إلغاء موقع الملعب</button></div>';
+  setModal(h);
+}
+function fieldSave(loc){ if(!loc)return; put('settings/field',{lat:+loc.lat.toFixed(6),lng:+loc.lng.toFixed(6),r:fieldR()}); toast('تم حفظ موقع الملعب'); }
+function fieldSaveTxt(){var v=document.getElementById('fieldTxt').value, l=parseLoc(v);
+  if(!l){var sh=/share\.google|goo\.gl|maps\.app/i.test(v); var n=document.getElementById('fieldHint'); if(n){n.className='lg-new fhint-bad';n.innerHTML=(sh?'<b>الرابط المختصر ما يحتوي على الإحداثيات.</b><br>':'<b>ما قدرنا نقرأ الموقع.</b><br>')+FIELD_HOWTO;} toast('⚠️ الصق الإحداثيات بدل الرابط المختصر');return;}
+  fieldSave(l);}
+var FIELD_HOWTO='في تطبيق خرائط قوقل: اضغط ضغطة طويلة على أرض الملعب، تطلع دبوس أحمر والإحداثيات فوق (مثل <span class="num ltr">24.71360, 46.67530</span>). انسخها والصقها هنا.';
+function fieldSetR(x){var f=fieldLoc(); if(!f){toast('⚠️ حدّد موقع الملعب أولاً');return;} put('settings/field/r',x);}
+function fieldHere(){
+  if(!navigator.geolocation){toast('❌ جهازك ما يدعم تحديد الموقع');return;}
+  toast('جارٍ تحديد موقعك…');
+  navigator.geolocation.getCurrentPosition(function(p){ if(p.coords.accuracy>200){toast('⚠️ دقة الموقع ضعيفة ('+fmtDist(p.coords.accuracy)+')، حاول من مكان مفتوح');return;} fieldSave({lat:p.coords.latitude,lng:p.coords.longitude}); },
+    function(e){toast(e&&e.code===1?'⚠️ اسمح للتطبيق بمعرفة موقعك من إعدادات الجوال':'⚠️ ما قدرنا نحدد موقعك، حاول مرة ثانية');},{enableHighAccuracy:true,timeout:20000,maximumAge:0});
+}
 function checkinInner(){
   var s=openSession(); if(!s)return;
   var ps=playersArr(), exp=ps.filter(function(p){return s.att[p.id];});
   var order=function(a,b){var ca=ciStatus(s,a.id)?1:0,cb=ciStatus(s,b.id)?1:0; return ca-cb||a.name.localeCompare(b.name,'ar');};
   exp.sort(order);
   var row=function(p){var st=ciStatus(s,p.id), ts=s.checkin[p.id], lm=ts?lateMin(s,ts):0;
-    var sub=st==='abs'?'غاب':ts?'وصل '+fmtClock(ts)+(lm>0?' · بعد البداية بـ '+lm+' د':''):POS[p.pos].ar;
+    var g=(s.ciGeo||{})[p.id], sub=st==='abs'?'غاب':ts?'وصل '+fmtClock(ts)+(lm>0?' · بعد البداية بـ '+lm+' د':'')+(g?' · 📍 حضّر نفسه (على بُعد '+fmtDist(g.d||0)+')':''):POS[p.pos].ar;
     return '<div class="cell ind cirow" data-id="'+p.id+'" style="flex-wrap:wrap">'+avatar(p.id)+'<div class="body"><div class="t">'+esc(p.name)+'</div><div class="s">'+sub+'</div></div>'+
       '<div class="seg ci-seg">'+[['ok','في الوقت'],['late','متأخر'],['abs','غاب']].map(function(o){return '<button type="button" class="ci-'+o[0]+(st===o[0]?' on':'')+'" onclick="setCi(\''+p.id+'\',\''+o[0]+'\')">'+o[1]+'</button>';}).join('')+'</div></div>';};
   var cnt={ok:0,late:0,abs:0,none:0}; exp.forEach(function(p){var st=ciStatus(s,p.id); cnt[st||'none']++;});
