@@ -1401,7 +1401,7 @@ window.addEventListener('scroll',function(){document.getElementById('nav').class
 function renderHome(el){
   var ps=playersArr(), ds=doneSessions(), st=computeStats(), os=openSession(), h='';
 
-  if(!isCoach&&myId()) h+='<div class="foot" id="meLine" style="margin:4px 4px 0">أهلاً <b style="color:var(--label)">'+esc(pname(myId()))+'</b> · <a href="#" style="color:var(--tint)" onclick="event.preventDefault();askMe()">تغيير</a> · <a href="#" id="meOut" style="color:var(--tint)" onclick="event.preventDefault();logoutMe();render()">خروج</a></div>';
+  if(!isCoach&&myId()) h+='<div class="foot" id="meLine" style="margin:4px 4px 0">أهلاً <a href="#" id="meName" style="color:var(--label);font-weight:700" onclick="event.preventDefault();openPlayer(myId())">'+esc(pname(myId()))+'</a> · <a href="#" style="color:var(--tint)" onclick="event.preventDefault();askMe()">تغيير</a> · <a href="#" id="meOut" style="color:var(--tint)" onclick="event.preventDefault();logoutMe();render()">خروج</a></div>';
   else if(!isCoach&&playersArr().length) h+='<div class="foot" id="guestLine" style="margin:4px 4px 0">أنت زائر، ولا يمكنك التصويت لأفضل لاعب · <a href="#" id="guestLogin" style="color:var(--tint);font-weight:700" onclick="event.preventDefault();askMe()">تسجيل الدخول</a></div>';
   var vs=voteSession();
   var voteH=vs?'<div class="card" style="margin-top:10px"><div class="cell tap ind" id="voteCard" onclick="openVote(\''+vs.id+'\')">'+tile('#D4A93C','star',true)+'<div class="body"><div class="t">صوّت لأفضل لاعب في التمرين</div><div class="s">'+(!myId()?'التصويت مفتوح حتى '+fmtWhen(voteEnd(vs))+'<br><span class="vnote" id="voteNote">لابد من إدخال الاسم للتمكن من التصويت لأفضل لاعب</span>':!inSess(vs,myId())?'التصويت مفتوح حتى '+fmtWhen(voteEnd(vs))+'<br><span class="vnote" id="voteNote">ما لك تصويت في هذا التمرين</span>':vs.votes[myId()]?'صوتك: '+esc(pname(vs.votes[myId()]))+' — اضغط للتغيير':'التصويت مفتوح حتى '+fmtWhen(voteEnd(vs)))+'</div></div>'+chev()+'</div></div>':'';
@@ -1760,6 +1760,7 @@ function openPlayerInner(id){
   var h=mh('');
   if(isCoach) h=h.replace('<span class="side"></span>','<button class="m-edit" id="editPlayer" onclick="openPlayerForm(\''+id+'\')">'+ic('pencil','xs')+'تعديل</button>');
   h+='<div class="prof">'+ring(o,POS[p.pos].ar,photoSrc(p))+'<div class="nm">'+esc(p.name)+'</div>'+(isJoker(p)?'<div id="profJoker" style="margin:6px 0 4px">'+jokerBadge(true)+'<div class="small muted" style="margin-top:6px">يلعب في مراكز كثيرة</div></div>':'')+'<div class="mt">'+(p.age?cnt(+p.age||0,'سنة')+' · ':'')+'القدم: '+(FOOT[p.foot]||'—')+'</div><div class="mt" style="display:flex;gap:16px;justify-content:center;margin-top:8px"><span>المهارة '+starsHTML(p.sm,'big')+'</span><span>القدم الضعيفة '+starsHTML(p.wf,'big')+'</span></div>'+(isCoach&&traitsOf(p).length?'<div class="chips" id="profTraits" style="justify-content:center;gap:6px;margin-top:10px">'+traitsOf(p).map(function(k){return '<span class="tag on">'+TRAITS.filter(function(x){return x[0]===k;})[0][1]+'</span>';}).join('')+'</div>':'')+'</div>';
+  if(!isCoach&&myId()===id) h+='<div style="text-align:center;margin:4px 0 8px"><button class="lnk" id="myAgeBtn" style="background:none;border:none;color:var(--tint);font-size:15px;font-weight:700;cursor:pointer" onclick="editMyAge()">✎ '+(p.age?'تعديل عمري':'أضف عمري')+'</button></div>';
   if(isCoach) h+='<div class="pinrow" id="pinRow">'+(hasPin(id)?'<span>🔒 عنده كلمة سر</span><button class="lnk" id="pinReset" onclick="resetPin(\''+id+'\')">إعادة تعيين كلمة السر</button>':'<span>🔓 ما اختار كلمة سر بعد</span>')+'</div>';
   h+='<div class="card sgrid" style="margin-top:16px">'+
     '<div><b class="num">'+st.apps+'</b><span>'+nounFor(st.apps,'تمرين')+'</span></div><div><b class="num">'+st.goals+'</b><span>'+nounFor(st.goals,'هدف')+'</span></div><div><b class="num">'+st.assists+'</b><span>'+nounFor(st.assists,'صناعة')+'</span></div>'+
@@ -1910,6 +1911,13 @@ function setCi(pid,k){
   else { if(!s.checkin[pid]) m[b+'checkin/'+pid]=Date.now(); m[b+'lateSet/'+pid]=(k==='late'); m[b+'absent/'+pid]=null; }
   putMany(m);
 }
+/* ---------- اللاعب يعدّل عمره بنفسه ---------- */
+function editMyAge(){ var me=myId(); if(!me){askMe();return;} var p=P(me); if(!p)return;
+  openModal(mh('عمرك')+'<div class="card pad"><div class="lg-l">كم عمرك؟</div><input class="field num" id="ageIn" inputmode="numeric" maxlength="2" style="text-align:center;font-size:24px;font-weight:800" value="'+(p.age||'')+'" placeholder="مثلاً 27" oninput="this.value=arNum(this.value).replace(/\\./g,\'\').slice(0,2)" onkeydown="if(event.key===\'Enter\')saveMyAge()"></div><div class="m-foot"><button class="btn" id="ageSave" onclick="saveMyAge()">حفظ</button></div>');
+  setTimeout(function(){var i=document.getElementById('ageIn');if(i)i.focus();},60); }
+function saveMyAge(){ var me=myId(); if(!me)return; var v=parseInt(arNum((document.getElementById('ageIn')||{}).value),10);
+  if(!(v>=10&&v<=70)){toast('⚠️ اكتب عمر صحيح بين 10 و70');return;}
+  putVote('players/'+me+'/age',v); closeModal(); toast('تم تحديث عمرك: '+cnt(v,'سنة')); }
 /* ---------- القطة: حساب مبلغ التمرين ومن دفع (لمجلس الإدارة) ---------- */
 function kOf(s){var k=(s&&s.kitty)||{};return {total:+k.total>0?+k.total:0,per:+k.per>0?+k.per:0,paid:k.paid||{}};}
 function kPlayers(s){return participants(s).filter(function(id){return P(id);}).sort(function(a,b){return pname(a).localeCompare(pname(b),'ar');});}
@@ -2048,11 +2056,13 @@ function openFieldLoc(){openModal('');fieldLocInner();modalRefresh=fieldLocInner
 function fieldLocInner(){
   var f=fieldLoc(), r=fieldR();
   var h=mh('موقع الملعب');
-  h+='<div class="card"><div class="cell"><div class="body"><div class="t" id="fieldNow">'+(f?'📍 محدد':'لم يُحدَّد بعد')+'</div><div class="s">'+(f?'<span class="num ltr">'+f.lat.toFixed(5)+', '+f.lng.toFixed(5)+'</span> · <a href="https://maps.google.com/?q='+f.lat+','+f.lng+'" target="_blank" rel="noopener" style="color:var(--tint)">افتحه في الخرائط</a>':'اللاعب ما يقدر يحضّر نفسه إلا إذا كان قريب من هذا الموقع يوم التمرين.')+'</div></div></div></div>';
+  var isDef=!(S.settings||{}).field;
+  h+='<div class="card"><div class="cell"><div class="body"><div class="t" id="fieldNow">'+(f?(isDef?'📍 ملعب التمرين (الموقع الافتراضي)':'📍 محدد'):'لم يُحدَّد بعد')+'</div><div class="s">'+(f?'<span class="num ltr">'+f.lat.toFixed(5)+', '+f.lng.toFixed(5)+'</span> · <a href="https://maps.google.com/?q='+f.lat+','+f.lng+'" target="_blank" rel="noopener" style="color:var(--tint)">افتحه في الخرائط</a>':'اللاعب ما يقدر يحضّر نفسه إلا إذا كان قريب من هذا الموقع يوم التمرين.')+'</div></div></div></div>';
   h+='<div class="m-foot" style="margin-top:12px"><button class="btn block" id="fieldHere" onclick="fieldHere()">'+ic('check','s')+'استخدم موقعي الحالي (وأنا في الملعب)</button></div>';
   h+=gh('<span style="font-size:16px">أو الصق رابط خرائط قوقل أو الإحداثيات</span>')+'<input class="field" id="fieldTxt" dir="ltr" placeholder="24.7136, 46.6753"><div class="small muted" id="fieldHint" style="margin:8px 4px 0">'+FIELD_HOWTO+'</div><div class="m-foot" style="margin-top:8px"><button class="btn gray" id="fieldSave" onclick="fieldSaveTxt()">حفظ</button></div>';
   h+=gh('<span style="font-size:16px">نطاق التحضير حول الملعب</span>')+'<div class="seg" id="fieldR" style="display:flex">'+[100,150,250,500].map(function(x){return '<button type="button" class="'+(r===x?'on':'')+'" onclick="fieldSetR('+x+')">'+x+' م</button>';}).join('')+'</div>';
   h+='<div class="foot">اللاعب يحضّر نفسه من ساعة ونص قبل التمرين إلى 3 ساعات بعد بدايته، ويُحسب تأخيره تلقائياً.</div>';
+  if(!isDef) h+='<div class="m-foot" style="margin-top:10px"><button class="btn tinted block" id="fieldDefault" onclick="put(\'settings/field\',null);toast(\'رجع موقع الملعب الافتراضي\')">📍 رجوع لموقع الملعب الافتراضي</button></div>';
   if(f) h+='<div style="text-align:center;margin-top:10px"><button class="lnk" style="background:none;border:none;color:#FF3B30;font-size:15px;cursor:pointer" id="fieldDel" onclick="askConfirm(\'إلغاء موقع الملعب؟ يتوقف تحضير اللاعبين لأنفسهم.\',function(){put(\'settings/field\',{off:true});},\'حذف\')">إلغاء موقع الملعب</button></div>';
   setModal(h);
 }
