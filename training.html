@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>تمرين ساف الأسبوعي</title>
+<title>تمرين ساف</title>
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="تمرين ساف الأسبوعي">
+<meta name="apple-mobile-web-app-title" content="تمرين ساف">
 <link rel="apple-touch-icon" href="icon-saff-192.png">
 <link rel="icon" type="image/png" href="icon-saff-192.png">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -642,8 +642,8 @@ document.addEventListener('DOMContentLoaded',function(){applyTheme();});
 <header class="nav" id="nav">
   <div class="wrap">
     <picture><source srcset="saff-white.png" media="(prefers-color-scheme: dark)"><img class="logo" src="saff.png" alt="الاتحاد السعودي لكرة القدم"></picture>
-    <div class="org">تمرين ساف الأسبوعي</div>
-    <div class="ntitle" id="navTitle">تمرين ساف الأسبوعي</div>
+    <div class="org">تمرين ساف</div>
+    <div class="ntitle" id="navTitle">تمرين ساف</div>
     <button class="theme-btn" id="themeBtn" onclick="openTheme()" aria-label="المظهر"><svg class="i s" viewBox="0 0 24 24"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg></button>
     <button class="coach-btn" id="coachBtn" onclick="coachClick()" aria-label="صلاحيات مجلس الإدارة">صلاحيات مجلس الإدارة</button>
   </div>
@@ -1285,7 +1285,7 @@ function photoHTML(p,cls){var u=photoSrc(p);return u?'<img class="'+cls+'" src="
 function avatar(id,big){return photoHTML(P(id)||{name:pname(id)},'avatar'+(big?' big':''));}
 function mh(title){return '<div class="grabber"></div><div class="m-h"><span class="side"></span><h3>'+title+'</h3><button class="m-x" onclick="closeModal()" aria-label="إغلاق">'+ic('x','xs')+'</button></div>';}
 
-var TITLES={home:'تمرين ساف الأسبوعي',players:'اللاعبون',session:'التمرين',archive:'الأرشيف',stats:'الإحصائيات'};
+var TITLES={home:'تمرين ساف',players:'اللاعبون',session:'التمرين',archive:'الأرشيف',stats:'الإحصائيات'};
 
 /* ---------- بطاقة اللاعب ---------- */
 function starsHTML(n,cls){n=clamp(+n||0,0,5);return '<span class="stars '+(cls||'')+'" aria-label="'+n+' من 5">'+'★'.repeat(n)+'<span class="off">'+'★'.repeat(5-n)+'</span></span>';}
@@ -1440,7 +1440,7 @@ function renderHome(el){
   }
 
   if(!ps.length){
-    h+='<div style="margin-top:22px">'+emptyBox('people','أهلاً بك في تمرين ساف الأسبوعي',isCoach?'ابدأ بإضافة اللاعبين من تبويب «اللاعبون».':'اضغط «صلاحيات مجلس الإدارة» في الأعلى وأدخل كلمة السر لتبدأ.')+'</div>';
+    h+='<div style="margin-top:22px">'+emptyBox('people','أهلاً بك في تمرين ساف',isCoach?'ابدأ بإضافة اللاعبين من تبويب «اللاعبون».':'اضغط «صلاحيات مجلس الإدارة» في الأعلى وأدخل كلمة السر لتبدأ.')+'</div>';
   }
   if(ps.length) h+='<div class="foot" style="text-align:center;margin-top:22px"><a href="#" id="tourLink" style="color:var(--tint);font-weight:600" onclick="event.preventDefault();openTour()">🧭 جولة سريعة في التطبيق</a></div>';
   if(isCoach&&!SBX) h+='<div class="card" style="margin-top:14px"><div class="cell tap ind" id="sbxEnter" onclick="enterSandbox()">'+tile('#AF52DE','star',true)+'<div class="body"><div class="t">🧪 تمرين تجريبي</div><div class="s">جرّب كل شي (التحضير، التصويت، النتيجة…) بدون ما يشوفه اللاعبون</div></div>'+chev()+'</div></div>';
@@ -1949,7 +1949,7 @@ function kittyToggle(sid,id){ var s=S.sessions[sid]; if(!s)return; var on=!kOf(s
 function kittyAll(sid,on){ var s=S.sessions[sid]; if(!s)return;
   if(on){ var p={}; kPlayers(s).forEach(function(id){p[id]=true;}); put('sessions/'+sid+'/kitty/paid',p); }
   else askConfirm('تصفير القطة؟ يصير الكل «لم يدفع».',function(){put('sessions/'+sid+'/kitty/paid',null);},'حذف'); }
-function kittyText(s){var m=kSum(s);return 'تذكير القطة 💰\n'+(sessLabel(s)||'تمرين ساف الأسبوعي')+' · '+niceDate(s.date)+'\nعلى كل لاعب: '+money(m.per)+'\n\nباقي ما دفعوا ('+m.unpaid.length+'):\n'+m.unpaid.map(function(id,i){return (i+1)+'. '+pname(id);}).join('\n');}
+function kittyText(s){var m=kSum(s);return 'تذكير القطة 💰\n'+(sessLabel(s)||'تمرين ساف')+' · '+niceDate(s.date)+'\nعلى كل لاعب: '+money(m.per)+'\n\nباقي ما دفعوا ('+m.unpaid.length+'):\n'+m.unpaid.map(function(id,i){return (i+1)+'. '+pname(id);}).join('\n');}
 function kittyRemind(sid){ var s=S.sessions[sid]; if(!s)return; var t=kittyText(s);
   var done=function(){toast('تم نسخ التذكير — الصقه في القروب');};
   var fallback=function(){openModal(mh('تذكير القطة')+'<textarea class="field" id="kText" rows="10" style="height:auto;padding:12px;line-height:1.7">'+esc(t)+'</textarea><div class="foot">انسخ النص والصقه في القروب.</div>');var x=document.getElementById('kText');if(x){x.focus();x.select();}};
@@ -2430,7 +2430,7 @@ function drawLineup2(s,ph){
   var lg=c.createLinearGradient(0,0,0,H); lg.addColorStop(0,'rgba(255,255,255,0)'); lg.addColorStop(.16,'rgba(255,255,255,.3)'); lg.addColorStop(.84,'rgba(255,255,255,.3)'); lg.addColorStop(1,'rgba(255,255,255,0)'); c.fillStyle=lg; c.fillRect(W/2-1,0,2,H);
   var hg=c.createLinearGradient(0,0,0,118); hg.addColorStop(0,'rgba(0,0,0,.6)'); hg.addColorStop(1,'rgba(0,0,0,0)'); c.fillStyle=hg; c.fillRect(0,0,W,118);
   // العنوان
-  var ttl='تشكيلة تمرين ساف الأسبوعي'+(s.num?' #'+s.num:'');
+  var ttl='تشكيلة تمرين ساف'+(s.num?' #'+s.num:'');
   txt(ttl,W/2,50,F(800,42,HF),'#fff');
   txt([s.title||'',niceDate(s.date)+' · '+fmtStart(s)].filter(Boolean).join('  ·  '),W/2,92,F(700,20,HF),'rgba(255,255,255,.7)');
   var subs={A:subsOf(s,'A').filter(function(id){return P(id);}),B:subsOf(s,'B').filter(function(id){return P(id);})}, anySubs=subs.A.length||subs.B.length;
@@ -2477,7 +2477,7 @@ function drawLineup(s,logo,ph){
   c.strokeStyle='rgba(230,204,120,.55)'; c.lineWidth=3; c.beginPath(); c.moveTo(W/2-150,292); c.lineTo(W/2+150,292); c.stroke();
   // الشعار والعنوان
   if(logo){var lh=118,lw=logo.naturalWidth/logo.naturalHeight*lh; c.drawImage(logo,W/2-lw/2,34,lw,lh);}
-  c.fillStyle='#fff'; c.font='800 62px '+IMG_FONT; c.fillText('تمرين ساف الأسبوعي',W/2,200);
+  c.fillStyle='#fff'; c.font='800 62px '+IMG_FONT; c.fillText('تمرين ساف',W/2,200);
   var d=parseD(s.date), ds=''; try{ds=d.toLocaleDateString(AR_LOC,{weekday:'long',day:'numeric',month:'long'});}catch(e){ds=s.date;}
   c.fillStyle='#E6CC78'; c.font='600 32px '+IMG_FONT; c.fillText(ds+'  ·  الساعة '+fmtStart(s),W/2,256);
   // الملعب
@@ -2597,7 +2597,7 @@ function drawPoster(kind,s,logo,ph){
   // الترويسة: الشعار + اسم التمرين، والتاريخ يسار
   var y=74+39;
   if(logo){var lh=78,lw=logo.naturalWidth/logo.naturalHeight*lh; c.drawImage(logo,R-lw,y-39,lw,lh); var bx=R-lw-20; c.fillStyle='rgba(255,255,255,.28)'; c.fillRect(bx-2,y-28,2,56);
-    txt('تمرين ساف الأسبوعي',bx-20,y-12,F(900,26),'#fff'); txt(sessLabel(s)||(esc2(s.teams.A.name)+' × '+esc2(s.teams.B.name)),bx-20,y+20,F(700,18),PST.gold); }
+    txt('تمرين ساف',bx-20,y-12,F(900,26),'#fff'); txt(sessLabel(s)||(esc2(s.teams.A.name)+' × '+esc2(s.teams.B.name)),bx-20,y+20,F(700,18),PST.gold); }
   var dstr=niceDate(s.date)+' · '+fmtStart(s); txt(dstr,P0,y,F(800,21),PST.mute,'left');
   // العنوان: الكلمة الأولى أبيض والثانية ذهبي
   var T={sum:['ملخص','التمرين'],list:['قائمة','اللاعبين'],rot:['ترتيب','التبديل'],mvp:['أفضل','لاعب'],attr:['تغيّر','الطاقات'],post:['انتهت','المباراة'],final:['أفضل','لاعب']}[kind];
@@ -2809,7 +2809,7 @@ function drawPoster(kind,s,logo,ph){
   }
   // التذييل
   y+=10; c.fillStyle=PST.line; c.fillRect(P0,y,W-2*P0,1.5); y+=40;
-  txt('الاتحاد السعودي لكرة القدم · تمرين ساف الأسبوعي',W/2,y,F(700,20),PST.faint,'center'); y+=46;
+  txt('الاتحاد السعودي لكرة القدم · تمرين ساف',W/2,y,F(700,20),PST.faint,'center'); y+=46;
   var H2=Math.max(1200,Math.ceil(y)); var out=document.createElement('canvas'); out.width=W; out.height=H2; out.getContext('2d').drawImage(cv,0,0);
   return out.toDataURL('image/png');
 }
