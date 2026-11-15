@@ -606,7 +606,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261115142044';
+var BUILD='20261115143015';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -2126,7 +2126,7 @@ function fitScore(p,pos){
   var i=prefRank(p,pos);
   if(i>=0) return [10,8,6,4][i];
   if(neverOf(p)[pos]) return -30;            // قال المدرب: ما يلعب فيه أبداً
-  if(pos==='GK'||p.pos==='GK') return -20;   // الحراسة تخصص
+  if(pos==='GK') return -1000;               // اللاعب اللي مو حارس ما يحرس أبداً
   // مركز غير مذكور: نفس الخط أفضل، ثم الخط المجاور، والبعيد مرفوض قدر الإمكان
   var d=lineDist(p,pos);
   return d===0?3:d===1?-2:-8;
@@ -2940,7 +2940,7 @@ function assignSlots(players,slots){
   var pairs=[]; players.forEach(function(p){slots.forEach(function(s){pairs.push([fitScore(p,s.pos)*10+traitFit(p,s.pos)*1.5+ovr(p)*0.01,p.id,s.id]);});});
   pairs.sort(function(a,b){return b[0]-a[0];});
   var up={},us={},res={};
-  pairs.forEach(function(x){if(up[x[1]]||us[x[2]])return;up[x[1]]=1;us[x[2]]=1;res[x[2]]=x[1];});
+  pairs.forEach(function(x){if(x[0]<-5000||up[x[1]]||us[x[2]])return;up[x[1]]=1;us[x[2]]=1;res[x[2]]=x[1];}); // غير الحارس لا يوضع في المرمى
   return res;
 }
 function teamScore(players,slots){return players.reduce(function(t,p){return t+ovr(p);},0);}
@@ -2968,7 +2968,7 @@ function balanceSolve(s,pri,noSubs){
     var key=useMemo?t+X.slice().sort().join(','):''; if(useMemo&&memo[key])return memo[key];
     var slots=sl[t], k=X.length, cols=slots.length+Math.max(0,k-slots.length), res={asg:{},bench:[],fit:0,bad:0};
     if(k){
-      var a=X.map(function(id){var lk=locks[id], row=VAL[t][id].slice(); for(var j=slots.length;j<cols;j++)row.push(lk&&lk.pos?1e5:0); return row;});
+      var a=X.map(function(id){var lk=locks[id], row=VAL[t][id].slice(); for(var j=slots.length;j<cols;j++)row.push(lk&&lk.pos?1e5:0); row.push(lk&&lk.pos?1e5:5000); /* مكان احتياط إضافي: أفضل من وضع لاعب غير حارس في المرمى */ return row;});
       var r=hungarian(a);
       X.forEach(function(id,i){var j=r[i],lk=locks[id];
         if(j<slots.length){res.asg[slots[j].id]=id;res.fit+=FIT[t][id][j];if(lk&&lk.pos&&lk.pos!==slots[j].pos)res.bad++;}
@@ -2989,7 +2989,7 @@ function balanceSolve(s,pri,noSubs){
   };
   var fixA=ids.filter(function(id){return locks[id]&&locks[id].t==='A';}), fixB=ids.filter(function(id){return locks[id]&&locks[id].t==='B';});
   var F=ids.filter(function(id){return !(locks[id]&&locks[id].t);});
-  var isGK=function(id){return P(id).pos==='GK';}, gkAll=ids.filter(isGK).length;
+  var isGK=function(id){return prefsOf(P(id)).indexOf('GK')>=0;}, gkAll=ids.filter(isGK).length; // الحارس أو من عنده الحراسة ضمن مراكزه
   var sizes=[]; var kA0=Math.ceil(N/2), kA1=Math.floor(N/2);
   [kA0,kA1].forEach(function(kA){var kB=N-kA; if(kA>cap.A||kB>cap.B)return; var r=kA-fixA.length; if(r<0||r>F.length||F.length-r!==kB-fixB.length)return; if(sizes.indexOf(r)<0)sizes.push(r);});
   if(!sizes.length){ // القيود تمنع تقسيم متساوٍ: أقرب تقسيم ممكن
