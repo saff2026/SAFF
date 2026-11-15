@@ -2715,15 +2715,6 @@ function drawPoster(kind,s,logo,ph){
       tiles.forEach(function(t,i){ var x0=tx-(i+1)*tw-i*gap; rrect(c,x0,y,tw,th,22); c.fillStyle=i===0&&typeof rtm==='number'?'rgba(230,204,120,.16)':PST.row; c.fill(); c.strokeStyle=i===0&&typeof rtm==='number'?'rgba(230,204,120,.55)':PST.rowEdge; c.lineWidth=1.5; c.stroke();
         txt(t[0],x0+tw/2,y+62,F(900,60),i===0&&typeof rtm==='number'?PST.gold:'#fff','center'); txt(t[1],x0+tw/2,y+118,F(700,24),PST.mute,'center'); });
       y+=th+50; }
-    if(up0&&typeof up0.ovrA==='number'){ var dd=up0.ovrA-up0.ovrB, col=dd>0?'#2FD28A':dd<0?'#FF7A7A':PST.mute;
-      c.save(); c.direction='ltr'; var t1=String(up0.ovrB), t2=String(up0.ovrA), t3=dd>0?'+'+dd:dd<0?'−'+Math.abs(dd):'±0';
-      c.font=F(900,40); var w1=c.measureText(t1).width, w2=c.measureText(t2).width; c.font=F(900,30); var w3=c.measureText(t3).width; var aw=56, tot=w1+aw+w2+28+w3+36, x0=W/2-tot/2;
-      rrect(c,x0-28,y-42,tot+56,84,42); c.fillStyle=PST.row; c.fill(); c.strokeStyle=PST.rowEdge; c.lineWidth=1.5; c.stroke();
-      c.textAlign='left'; c.fillStyle=PST.mute; c.font=F(900,40); c.fillText(t1,x0,y+2); c.fillStyle=PST.mute; c.font=F(700,34); c.fillText('→',x0+w1+12,y);
-      c.fillStyle='#fff'; c.font=F(900,40); c.fillText(t2,x0+w1+aw,y+2);
-      rrect(c,x0+w1+aw+w2+28,y-24,w3+36,48,24); c.fillStyle=dd>0?'rgba(47,210,138,.16)':dd<0?'rgba(255,122,122,.16)':'rgba(255,255,255,.08)'; c.fill();
-      c.fillStyle=col; c.font=F(900,30); c.fillText(t3,x0+w1+aw+w2+28+18,y+2); c.restore();
-      y+=58; txt('التقييم العام قبل وبعد التمرين',W/2,y,F(700,22),PST.faint,'center'); y+=40; }
     y=kind==='mvp'?Math.max(y+20,1240):y+30;
   }
   if(kind==='final'){
