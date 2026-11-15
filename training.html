@@ -610,7 +610,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261115175712';
+var BUILD='20261115180426';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -1929,30 +1929,38 @@ function saveMyAge(){ var me=myId(); if(!me)return; var v=parseInt(arNum((docume
 /* ---------- التأكيد: مين كلّمته من القائمة ومين أكّد (لمجلس الإدارة) ---------- */
 var CONF=[['','لم أكلمه','#8E8E93'],['called','كلّمته','#FF9500'],['yes','أكّد','#34C759'],['no','اعتذر','#FF3B30']];
 function confOf(s,id){var v=((s&&s.conf)||{})[id];return v==='called'||v==='yes'||v==='no'?v:'';}
-function confPlayers(s){return attendees(s).filter(function(id){return P(id);});}
+function confPlayers(s){return playersArr().map(function(p){return p.id;});} // كل اللاعبين: «أكّد» يضيفه للقائمة و«اعتذر» يشيله
 function confSum(s){var c={'':0,called:0,yes:0,no:0};confPlayers(s).forEach(function(id){c[confOf(s,id)]++;});return c;}
 function confCardH(s){
   var ids=confPlayers(s), c=confSum(s);
-  var sub=!ids.length?'أضف اللاعبين لقائمة التمرين أولاً':'أكّد <span class="num">'+c.yes+'</span> من <span class="num">'+ids.length+'</span>'+(c.called?' · كلّمته <span class="num">'+c.called+'</span>':'')+(c.no?' · <span style="color:var(--red)">اعتذر '+c.no+'</span>':'')+(c['']?' · <span style="color:var(--orange)">لم أكلم '+c['']+'</span>':'');
+  var sub=!ids.length?'أضف لاعبين أولاً':'أكّد <span class="num">'+c.yes+'</span> · في القائمة <span class="num">'+listCount(s)+'</span> من <span class="num">'+maxList(s)+'</span>'+(c.called?' · كلّمته <span class="num">'+c.called+'</span>':'')+(c.no?' · <span style="color:var(--red)">اعتذر '+c.no+'</span>':'')+(c['']?' · <span style="color:var(--orange)">لم أكلم '+c['']+'</span>':'');
   return gh('التأكيد')+'<div class="card"><div class="cell tap ind" id="confBtn" onclick="openConf(\''+s.id+'\')">'+tile('#0A84FF','people')+'<div class="body"><div class="t">مين كلّمت ومين أكّد</div><div class="s">'+sub+'</div></div>'+chev()+'</div></div>';
 }
 function openConf(sid){ if(!isCoach)return; openModal(''); confInner(sid); modalRefresh=function(){ if(!S.sessions[sid]){closeModal();return;} confInner(sid); }; }
 function confInner(sid){
   var s=S.sessions[sid]; if(!s)return; var ids=confPlayers(s), c=confSum(s), rank={'':0,called:1,no:2,yes:3};
   var h=mh('التأكيد');
-  if(!ids.length){ setModal(h+emptyBox('people','القائمة فارغة','أضف اللاعبين لقائمة التمرين أولاً.')); return; }
+  if(!ids.length){ setModal(h+emptyBox('people','لا يوجد لاعبون','أضف لاعبين أولاً من تبويب «اللاعبون».')); return; }
+  h+='<div class="small muted" id="confList" style="text-align:center;margin:0 0 8px">في قائمة التمرين <b class="num" style="color:var(--label)">'+listCount(s)+'</b> من <b class="num" style="color:var(--label)">'+maxList(s)+'</b> · «أكّد» يضيفه للقائمة، و«اعتذر» يشيله منها</div>';
   h+='<div class="kstats cstats" id="confStats">'+CONF.slice(1).concat([CONF[0]]).map(function(x){return '<div><b class="num" style="color:'+x[2]+'">'+c[x[0]]+'</b><span>'+x[1]+'</span></div>';}).join('')+'</div>';
   var order=ids.slice().sort(function(a,b){return rank[confOf(s,a)]-rank[confOf(s,b)]||pname(a).localeCompare(pname(b),'ar');});
   h+='<div class="card">'+order.map(function(id){var v=confOf(s,id);
-    return '<div class="cell ind confrow" data-id="'+id+'" style="flex-wrap:wrap">'+avatar(id)+'<div class="body"><div class="t">'+esc(pname(id))+'</div></div>'+
+    return '<div class="cell ind confrow" data-id="'+id+'" style="flex-wrap:wrap">'+avatar(id)+'<div class="body"><div class="t">'+esc(pname(id))+'</div>'+(s.att[id]?'<div class="s" style="color:var(--green)">✓ في القائمة</div>':'')+'</div>'+
       '<div class="seg confseg">'+CONF.slice(1).map(function(x){return '<button type="button" class="c-'+x[0]+(v===x[0]?' on':'')+'" onclick="setConf(\''+sid+'\',\''+id+'\',\''+x[0]+'\')">'+x[1]+'</button>';}).join('')+'</div></div>';}).join('')+'</div>';
   h+='<div class="foot">اضغط الحالة مرة ثانية لإلغائها (ترجع «لم أكلمه»).</div>';
-  if(c['']+c.called) h+='<div class="m-foot"><button class="btn tinted block" id="confCopy" onclick="confCopy(\''+sid+'\')">'+ic('upl','s')+'نسخ أسماء اللي ما أكّدوا</button></div>';
+  if(c.called||ids.some(function(id){return !confOf(s,id)&&s.att[id];})) h+='<div class="m-foot"><button class="btn tinted block" id="confCopy" onclick="confCopy(\''+sid+'\')">'+ic('upl','s')+'نسخ أسماء اللي ما أكّدوا</button></div>';
   setModal(h);
 }
-function setConf(sid,id,v){ var s=S.sessions[sid]; if(!s)return; put('sessions/'+sid+'/conf/'+id,confOf(s,id)===v?null:v); }
+function setConf(sid,id,v){ var s=S.sessions[sid]; if(!s)return;
+  var nv=confOf(s,id)===v?null:v, m={}; m['sessions/'+sid+'/conf/'+id]=nv;
+  if(nv==='yes'&&!s.att[id]){ // أكّد: يدخل قائمة التمرين مباشرة
+    if(listCount(s)+1>maxList(s)){ toast('⚠️ القائمة مكتملة ('+cnt(maxList(s),'لاعب')+') — سجّلته «أكّد» بدون إضافة'); }
+    else { m['sessions/'+sid+'/att/'+id]=true; if((s.absent||{})[id])m['sessions/'+sid+'/absent/'+id]=null; toast(pname(id)+' انضاف لقائمة التمرين'); } }
+  if(nv==='no'&&s.att[id]){ // اعتذر: يطلع من القائمة ومن التشكيلة
+    m['sessions/'+sid+'/att/'+id]=null; var lp=lineupPath(s,id); if(lp)m[lp]=null; toast(pname(id)+' طلع من قائمة التمرين'); }
+  putMany(m); }
 function confCopy(sid){ var s=S.sessions[sid]; if(!s)return; var ids=confPlayers(s);
-  var nc=ids.filter(function(id){return !confOf(s,id);}), cl=ids.filter(function(id){return confOf(s,id)==='called';});
+  var nc=ids.filter(function(id){return !confOf(s,id)&&s.att[id];}), cl=ids.filter(function(id){return confOf(s,id)==='called';});
   var t='تأكيد الحضور ⚽\n'+(sessLabel(s)||'تمرين ساف')+' · '+niceDate(s.date)+' · '+fmtStart(s)+'\n'+(cl.length?'\nكلّمناهم وما أكّدوا ('+cl.length+'):\n'+cl.map(function(id,i){return (i+1)+'. '+pname(id);}).join('\n')+'\n':'')+(nc.length?'\nلم نكلّمهم بعد ('+nc.length+'):\n'+nc.map(function(id,i){return (i+1)+'. '+pname(id);}).join('\n'):'');
   var done=function(){toast('تم نسخ الأسماء');};
   var fb=function(){openModal(mh('اللي ما أكّدوا')+'<textarea class="field" id="confText" rows="10" style="height:auto;padding:12px;line-height:1.7">'+esc(t)+'</textarea><div class="foot">انسخ النص والصقه في القروب.</div>');};
