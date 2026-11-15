@@ -601,7 +601,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261115111516';
+var BUILD='20261115112526';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -2489,7 +2489,6 @@ function openShare(sid){
   if(done){ var hm=!!(mvpOf(s)&&P(mvpOf(s)));
     h+=opt('sh-final','star','#E0A100','أفضل لاعب والتقييمات','أفضل لاعب، وتقييمات اللاعبين، وتغيّر الطاقات'+(hm?'':' — لا يوجد أفضل لاعب بعد'),'posterShare(\'final\',\''+s.id+'\')',!hm); }
   h+=opt('sh-lineup','ball','#0A7D4F','التشكيلة','الملعب بصور اللاعبين'+(hasLineup?'':' — وزّع الفريقين أولاً'),'lineupImage(\''+s.id+'\')',!hasLineup);
-  h+=opt('sh-list','people','#0A84FF','قائمة اللاعبين','لاعبو كل فريق ومراكزهم'+(hasLineup?'':' — وزّع الفريقين أولاً'),'posterShare(\'list\',\''+s.id+'\')',!hasLineup);
   if(!done) h+=opt('sh-rot','undo','#AF52DE','ترتيب التبديل','من يدخل ومن يخرج'+(hasSubs?'':' — لا يوجد بدلاء'),'posterShare(\'rot\',\''+s.id+'\')',!hasSubs);
   h+='</div><div class="foot">تطلع صورة جاهزة ترسلها في القروب.</div>';
   openModal(h);
@@ -2548,8 +2547,9 @@ function drawPoster(kind,s,logo,ph){
   var dstr=niceDate(s.date)+' · '+fmtStart(s); txt(dstr,P0,y,F(800,21),PST.mute,'left');
   // العنوان: الكلمة الأولى أبيض والثانية ذهبي
   var T={sum:['ملخص','التمرين'],list:['قائمة','اللاعبين'],rot:['ترتيب','التبديل'],mvp:['أفضل','لاعب'],attr:['تغيّر','الطاقات'],post:['انتهت','المباراة'],final:['أفضل','لاعب']}[kind];
-  y+=170; c.font=F(900,92); txt(T[0],R,y,F(900,92),'#fff'); var w0=c.measureText(T[0]+' ').width; txt(T[1],R-w0,y,F(900,92),PST.gold);
-  y+=110;
+  if(kind==='post'||kind==='final'){ y+=110; } // بدون العنوان الكبير
+  else { y+=170; c.font=F(900,92); txt(T[0],R,y,F(900,92),'#fff'); var w0=c.measureText(T[0]+' ').width; txt(T[1],R-w0,y,F(900,92),PST.gold);
+  y+=110; }
   if(kind==='sum'||kind==='post'){
     var sc=scoreOf(s);
     // النتيجة
