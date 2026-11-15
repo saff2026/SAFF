@@ -419,6 +419,12 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .field.pin{text-align:center;letter-spacing:10px;font-size:22px;direction:ltr}
 .lg-new{margin-top:12px;background:rgba(22,160,102,.1);color:var(--label);border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.6}
 .lg-n{margin:8px 4px 0}
+#sbxBar{position:fixed;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom) + 92px);z-index:60;background:linear-gradient(135deg,#6D28D9,#AF52DE);color:#fff;border-radius:18px;padding:8px 10px;box-shadow:0 12px 30px -10px rgba(80,20,140,.6);display:flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:560px;margin:0 auto}
+#sbxBar .sbx-t{font-weight:800;font-size:14px;flex:1;min-width:150px}#sbxBar .sbx-t span{font-weight:500;opacity:.85;font-size:12px}
+#sbxBar .sbx-b{display:flex;gap:6px;flex-wrap:wrap}#sbxBar button{border:none;border-radius:999px;padding:7px 11px;font-size:13px;font-weight:700;background:rgba(255,255,255,.2);color:#fff;cursor:pointer}
+#sbxBar button.on{background:#fff;color:#6D28D9}#sbxBar button.x{background:rgba(0,0,0,.25)}
+body:has(#sbxBar) .page{padding-bottom:170px}
+.gbig{font-weight:800;color:var(--label);white-space:nowrap}
 .fhint-bad{background:rgba(255,149,0,.12)!important}
 .pinrow{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin:10px 0 4px;font-size:14px;color:var(--label2)}
 .pinrow .lnk{background:none;border:none;color:#FF3B30;font-size:14px;font-weight:600;cursor:pointer}
@@ -595,7 +601,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261115093057';
+var BUILD='20261115100134';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -735,9 +741,11 @@ var ui = {pFilter:'all', pSort:'ovr', pDir:'desc', attOpen:false, pSearch:'', te
 var QS = {}; location.search.replace(/^\?/,'').split('&').forEach(function(kv){if(!kv)return;var a=kv.split('=');QS[decodeURIComponent(a[0])]=decodeURIComponent(a[1]||'');});
 var LS_KEY = 'saff_training_v1';
 
-function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
-function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
-function lsDel(k){try{localStorage.removeItem(k);}catch(e){}}
+var SBX=false, SBX_PLAYER=false, SBX_HERE=false, RAW_SBX=null; // وضع التجربة (لمجلس الإدارة فقط)
+function lk(k){return SBX&&/^saff_tr_(me|meh|me_skip|tour)$/.test(k)?k+'_sbx':k;}
+function lsGet(k){try{return localStorage.getItem(lk(k));}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(lk(k),v);}catch(e){}}
+function lsDel(k){try{localStorage.removeItem(lk(k));}catch(e){}}
 
 function uid(pre){return pre+Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
 function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
@@ -822,7 +830,7 @@ function startCloud(){
     db.ref(ROOT).on('value',function(snap){
       clearTimeout(to);
       document.getElementById('bnErr').classList.remove('show');
-      S = normalize(snap.val()); ready=true; render(); maybeAskMe();
+      var raw=snap.val()||{}; RAW_SBX=SBX?null:(raw.sandbox||null); S = normalize(raw); ready=true; render(); maybeAskMe();
     },function(err){
       clearTimeout(to); console.error(err);
       showErr('🔒 قاعدة البيانات رفضت القراءة. لازم تنشر القواعد الجديدة (ملف <b>database.rules.json</b>) في Firebase ← Realtime Database ← Rules ← Publish.');
@@ -1365,7 +1373,7 @@ function render(){
   if(!ready)return;
   applyTeamVars();
   if(isCoach) setTimeout(settleVotes,0);
-  document.body.classList.toggle('v2',(S.settings||{}).design!=='classic');
+  document.body.classList.toggle('v2',(S.settings||{}).design!=='classic'); sbxBar();
   if(isCoach&&playersArr().some(function(p){return p._mig&&!migTried[p.id];})){ setTimeout(migratePositions,0); }
   document.getElementById('loading').style.display='none';
   var cb=document.getElementById('coachBtn');
@@ -1426,6 +1434,7 @@ function renderHome(el){
     h+='<div style="margin-top:22px">'+emptyBox('people','أهلاً بك في تمرين ساف الأسبوعي',isCoach?'ابدأ بإضافة اللاعبين من تبويب «اللاعبون».':'اضغط «صلاحيات مجلس الإدارة» في الأعلى وأدخل كلمة السر لتبدأ.')+'</div>';
   }
   if(ps.length) h+='<div class="foot" style="text-align:center;margin-top:22px"><a href="#" id="tourLink" style="color:var(--tint);font-weight:600" onclick="event.preventDefault();openTour()">🧭 جولة سريعة في التطبيق</a></div>';
+  if(isCoach&&!SBX) h+='<div class="card" style="margin-top:14px"><div class="cell tap ind" id="sbxEnter" onclick="enterSandbox()">'+tile('#AF52DE','star',true)+'<div class="body"><div class="t">🧪 تمرين تجريبي</div><div class="s">جرّب كل شي (التحضير، التصويت، النتيجة…) بدون ما يشوفه اللاعبون</div></div>'+chev()+'</div></div>';
   if(isCoach) h+='<div class="card" style="margin-top:26px"><div class="cell tap ind" onclick="openSettings()">'+tile('#8E8E93','gear')+'<div class="body"><div class="t">الإعدادات والنسخ الاحتياطي</div></div>'+chev()+'</div></div>';
   el.innerHTML=h;
 }
@@ -1892,6 +1901,43 @@ function setCi(pid,k){
   else { if(!s.checkin[pid]) m[b+'checkin/'+pid]=Date.now(); m[b+'lateSet/'+pid]=(k==='late'); m[b+'absent/'+pid]=null; }
   putMany(m);
 }
+/* ---------- وضع التجربة: نسخة منفصلة لمجلس الإدارة فقط ---------- */
+function sbxData(){
+  var pl={}; playersArr().forEach(function(p){var c=clone(p); delete c.id; delete c._mig; pl[p.id]=c;});
+  var n=Object.keys(pl).length;
+  for(var i=n;i<10;i++) pl['sbx'+i]={name:'لاعب تجريبي '+(i+1),pos:['GK','CB','CM','ST','LW','RB','CM','ST','CB','RW'][i%10],pos2:'',foot:'R',age:25,attrs:{pac:70,sho:70,pas:70,dri:70,def:70,phy:70,gk:i%10===0?75:25},created:Date.now()};
+  var ids=Object.keys(pl), sizes=Object.keys(FORMS).map(Number).sort(function(a,b){return a-b;}), size=sizes[0];
+  sizes.forEach(function(z){ if(z*2<=ids.length) size=z; });
+  var att={}; ids.slice(0,size*2+2).forEach(function(id){att[id]=true;});
+  var d=new Date(Date.now()+10*60000), f=Object.keys(FORMS[size])[0];
+  var sess={title:'تمرين تجريبي',date:fmtD(d),time:String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'),size:size,formation:f,
+    teams:{A:{name:'الأخضر',formation:f,slots:{}},B:{name:'الأبيض',formation:f,slots:{}}},att:att,goals:{},ratings:{},status:'open',created:Date.now()};
+  var st={}; if((S.settings||{}).field) st.field=clone(S.settings.field);
+  return {players:pl,sessions:{sbx1:sess},settings:st};
+}
+function sbxWrite(data,cb){
+  if(mode==='cloud'){ db.ref(SBX?ROOT:ROOT+'/sandbox').set(data).then(cb).catch(writeErr); }
+  else { lsSet(SBX?LS_KEY:LS_KEY+'_sandbox',JSON.stringify(data)); cb(); }
+}
+function enterSandbox(){
+  askConfirm('<b>🧪 الدخول لوضع التجربة؟</b><br><span class="small">نسخة منفصلة فيها لاعبينك وتمرين تجريبي يبدأ بعد 10 دقائق، والتصويت فيه مفتوح من البداية. كل شي تسويه فيها ما يأثّر على التطبيق الحقيقي، واللاعبون ما يشوفونها.</span>',function(){
+    var has=mode==='cloud'?!!(RAW_SBX&&RAW_SBX.players):!!lsGet(LS_KEY+'_sandbox');
+    var go2=function(){lsSet('saff_tr_sandbox','1');location.reload();};
+    if(has) go2(); else sbxWrite(sbxData(),go2);
+  },'دخول');
+}
+function exitSandbox(){lsDel('saff_tr_sandbox');location.reload();}
+function resetSandbox(){askConfirm('<b>إعادة ضبط التجربة؟</b><br><span class="small">يُمسح كل شي سويته في وضع التجربة، ويبدأ تمرين تجريبي جديد بعد 10 دقائق.</span>',function(){
+  SBX_PLAYER=false; isCoach=true; sbxWrite(sbxData(),function(){try{['saff_tr_me','saff_tr_meh','saff_tr_me_skip'].forEach(function(k){lsDel(k);});}catch(e){} location.reload();});},'إعادة ضبط');}
+function sbxAsPlayer(on){SBX_PLAYER=!!on; isCoach=!on; if(!on)SBX_HERE=false; closeModal(); render(); if(on){askedMe=false; maybeAskMe();} toast(on?'تشوف التطبيق الحين مثل اللاعب':'رجعت لمجلس الإدارة');}
+function sbxBar(){
+  var b=document.getElementById('sbxBar'); if(!SBX){if(b)b.remove();return;}
+  if(!b){b=document.createElement('div');b.id='sbxBar';document.body.appendChild(b);}
+  b.innerHTML='<div class="sbx-t">🧪 وضع التجربة <span>· اللاعبون ما يشوفونه</span></div><div class="sbx-b">'+
+    (SBX_PLAYER?'<button id="sbxBack" onclick="sbxAsPlayer(false)">↩︎ رجوع للمجلس</button><button id="sbxHere" class="'+(SBX_HERE?'on':'')+'" onclick="SBX_HERE=!SBX_HERE;sbxBar();toast(SBX_HERE?\'محاكاة: أنت داخل الملعب\':\'الموقع الحقيقي\')">📍 '+(SBX_HERE?'أنا في الملعب ✓':'أنا في الملعب')+'</button>'
+      :'<button id="sbxPlayer" onclick="sbxAsPlayer(true)">👀 شوف كلاعب</button><button id="sbxReset" onclick="resetSandbox()">↻ إعادة ضبط</button>')+
+    '<button id="sbxExit" class="x" onclick="exitSandbox()">خروج</button></div>';
+}
 /* ---------- تحضير اللاعب لنفسه من الملعب (بالموقع الجغرافي) ---------- */
 var CI_BEFORE=90*60000, CI_AFTER=180*60000;
 // موقع الملعب الافتراضي (24°49'15.1"N 46°27'40.1"E)، ومجلس الإدارة يقدر يغيّره من صفحة التمرين
@@ -1921,15 +1967,16 @@ function selfCheckin(sid){
   if(!s.att[me]){toast('⚠️ اسمك مو في قائمة هذا التمرين');return;}
   if(!selfCiWindow(s)){toast('⚠️ التحضير متاح يوم التمرين فقط');return;}
   var f=fieldLoc(); if(!f){toast('⚠️ موقع الملعب غير محدد');return;}
-  if(!navigator.geolocation){toast('❌ جهازك ما يدعم تحديد الموقع');return;}
+  if(!navigator.geolocation&&!(SBX&&SBX_HERE)){toast('❌ جهازك ما يدعم تحديد الموقع');return;}
   openModal(mh('سجّل حضورك')+'<div class="card"><div class="empty" id="geoWait"><div class="ei">'+ic('check')+'</div><b>جارٍ تحديد موقعك…</b>إذا سألك الجوال اسمح للتطبيق بمعرفة موقعك.</div></div>');
-  navigator.geolocation.getCurrentPosition(function(pos){
+  var getPos=SBX&&SBX_HERE?function(ok){setTimeout(function(){ok({coords:{latitude:f.lat+0.0002,longitude:f.lng,accuracy:10}});},600);}:function(ok,bad,o){navigator.geolocation.getCurrentPosition(ok,bad,o);};
+  getPos(function(pos){
     var c=pos.coords, d=geoDist(c.latitude,c.longitude,f.lat,f.lng), acc=c.accuracy||0, r=fieldR(), s2=S.sessions[sid];
     if(!s2||!document.getElementById('geoWait'))return;
     var box=function(id,icon,t,p,btn){setModal(mh('سجّل حضورك')+'<div class="card"><div class="empty" id="'+id+'"><div class="ei">'+icon+'</div><b>'+t+'</b>'+p+'</div></div>'+(btn||''));};
     var again='<div class="m-foot"><button class="btn" id="geoAgain" onclick="selfCheckin(\''+sid+'\')">حاول مرة ثانية</button></div>';
-    if(d>r){ box('geoFar',ic('warn'),'أنت بعيد عن الملعب','المسافة بينك وبين الملعب تقريباً <b class="num">'+fmtDist(d)+'</b>. لازم تكون داخل <b class="num">'+fmtDist(r)+'</b> من الملعب عشان تحضّر نفسك.',again); return; }
-    if(acc>Math.max(r,100)){ box('geoWeak',ic('warn'),'إشارة الموقع ضعيفة','دقة موقعك الحين <b class="num">'+fmtDist(acc)+'</b>. اطلع لمكان مفتوح وحاول مرة ثانية.',again); return; }
+    if(d>r){ box('geoFar',ic('warn'),'أنت بعيد عن الملعب','<span>المسافة بينك وبين الملعب تقريباً <span class="num gbig">'+fmtDist(d)+'</span>، ولازم تكون داخل <span class="num gbig">'+fmtDist(r)+'</span> من الملعب عشان تحضّر نفسك.</span>',again); return; }
+    if(acc>Math.max(r,100)){ box('geoWeak',ic('warn'),'إشارة الموقع ضعيفة','<span>دقة موقعك الحين <span class="num gbig">'+fmtDist(acc)+'</span>، اطلع لمكان مفتوح وحاول مرة ثانية.</span>',again); return; }
     if(s2.checkin[me]){closeModal();return;}
     var now=Date.now(); putVote('sessions/'+sid+'/checkin/'+me,now); putVote('sessions/'+sid+'/ciGeo/'+me,{d:Math.round(d),a:Math.round(acc)});
     var lm=lateMin(s2,now);
@@ -3114,6 +3161,8 @@ function toast(m){
 
 /* ---------- التشغيل ---------- */
 isCoach = lsGet('saff_tr_coach')==='1';
+if(isCoach&&lsGet('saff_tr_sandbox')==='1'){ SBX=true; ROOT=ROOT+'/sandbox'; LS_KEY=LS_KEY+'_sandbox'; VOTE_AFTER=-60*60000; /* التصويت مفتوح من البداية في التجربة */ document.title='🧪 '+document.title; }
+else if(lsGet('saff_tr_sandbox')) lsDel('saff_tr_sandbox');
 if(QS.tab&&document.getElementById('pg-'+QS.tab)) curTab=QS.tab;
 document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-t')===curTab);});
 if(typeof firebase!=='undefined' && !('local' in QS)) startCloud(); else startLocal();
