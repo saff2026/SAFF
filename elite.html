@@ -419,6 +419,11 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .field.pin{text-align:center;letter-spacing:10px;font-size:22px;direction:ltr}
 .lg-new{margin-top:12px;background:rgba(22,160,102,.1);color:var(--label);border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.6}
 .lg-n{margin:8px 4px 0}
+.kgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.kgrid label span{display:block;font-size:13px;font-weight:700;color:var(--label2);margin:0 2px 6px}.kgrid .field{text-align:center;font-size:20px;font-weight:800}
+.kstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.kstats div{background:var(--card,#fff);border-radius:14px;padding:12px 6px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.kstats b{display:block;font-size:22px;font-weight:900}.kstats span{font-size:12px;color:var(--label2)}.kstats .warn b{color:var(--orange)}.kstats .ok b{color:var(--green)}
+.kbtn{border:none;border-radius:999px;padding:8px 14px;font-size:14px;font-weight:800;background:var(--fill,rgba(120,120,128,.16));color:var(--label2);cursor:pointer;flex:none}
+.kbtn.on{background:var(--green,#34C759);color:#fff}.krow.paid .t{color:var(--label2)}
 #sbxBar{position:fixed;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom) + 92px);z-index:60;background:linear-gradient(135deg,#6D28D9,#AF52DE);color:#fff;border-radius:18px;padding:8px 10px;box-shadow:0 12px 30px -10px rgba(80,20,140,.6);display:flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:560px;margin:0 auto}
 #sbxBar .sbx-t{font-weight:800;font-size:14px;flex:1;min-width:150px}#sbxBar .sbx-t span{font-weight:500;opacity:.85;font-size:12px}
 #sbxBar .sbx-b{display:flex;gap:6px;flex-wrap:wrap}#sbxBar button{border:none;border-radius:999px;padding:7px 11px;font-size:13px;font-weight:700;background:rgba(255,255,255,.2);color:#fff;cursor:pointer}
@@ -922,7 +927,8 @@ var NOUN={
   'سنة':['سنة','سنتان','سنتين','سنوات','سنةً','واحدة'],
   'صورة':['صورة','صورتان','صورتين','صور','صورةً','واحدة'],
   'تبديل':['تبديل','تبديلان','تبديلين','تبديلات','تبديلًا','واحد'],
-  'متأخر':['متأخر','متأخران','متأخرَين','متأخرين','متأخرًا','واحد']
+  'متأخر':['متأخر','متأخران','متأخرَين','متأخرين','متأخرًا','واحد'],
+  'ريال':['ريال','ريالان','ريالين','ريالات','ريالًا','واحد']
 };
 // الكلمة فقط (والرقم يُعرض لحاله)
 function nounFor(n,w,gen){var f=NOUN[w]; if(!f)return w; n=Math.abs(Math.round(+n||0)); var r=n%100;
@@ -1797,7 +1803,7 @@ function renderSession(el){
   var head=h, ciH='', goalH=''; h='';
   if(C){
     var ciN=Object.keys(s.checkin).filter(function(id){return P(id)&&!s.absent[id];}), ciLate=ciN.filter(function(id){return isLate(s,id);}).length, ciAbs=Object.keys(s.absent).filter(function(id){return s.absent[id]&&P(id);}).length;
-    ciH=gh('التحضير')+'<div class="card"><div class="cell tap ind" id="checkinBtn" onclick="openCheckin()">'+tile('#FF9500','check')+'<div class="body"><div class="t">التحضير</div><div class="s">البداية '+fmtStart(s)+' · حضر <span class="num">'+ciN.length+'</span> من <span class="num">'+att.length+'</span>'+(ciLate?' · <span style="color:var(--orange)">'+cnt(ciLate,'متأخر')+'</span>':'')+(ciAbs?' · <span style="color:var(--red)">'+ciAbs+' غاب</span>':'')+'</div></div>'+chev()+'</div><div class="cell tap ind" id="fieldBtn" onclick="openFieldLoc()">'+tile(fieldLoc()?'#34C759':'#8E8E93','check')+'<div class="body"><div class="t">موقع الملعب (تحضير اللاعب لنفسه)</div><div class="s">'+(fieldLoc()?'محدد · النطاق '+fieldR()+' م':'غير محدد — اضغط لتحديده')+'</div></div>'+chev()+'</div></div>'+lateSummaryHTML(s);
+    ciH=gh('التحضير')+'<div class="card"><div class="cell tap ind" id="checkinBtn" onclick="openCheckin()">'+tile('#FF9500','check')+'<div class="body"><div class="t">التحضير</div><div class="s">البداية '+fmtStart(s)+' · حضر <span class="num">'+ciN.length+'</span> من <span class="num">'+att.length+'</span>'+(ciLate?' · <span style="color:var(--orange)">'+cnt(ciLate,'متأخر')+'</span>':'')+(ciAbs?' · <span style="color:var(--red)">'+ciAbs+' غاب</span>':'')+'</div></div>'+chev()+'</div><div class="cell tap ind" id="fieldBtn" onclick="openFieldLoc()">'+tile(fieldLoc()?'#34C759':'#8E8E93','check')+'<div class="body"><div class="t">موقع الملعب (تحضير اللاعب لنفسه)</div><div class="s">'+(fieldLoc()?'محدد · النطاق '+fieldR()+' م':'غير محدد — اضغط لتحديده')+'</div></div>'+chev()+'</div></div>'+lateSummaryHTML(s)+kittyCardH(s);
     var ps=playersArr().sort(function(a,b){return a.name.localeCompare(b.name,'ar');});
     h+=gh('قائمة اللاعبين في التمرين',(ps.length<=maxList(s)?lnk('الكل','attAll(true)','attAll'):'')+lnk('إفراغ','attAll(false)','attNone'));
     h+=ps.length?attDropdown(s,ps):emptyBox('people','لا يوجد لاعبون','أضف لاعبين أولاً من تبويب «اللاعبون».');
@@ -1903,6 +1909,51 @@ function setCi(pid,k){
   else { if(!s.checkin[pid]) m[b+'checkin/'+pid]=Date.now(); m[b+'lateSet/'+pid]=(k==='late'); m[b+'absent/'+pid]=null; }
   putMany(m);
 }
+/* ---------- القطة: حساب مبلغ التمرين ومن دفع (لمجلس الإدارة) ---------- */
+function kOf(s){var k=(s&&s.kitty)||{};return {total:+k.total>0?+k.total:0,per:+k.per>0?+k.per:0,paid:k.paid||{}};}
+function kPlayers(s){return participants(s).filter(function(id){return P(id);}).sort(function(a,b){return pname(a).localeCompare(pname(b),'ar');});}
+function kPer(s){var k=kOf(s),n=kPlayers(s).length; if(k.per)return k.per; if(k.total&&n)return Math.ceil(k.total/n); return 0;}
+function kSum(s){var k=kOf(s),ids=kPlayers(s),per=kPer(s),paid=ids.filter(function(id){return k.paid[id];});
+  return {n:ids.length,per:per,paidN:paid.length,got:paid.length*per,need:ids.length*per,left:(ids.length-paid.length)*per,unpaid:ids.filter(function(id){return !k.paid[id];}),total:k.total};}
+function money(n){n=Math.round(n*100)/100;return cnt(n,'ريال');}
+function kittyCardH(s){
+  var m=kSum(s);
+  var sub=!m.per?'حدّد المبلغ وتابع مين دفع':'على كل لاعب '+money(m.per)+' · دفع <span class="num">'+m.paidN+'</span> من <span class="num">'+m.n+'</span>'+(m.left?' · <span style="color:var(--orange)">الباقي '+money(m.left)+'</span>':' · <span style="color:var(--green)">اكتملت ✓</span>');
+  return gh('القطة')+'<div class="card"><div class="cell tap ind" id="kittyBtn" onclick="openKitty(\''+s.id+'\')">'+tile('#34C759','trophy')+'<div class="body"><div class="t">القطة</div><div class="s">'+sub+'</div></div>'+chev()+'</div></div>';
+}
+function openKitty(sid){ if(!isCoach)return; openModal(''); kittyInner(sid); modalRefresh=function(){ if(!S.sessions[sid]){closeModal();return;} kittyInner(sid); }; }
+function arNum(v){return String(v||'').replace(/[٠-٩]/g,function(d){return '٠١٢٣٤٥٦٧٨٩'.indexOf(d);}).replace(/[^\d.]/g,'');}
+function kittyInner(sid){
+  var s=S.sessions[sid]; if(!s)return; var k=kOf(s), m=kSum(s), ids=kPlayers(s);
+  var h=mh('القطة');
+  h+='<div class="card pad"><div class="kgrid"><label><span>التكلفة الإجمالية (ريال)</span><input class="field num" id="kTotal" inputmode="decimal" placeholder="مثلاً 350" value="'+(k.total||'')+'" onchange="setKitty(\''+sid+'\',\'total\',this.value)"></label>'+
+     '<label><span>على كل لاعب (ريال)</span><input class="field num" id="kPer" inputmode="decimal" placeholder="'+(k.total&&m.n?Math.ceil(k.total/m.n):'مثلاً 25')+'" value="'+(k.per||'')+'" onchange="setKitty(\''+sid+'\',\'per\',this.value)"></label></div>'+
+     '<div class="small muted" style="margin-top:8px">'+(k.total&&!k.per&&m.n?'تقسيم '+money(k.total)+' على '+cnt(m.n,'لاعب')+' = <b style="color:var(--label)">'+money(m.per)+'</b> على كل لاعب (مقرّبة لفوق).':'اكتب التكلفة الإجمالية ويتقسّم المبلغ تلقائياً، أو اكتب المبلغ على كل لاعب مباشرة.')+'</div></div>';
+  if(m.per&&m.n){
+    h+='<div class="kstats" id="kStats"><div><b class="num">'+m.paidN+'/'+m.n+'</b><span>دفعوا</span></div><div><b class="num">'+m.got+'</b><span>المحصّل (ريال)</span></div><div class="'+(m.left?'warn':'ok')+'"><b class="num">'+m.left+'</b><span>الباقي (ريال)</span></div></div>';
+    if(m.total&&m.need>m.total) h+='<div class="small muted" style="text-align:center;margin:-4px 0 10px">لو دفع الكل: '+money(m.need)+' (يزيد '+money(m.need-m.total)+' بسبب التقريب)</div>';
+  }
+  if(!ids.length) h+=emptyBox('people','لا يوجد لاعبون','أضف اللاعبين لقائمة التمرين أولاً.');
+  else{
+    var order=ids.slice().sort(function(a,b){return (k.paid[a]?1:0)-(k.paid[b]?1:0)||pname(a).localeCompare(pname(b),'ar');});
+    h+=gh('<span style="font-size:17px">اللاعبون</span>',m.unpaid.length?lnk('الكل دفع','kittyAll(\''+sid+'\',true)','kAll'):lnk('تصفير','kittyAll(\''+sid+'\',false)','kNone'))+'<div class="card">'+order.map(function(id){var pd=!!k.paid[id];
+      return '<div class="cell ind krow'+(pd?' paid':'')+'" data-id="'+id+'">'+avatar(id)+'<div class="body"><div class="t">'+esc(pname(id))+'</div><div class="s">'+(pd?'دفع'+(m.per?' '+money(m.per):''):'لم يدفع')+'</div></div>'+
+        '<button type="button" class="kbtn'+(pd?' on':'')+'" onclick="kittyToggle(\''+sid+'\',\''+id+'\')">'+(pd?'✓ دفع':'لم يدفع')+'</button></div>';}).join('')+'</div>';
+    if(m.unpaid.length&&m.per) h+='<div class="m-foot"><button class="btn tinted block" id="kRemind" onclick="kittyRemind(\''+sid+'\')">'+ic('upl','s')+'نسخ تذكير لمن لم يدفع</button></div>';
+  }
+  setModal(h);
+}
+function setKitty(sid,key,v){ var n=parseFloat(arNum(v)); put('sessions/'+sid+'/kitty/'+key,n>0?Math.round(n*100)/100:null); }
+function kittyToggle(sid,id){ var s=S.sessions[sid]; if(!s)return; var on=!kOf(s).paid[id]; put('sessions/'+sid+'/kitty/paid/'+id,on?true:null); }
+function kittyAll(sid,on){ var s=S.sessions[sid]; if(!s)return;
+  if(on){ var p={}; kPlayers(s).forEach(function(id){p[id]=true;}); put('sessions/'+sid+'/kitty/paid',p); }
+  else askConfirm('تصفير القطة؟ يصير الكل «لم يدفع».',function(){put('sessions/'+sid+'/kitty/paid',null);},'حذف'); }
+function kittyText(s){var m=kSum(s);return 'تذكير القطة 💰\n'+(sessLabel(s)||'تمرين نخبة السبت')+' · '+niceDate(s.date)+'\nعلى كل لاعب: '+money(m.per)+'\n\nباقي ما دفعوا ('+m.unpaid.length+'):\n'+m.unpaid.map(function(id,i){return (i+1)+'. '+pname(id);}).join('\n');}
+function kittyRemind(sid){ var s=S.sessions[sid]; if(!s)return; var t=kittyText(s);
+  var done=function(){toast('تم نسخ التذكير — الصقه في القروب');};
+  var fallback=function(){openModal(mh('تذكير القطة')+'<textarea class="field" id="kText" rows="10" style="height:auto;padding:12px;line-height:1.7">'+esc(t)+'</textarea><div class="foot">انسخ النص والصقه في القروب.</div>');var x=document.getElementById('kText');if(x){x.focus();x.select();}};
+  try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(done,fallback); return; } }catch(e){}
+  fallback(); }
 /* ---------- وضع التجربة: نسخة منفصلة لمجلس الإدارة فقط ---------- */
 function sbxData(){
   var pl={}; playersArr().forEach(function(p){var c=clone(p); delete c.id; delete c._mig; pl[p.id]=c;});
@@ -3209,6 +3260,7 @@ function sessionDetailInner(id){
 
   var cis=Object.keys(s.checkin||{}).filter(function(pid){return P(pid);}).sort(function(a,b){return s.checkin[a]-s.checkin[b];});
   if(s.notes) h+=gh('الملاحظات')+'<div class="card pad" style="white-space:pre-wrap;line-height:1.7;font-size:15px">'+esc(s.notes)+'</div>';
+  if(isCoach) h+=kittyCardH(s);
   var updRows=s.upd?Object.keys(s.upd).filter(function(pid){return P(pid)&&updChanged(s.upd[pid]);}):[];
   if(updRows.length){
     var rows=updRows.map(function(pid){return {id:pid,c:s.upd[pid]};}).sort(function(a,b){return (b.c.ovrA-b.c.ovrB)-(a.c.ovrA-a.c.ovrB);});
