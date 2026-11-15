@@ -15,7 +15,7 @@
 <link rel="apple-touch-icon" href="icon-elite-192.png?v=3">
 <link rel="icon" type="image/png" href="icon-elite-192.png?v=3">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Changa:wght@700;800&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -601,7 +601,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261115103741';
+var BUILD='20261115104803';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -2339,10 +2339,10 @@ function lineupImage(sid){
   var ids=teamPlayers(s,'A').concat(teamPlayers(s,'B')).filter(function(id){return P(id);});
   if(!ids.length){toast('⚠️ وزّع الفريقين أولاً');return;}
   toast('جارِ تجهيز الصورة…');
-  var fontP=(document.fonts&&document.fonts.load)?Promise.all(['800 60px Tajawal','700 30px Tajawal','500 26px Tajawal'].map(function(f){return document.fonts.load(f).catch(function(){});})):Promise.resolve();
+  var fontP=(document.fonts&&document.fonts.load)?Promise.all(['800 60px Tajawal','700 30px Tajawal','500 26px Tajawal','800 42px Changa','700 20px Changa'].map(function(f){return document.fonts.load(f).catch(function(){});})):Promise.resolve();
   Promise.all([fontP,loadImg('emblem.png?v=3')].concat(ids.map(function(id){return loadImg(photoSrc(P(id)));}))).then(function(r){
     var ph={}; ids.forEach(function(id,i){ph[id]=r[i+2];});
-    var url; try{url=drawLineup(s,r[1],ph);}catch(e){console.error(e);toast('⚠️ تعذّر تجهيز الصورة');return;}
+    var url; try{url=drawLineup2(s,ph);}catch(e){console.error(e);toast('⚠️ تعذّر تجهيز الصورة');return;}
     LINEUP_URL=url; LINEUP_NAME='تشكيلة-'+s.date+'.png';
     var share=!!(navigator.share&&navigator.canShare);
     openModal(mh('صورة التشكيلة')+'<img class="lineup-img" src="'+url+'" alt="صورة التشكيلة" style="width:100%;border-radius:16px;display:block">'+
@@ -2356,6 +2356,57 @@ function shareLineup(){
     if(navigator.canShare&&navigator.canShare({files:[file]})) return navigator.share({files:[file],title:'تمرين نخبة السبت'});
     var a=document.getElementById('imgDl'); if(a)a.click();
   }).catch(function(){});
+}
+// بوستر التشكيلة (التصميم الديجيتال): كل فريق في نصّه بلونه، والملعب بصور اللاعبين
+function hexMix(h,t,a){var p=function(x){return [parseInt(x.slice(1,3),16),parseInt(x.slice(3,5),16),parseInt(x.slice(5,7),16)];},A=p(h),B=p(t);return 'rgb('+A.map(function(v,i){return Math.round(v+(B[i]-v)*a);}).join(',')+')';}
+function hexA(h,a){return 'rgba('+parseInt(h.slice(1,3),16)+','+parseInt(h.slice(3,5),16)+','+parseInt(h.slice(5,7),16)+','+a+')';}
+function drawLineup2(s,ph){
+  var W=1080,H=1080, cv=document.createElement('canvas'); cv.width=W; cv.height=H; var c=cv.getContext('2d'); c.direction='rtl'; c.textBaseline='middle';
+  var HF='"Changa",'+IMG_FONT, F=function(w,z,ff){return w+' '+z+'px '+(ff||IMG_FONT);};
+  var txt=function(t,x,y,font,color,align){c.font=font;c.fillStyle=color;c.textAlign=align||'center';c.fillText(t,x,y);};
+  var col={A:teamColor(s,'A'),B:teamColor(s,'B')};
+  // الخلفية: نصف لكل فريق (الأول يمين)
+  [['A',W/2,W,1],['B',0,W/2,0]].forEach(function(o){ var t=o[0], x0=o[1], x1=o[2], cx=o[3]?x1:x0, k=col[t];
+    var g=c.createRadialGradient(cx,0,10,cx,0,W*.9); g.addColorStop(0,hexMix(k,'#000000',.45)); g.addColorStop(.45,hexMix(k,'#000000',.74)); g.addColorStop(1,hexMix(k,'#000000',.92)); c.fillStyle=g; c.fillRect(x0,0,x1-x0,H);
+    var g2=c.createRadialGradient(o[3]?x0+(x1-x0)*.8:x0+(x1-x0)*.2,H*.92,10,o[3]?x0+(x1-x0)*.8:x0+(x1-x0)*.2,H*.92,W*.32); g2.addColorStop(0,hexA(k,.32)); g2.addColorStop(1,hexA(k,0)); c.fillStyle=g2; c.fillRect(x0,0,x1-x0,H); });
+  var lg=c.createLinearGradient(0,0,0,H); lg.addColorStop(0,'rgba(255,255,255,0)'); lg.addColorStop(.16,'rgba(255,255,255,.3)'); lg.addColorStop(.84,'rgba(255,255,255,.3)'); lg.addColorStop(1,'rgba(255,255,255,0)'); c.fillStyle=lg; c.fillRect(W/2-1,0,2,H);
+  var hg=c.createLinearGradient(0,0,0,118); hg.addColorStop(0,'rgba(0,0,0,.6)'); hg.addColorStop(1,'rgba(0,0,0,0)'); c.fillStyle=hg; c.fillRect(0,0,W,118);
+  // العنوان
+  var ttl='تشكيلة تمرين نخبة السبت'+(s.num?' #'+s.num:'');
+  txt(ttl,W/2,50,F(800,42,HF),'#fff');
+  txt([s.title||'',niceDate(s.date)+' · '+fmtStart(s)].filter(Boolean).join('  ·  '),W/2,92,F(700,20,HF),'rgba(255,255,255,.7)');
+  var subs={A:subsOf(s,'A').filter(function(id){return P(id);}),B:subsOf(s,'B').filter(function(id){return P(id);})}, anySubs=subs.A.length||subs.B.length;
+  var PT=208, PB=anySubs?968:1040;
+  ['A','B'].forEach(function(t){
+    var x0=t==='A'?W/2:0, cx=x0+W/4, k=col[t], light=hexMix(k,'#FFFFFF',.55), line=hexA(hexMix(k,'#FFFFFF',.45).replace(/rgb\((\d+),(\d+),(\d+)\)/,function(m,a,b,d){return '#'+[a,b,d].map(function(v){return ('0'+(+v).toString(16)).slice(-2);}).join('');}),.26);
+    c.save(); c.shadowColor=hexA(k,.75); c.shadowBlur=22; txt(s.teams[t].name||'',cx,158,F(800,36,HF),hexMix(k,'#FFFFFF',.88)); c.restore();
+    // الملعب
+    var px=x0+22, pw=W/2-44, ph2=PB-PT; c.strokeStyle=line; c.lineWidth=1.5;
+    rrect(c,px,PT,pw,ph2,20); c.stroke();
+    c.beginPath(); c.moveTo(cx-75,PT); c.lineTo(cx-75,PT+52-14); c.arcTo(cx-75,PT+52,cx-61,PT+52,14); c.lineTo(cx+61,PT+52); c.arcTo(cx+75,PT+52,cx+75,PT+38,14); c.lineTo(cx+75,PT); c.stroke();
+    c.beginPath(); c.moveTo(cx-75,PB); c.lineTo(cx-75,PB-52+14); c.arcTo(cx-75,PB-52,cx-61,PB-52,14); c.lineTo(cx+61,PB-52); c.arcTo(cx+75,PB-52,cx+75,PB-38,14); c.lineTo(cx+75,PB); c.stroke();
+    c.beginPath(); c.moveTo(px,PT+ph2/2); c.lineTo(px+pw,PT+ph2/2); c.stroke();
+    c.beginPath(); c.arc(cx,PT+ph2/2,81,0,Math.PI*2); c.stroke();
+    // اللاعبون: الهجوم فوق والحارس تحت
+    var sl=slotsOf(s,t), rowsY={}; sl.forEach(function(x){rowsY[x.y]=1;}); var ys=Object.keys(rowsY).map(Number).sort(function(a,b){return a-b;}), n=ys.length;
+    var R0=43, top=PT+16+R0+3, bot=PB-16-R0-3-34;
+    sl.forEach(function(x){ var id=s.teams[t].slots[x.id]; var ri=ys.indexOf(x.y), yy=n>1?bot-(ri*(bot-top)/(n-1)):(top+bot)/2, xx=px+pw*(x.x/100);
+      var isGK=x.pos==='GK', rg=c.createLinearGradient(xx-R0,yy-R0,xx+R0,yy+R0); rg.addColorStop(0,isGK?hexMix(k,'#FFFFFF',.78):hexMix(k,'#FFFFFF',.35)); rg.addColorStop(1,isGK?hexMix(k,'#000000',.45):hexMix(k,'#000000',.25));
+      c.beginPath(); c.arc(xx,yy,R0+3,0,Math.PI*2); c.fillStyle=rg; c.fill();
+      c.save(); c.beginPath(); c.arc(xx,yy,R0,0,Math.PI*2); c.clip(); var im=id&&ph[id];
+      if(im){var sc=Math.max(2*R0/im.naturalWidth,2*R0/im.naturalHeight),iw=im.naturalWidth*sc,ih=im.naturalHeight*sc;c.drawImage(im,xx-iw/2,yy-ih/2,iw,ih);}
+      else{c.fillStyle=hexMix(k,'#0A0B0D',.6);c.fillRect(xx-R0,yy-R0,2*R0,2*R0); txt(id&&P(id)?pname(id).trim().charAt(0):POS[x.pos].ar.charAt(0),xx,yy+3,F(800,36),'rgba(255,255,255,.9)');}
+      c.restore();
+      c.font=F(800,16); var nm=id&&P(id)?pname(id):'—'; while(nm.length>2&&c.measureText(nm).width>146)nm=nm.slice(0,-1);
+      txt(nm!==(id&&P(id)?pname(id):'—')?nm+'…':nm,xx,yy+R0+21,F(800,16),'#fff'); });
+    if(subs[t].length){ c.font=F(700,17); var st2='البدلاء: '+subs[t].map(function(id){return pname(id);}).join('، '); while(st2.length>8&&c.measureText(st2).width>W/2-60)st2=st2.slice(0,-1);
+      txt(st2,cx,PB+40,F(700,17),'rgba(255,255,255,.75)'); }
+  });
+  // VS
+  var vy=PT+(PB-PT)/2; c.save(); c.translate(W/2,vy); c.rotate(Math.PI/4); var vg=c.createLinearGradient(-42,-42,42,42); vg.addColorStop(0,hexMix(col.A,'#000000',.72)); vg.addColorStop(1,hexMix(col.B,'#000000',.72));
+  c.shadowColor='rgba(0,0,0,.6)'; c.shadowBlur=40; c.shadowOffsetY=14; rrect(c,-42,-42,84,84,22); c.fillStyle=vg; c.fill(); c.shadowColor='transparent'; c.strokeStyle='rgba(255,255,255,.5)'; c.lineWidth=2; c.stroke(); c.restore();
+  c.save(); c.direction='ltr'; txt('VS',W/2,vy+2,F(800,30,HF),'#fff'); c.restore();
+  return cv.toDataURL('image/png');
 }
 function drawLineup(s,logo,ph){
   var W=1080, subsA=subsOf(s,'A').filter(function(id){return P(id);}), subsB=subsOf(s,'B').filter(function(id){return P(id);});
@@ -2429,9 +2480,10 @@ function openShare(sid){
   var opt=function(id,icon,color,t,sub,fn,off){return '<div class="cell tap ind shareopt" id="'+id+'" style="'+(off?'opacity:.45;pointer-events:none':'')+'" onclick="closeModal();setTimeout(function(){'+fn+'},250)">'+tile(color,icon)+'<div class="body"><div class="t">'+t+'</div><div class="s">'+sub+'</div></div>'+chev()+'</div>';};
   var h=mh('مشاركة')+'<div class="card">';
   if(done) h+=opt('sh-sum','trophy','#D4A93C','ملخص التمرين','النتيجة والأهداف وأفضل لاعب والتقييمات','posterShare(\'sum\',\''+s.id+'\')');
-  if(done){ var hm=!!(mvpOf(s)&&P(mvpOf(s))), hu=!!(s.upd&&Object.keys(s.upd).some(function(id){return P(id);}));
-    h+=opt('sh-mvp','star','#E0A100','أفضل لاعب','بوستر خاص لأفضل لاعب في التمرين'+(hm?'':' — لا يوجد أفضل لاعب بعد'),'posterShare(\'mvp\',\''+s.id+'\')',!hm);
-    h+=opt('sh-attr','trend','#34C759','تغيّر الطاقات','طاقات كل لاعب قبل وبعد التمرين'+(hu?'':' — بعد انتهاء تصويت أفضل لاعب'),'posterShare(\'attr\',\''+s.id+'\')',!hu); }
+  var ended=done||liveState(s)==='ended'||(liveState(s)==='live'&&Object.keys(s.goals||{}).length>0);
+  if(ended) h+=opt('sh-post','flag','#FF9500','بعد المباراة','النتيجة والأهداف وهدّاف ومايسترو التمرين والمتأخرين وتذكير التصويت','posterShare(\'post\',\''+s.id+'\')');
+  if(done){ var hm=!!(mvpOf(s)&&P(mvpOf(s)));
+    h+=opt('sh-final','star','#E0A100','أفضل لاعب والتقييمات','أفضل لاعب، وتقييمات اللاعبين، وتغيّر الطاقات'+(hm?'':' — لا يوجد أفضل لاعب بعد'),'posterShare(\'final\',\''+s.id+'\')',!hm); }
   h+=opt('sh-lineup','ball','#0A7D4F','التشكيلة','الملعب بصور اللاعبين'+(hasLineup?'':' — وزّع الفريقين أولاً'),'lineupImage(\''+s.id+'\')',!hasLineup);
   h+=opt('sh-list','people','#0A84FF','قائمة اللاعبين','لاعبو كل فريق ومراكزهم'+(hasLineup?'':' — وزّع الفريقين أولاً'),'posterShare(\'list\',\''+s.id+'\')',!hasLineup);
   if(!done) h+=opt('sh-rot','undo','#AF52DE','ترتيب التبديل','من يدخل ومن يخرج'+(hasSubs?'':' — لا يوجد بدلاء'),'posterShare(\'rot\',\''+s.id+'\')',!hasSubs);
@@ -2445,7 +2497,7 @@ function posterShare(kind,sid){
   var fontP=(document.fonts&&document.fonts.load)?Promise.all(['900 90px Tajawal','800 34px Tajawal','700 24px Tajawal'].map(function(f){return document.fonts.load(f).catch(function(){});})):Promise.resolve();
   Promise.all([fontP,loadImg('emblem.png?v=3')].concat(ids.map(function(id){return loadImg(photoSrc(P(id)));}))).then(function(r){
     var ph={}; ids.forEach(function(id,i){ph[id]=r[i+2];});
-    var url, name={sum:'ملخص',list:'قائمة',rot:'التبديل',mvp:'أفضل-لاعب',attr:'تغير-الطاقات'}[kind]+'-'+s.date+'.png', title={sum:'ملخص التمرين',list:'قائمة اللاعبين',rot:'ترتيب التبديل',mvp:'أفضل لاعب',attr:'تغيّر الطاقات'}[kind];
+    var url, name={sum:'ملخص',list:'قائمة',rot:'التبديل',mvp:'أفضل-لاعب',attr:'تغير-الطاقات',post:'بعد-المباراة',final:'أفضل-لاعب-والتقييمات'}[kind]+'-'+s.date+'.png', title={sum:'ملخص التمرين',list:'قائمة اللاعبين',rot:'ترتيب التبديل',mvp:'أفضل لاعب',attr:'تغيّر الطاقات',post:'بعد المباراة',final:'أفضل لاعب والتقييمات'}[kind];
     try{ url=drawPoster(kind,s,r[1],ph); }catch(e){console.error(e);toast('⚠️ تعذّر تجهيز الصورة');return;}
     showShareImg(url,name,title);
   });
@@ -2461,7 +2513,7 @@ function fitTxt(c,t,w){t=String(t);if(c.measureText(t).width<=w)return t;while(t
 // لون الفريق على خلفية البوستر الخضراء (الأخضر الافتراضي نخليه أفتح ليبان)
 function posterTeamColor(s,t){var c=teamColor(s,t);return c==='#0A7D4F'?'#2FD28A':c;}
 function drawPoster(kind,s,logo,ph){
-  var W=1080, H=4200, P0=72, R=W-P0;
+  var W=1080, H=7000, P0=72, R=W-P0;
   var cv=document.createElement('canvas'); cv.width=W; cv.height=H; var c=cv.getContext('2d');
   c.direction='rtl'; c.textBaseline='middle';
   var F=function(w,sz){return w+' '+sz+'px '+IMG_FONT;};
@@ -2488,10 +2540,10 @@ function drawPoster(kind,s,logo,ph){
     txt('تمرين نخبة السبت',bx-20,y-12,F(900,26),'#fff'); txt(sessLabel(s)||(esc2(s.teams.A.name)+' × '+esc2(s.teams.B.name)),bx-20,y+20,F(700,18),PST.gold); }
   var dstr=niceDate(s.date)+' · '+fmtStart(s); txt(dstr,P0,y,F(800,21),PST.mute,'left');
   // العنوان: الكلمة الأولى أبيض والثانية ذهبي
-  var T={sum:['ملخص','التمرين'],list:['قائمة','اللاعبين'],rot:['ترتيب','التبديل'],mvp:['أفضل','لاعب'],attr:['تغيّر','الطاقات']}[kind];
+  var T={sum:['ملخص','التمرين'],list:['قائمة','اللاعبين'],rot:['ترتيب','التبديل'],mvp:['أفضل','لاعب'],attr:['تغيّر','الطاقات'],post:['انتهت','المباراة'],final:['أفضل','لاعب']}[kind];
   y+=170; c.font=F(900,92); txt(T[0],R,y,F(900,92),'#fff'); var w0=c.measureText(T[0]+' ').width; txt(T[1],R-w0,y,F(900,92),PST.gold);
   y+=110;
-  if(kind==='sum'){
+  if(kind==='sum'||kind==='post'){
     var sc=scoreOf(s);
     // النتيجة
     rowBox(y,150); var cy=y+75;
@@ -2519,6 +2571,46 @@ function drawPoster(kind,s,logo,ph){
       gA.forEach(function(g,i){gl(g,i,true);}); gB.forEach(function(g,i){gl(g,i,false);});
       y+=n*rh+18+50;
     }
+  }
+  if(kind==='post'){
+    var gcp=goalCount(s), topOf=function(map){var mx=0,ids=[];Object.keys(map).forEach(function(id){if(!P(id))return;var v=map[id];if(v>mx){mx=v;ids=[id];}else if(v===mx&&v>0)ids.push(id);});return {n:mx,ids:ids};};
+    var ts=topOf(gcp.g), ta=topOf(gcp.a);
+    if(ts.n||ta.n){
+      var cw=(W-2*P0-24)/2, chh=240;
+      var card=function(x0,label,res,unit,color){ rrect(c,x0,y,cw,chh,20); c.fillStyle=PST.row; c.fill(); c.strokeStyle=PST.rowEdge; c.lineWidth=1.5; c.stroke();
+        c.fillStyle=color; c.fillRect(x0+cw-24-6,y+26,6,26); txt(label,x0+cw-24-18,y+40,F(800,24),color);
+        if(!res.n){ txt('—',x0+cw/2,y+chh/2+20,F(800,40),PST.faint,'center'); return; }
+        circleImg(res.ids[0],x0+cw-24-52,y+140,52,color);
+        var tx=x0+cw-24-104-20, tw=tx-x0-20; c.font=F(900,res.ids.length>1?26:32);
+        txt(fitTxt(c,res.ids.map(function(id){return pname(id);}).join('، '),tw),tx,y+122,F(900,res.ids.length>1?26:32),'#fff');
+        txt(cnt(res.n,unit),tx,y+168,F(800,26),color); };
+      card(R-cw,'هدّاف التمرين',ts,'هدف',PST.gold); card(P0,'مايسترو التمرين',ta,'صناعة','#7CC4FF');
+      y+=chh+56;
+    }
+    // المتأخرون
+    var lates=attendees(s).filter(function(id){return P(id)&&ciStatus(s,id)==='late';}).map(function(id){return {id:id,m:s.checkin&&s.checkin[id]?lateMin(s,s.checkin[id]):0};}).sort(function(a,b){return b.m-a.m;});
+    var abs=attendees(s).filter(function(id){return P(id)&&ciStatus(s,id)==='abs';});
+    y=shead(y,'المتأخرون');
+    if(!lates.length){ rowBox(y,84); txt('الكل حضر في الوقت',W/2,y+44,F(800,30),'#2FD28A','center'); y+=84+12; }
+    lates.forEach(function(x){ rowBox(y,80); var cy8=y+40; circleImg(x.id,R-26-30,cy8,30,'#FF9F43');
+      c.font=F(800,31); txt(fitTxt(c,pname(x.id),560),R-26-60-24,cy8+2,F(800,31),'#fff');
+      pill(P0+26+(x.m>0?230:150),cy8,x.m>0?String(x.m):'متأخر',x.m>0?nounFor(x.m,'دقيقة'):'','#FFB36B','rgba(255,159,67,.12)','rgba(255,159,67,.4)'); y+=80+10; });
+    if(abs.length){ c.font=F(700,26); txt(fitTxt(c,'الغائبون: '+abs.map(function(id){return pname(id);}).join('، '),W-2*P0),R,y+24,F(700,26),'#FF8A8A'); y+=56; }
+    y+=40;
+    // تذكير التصويت
+    if(s.status!=='done'&&Date.now()<voteEnd(s)){
+      var vb=250; rrect(c,P0,y,W-2*P0,vb,26); var vg=c.createLinearGradient(P0,y,W-P0,y+vb); vg.addColorStop(0,'rgba(230,204,120,.26)'); vg.addColorStop(1,'rgba(230,204,120,.06)'); c.fillStyle=vg; c.fill(); c.strokeStyle='rgba(230,204,120,.7)'; c.lineWidth=2.5; c.stroke();
+      var scx=R-40-62, scy=y+vb/2; var sg=c.createRadialGradient(scx-20,scy-22,6,scx,scy,62); sg.addColorStop(0,'#F7E7B0'); sg.addColorStop(1,PST.goldDeep); c.beginPath(); c.arc(scx,scy,62,0,Math.PI*2); c.fillStyle=sg; c.fill();
+      c.beginPath(); for(var q=0;q<10;q++){var an=-Math.PI/2+q*Math.PI/5, rq=q%2?14:32; c.lineTo(scx+rq*Math.cos(an),scy+2+rq*Math.sin(an));} c.closePath(); c.fillStyle='#0A2C20'; c.fill();
+      var vx=R-40-124-30;
+      txt('صوّت لأفضل لاعب في التمرين',vx,y+66,F(900,40),'#fff');
+      txt('التصويت مفتوح حتى '+fmtWhen(voteEnd(s)),vx,y+120,F(800,27),PST.gold);
+      txt('ادخل التطبيق باسمك وصوّت قبل لا يقفل',vx,y+166,F(700,23),PST.mute);
+      var link=(location.host+location.pathname).replace(/^www\./,''); c.save(); c.direction='ltr'; c.textAlign='right'; c.font=F(700,21); c.fillStyle=PST.faint; c.fillText(link,vx,y+206); c.restore();
+      y+=vb+50;
+    }
+  }
+  if(kind==='sum'){
     // أفضل لاعب
     var m=mvpOf(s);
     if(m&&P(m)){
@@ -2595,7 +2687,7 @@ function drawPoster(kind,s,logo,ph){
       y+=44;
     });
   }
-  if(kind==='mvp'){
+  if(kind==='mvp'||kind==='final'){
     var mv=mvpOf(s), up0=(s.upd||{})[mv], gcm=goalCount(s), tal=voteTally(s), nvm=tal[mv]||0, rtm=s.ratings&&s.ratings[mv];
     // الصورة الكبيرة بحلقة ذهبية وتوهّج
     var pcx=W/2, pcy=y+215, pr=185;
@@ -2624,11 +2716,26 @@ function drawPoster(kind,s,logo,ph){
       rrect(c,x0+w1+aw+w2+28,y-24,w3+36,48,24); c.fillStyle=dd>0?'rgba(47,210,138,.16)':dd<0?'rgba(255,122,122,.16)':'rgba(255,255,255,.08)'; c.fill();
       c.fillStyle=col; c.font=F(900,30); c.fillText(t3,x0+w1+aw+w2+28+18,y+2); c.restore();
       y+=58; txt('التقييم العام قبل وبعد التمرين',W/2,y,F(700,22),PST.faint,'center'); y+=40; }
-    y=Math.max(y+20,1240);
+    y=kind==='mvp'?Math.max(y+20,1240):y+30;
   }
-  if(kind==='attr'){
+  if(kind==='final'){
+    var rt2=Object.keys(s.ratings||{}).filter(function(id){return P(id)&&typeof s.ratings[id]==='number';}).sort(function(a,b){return s.ratings[b]-s.ratings[a]||pname(a).localeCompare(pname(b),'ar');});
+    if(rt2.length){
+      y=shead(y,'تقييمات اللاعبين');
+      var colW=(W-2*P0-20)/2, rh2=78;
+      rt2.forEach(function(id,i){ var col=i%2, row=Math.floor(i/2), x0=col===0?R-colW:P0, yy=y+row*(rh2+10), cyr=yy+rh2/2, v=s.ratings[id];
+        rrect(c,x0,yy,colW,rh2,14); c.fillStyle=PST.row; c.fill(); c.strokeStyle=PST.rowEdge; c.lineWidth=1; c.stroke();
+        txt(String(i+1),x0+colW-22,cyr+2,F(900,22),i<3?PST.gold:PST.faint,'center');
+        circleImg(id,x0+colW-44-28,cyr,28,i===0?PST.gold:null);
+        c.font=F(800,26); txt(fitTxt(c,pname(id),colW-44-56-22-96),x0+colW-44-56-20,cyr+2,F(800,26),'#fff');
+        var pc=v>=8?PST.gold:v>=6.5?'#fff':PST.mute; rrect(c,x0+14,cyr-22,76,44,22); c.fillStyle=v>=8?'rgba(230,204,120,.16)':'rgba(255,255,255,.07)'; c.fill();
+        txt(String(v),x0+14+38,cyr+2,F(900,26),pc,'center'); });
+      y+=Math.ceil(rt2.length/2)*(rh2+10)+46;
+    }
+  }
+  if(kind==='attr'||(kind==='final'&&s.upd)){
     var U=s.upd||{}, ids2=Object.keys(U).filter(function(id){return P(id)&&U[id];}).sort(function(a,b){return (U[b].ovrA-U[b].ovrB)-(U[a].ovrA-U[a].ovrB)||pname(a).localeCompare(pname(b),'ar');});
-    txt('تعدّلت الطاقات بعد انتهاء تصويت أفضل لاعب، حسب أداء كل لاعب',R,y-30,F(700,24),PST.mute); y+=20;
+    if(kind==='final') y=shead(y,'تغيّر الطاقات'); else { txt('تعدّلت الطاقات بعد انتهاء تصويت أفضل لاعب، حسب أداء كل لاعب',R,y-30,F(700,24),PST.mute); y+=20; }
     ids2.forEach(function(id){
       var cc=U[id], dd=cc.ovrA-cc.ovrB, ks=Object.keys(cc.d||{}).filter(function(k){return cc.d[k];}).sort(function(a,b){return Math.abs(cc.d[b])-Math.abs(cc.d[a]);});
       var hh=ks.length?118:92; rowBox(y,hh); var cy7=y+(ks.length?42:hh/2);
