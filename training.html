@@ -390,7 +390,7 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .attrnote{color:var(--tint);font-weight:700}
 .vwho{margin:0 0 12px;border:1px solid var(--sep);border-radius:14px;padding:10px 12px}
 .vwho-h{display:flex;align-items:center;gap:8px;font-size:15px;margin-bottom:6px}.vwho-h .num{background:var(--fill,rgba(120,120,128,.16));border-radius:999px;padding:1px 9px;font-size:13px}
-.vrow{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--sep);font-size:15px}.vfrom{color:var(--label2)}.varr{color:var(--label3,#999)}.vbad{font-size:12px;color:var(--orange)}
+.vrow{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--sep);font-size:15px}.vfrom{color:var(--label2)}.varr{color:var(--label3,#999)}.vbad{font-size:12px;color:var(--orange)}.vself{font-size:12px;color:var(--label2)}
 .vdel{background:none;border:none;color:#FF3B30;cursor:pointer;padding:4px;display:flex}.vwho .lnk{background:none;border:none;font-size:14px;font-weight:600;cursor:pointer;color:#FF3B30}
 .vend{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;margin:0 0 10px;font-size:14px;color:var(--label2)}
 .vend span{white-space:nowrap}
@@ -601,7 +601,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261115110914';
+var BUILD='20261115111239';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -1105,7 +1105,7 @@ function settleVotes(){
     putMany(m);
   });
 }
-function voteTally(s){var t={},pp={};participants(s).forEach(function(id){pp[id]=1;});Object.keys(s.votes||{}).forEach(function(v){var c=s.votes[v];if(c&&P(c)&&c!==v&&pp[v]&&pp[c])t[c]=(t[c]||0)+1;});return t;}
+function voteTally(s){var t={},pp={};participants(s).forEach(function(id){pp[id]=1;});Object.keys(s.votes||{}).forEach(function(v){var c=s.votes[v];if(c&&P(c)&&pp[v]&&pp[c])t[c]=(t[c]||0)+1;});return t;}
 function voteWinner(s){var t=voteTally(s),ids=Object.keys(t);if(!ids.length)return null;var gl=goalCount(s);
   ids.sort(function(a,b){return (t[b]-t[a])||((s.ratings[b]||0)-(s.ratings[a]||0))||((gl.g[b]||0)-(gl.g[a]||0));});return ids[0];}
 function mvpOf(s){return s.mvp||voteWinner(s)||autoMvp(s);}
@@ -1845,7 +1845,7 @@ function renderSession(el){
         '<div class="small muted" style="margin-bottom:10px">'+(s.mvp?'تم اختياره يدوياً.':(vk.length&&am===voteWinner(s))?'الاختيار الحالي حسب تصويت اللاعبين: <b style="color:var(--label)">'+esc(pname(am))+'</b>':am?'الاقتراح التلقائي حسب أعلى تقييم: <b style="color:var(--label)">'+esc(pname(am))+'</b>':'يُقترح تلقائياً بعد التقييم، أو اختره بنفسك.')+'</div>';
       var vlist=Object.keys(s.votes||{}).filter(function(v){return s.votes[v];}).sort(function(x,y){return pname(s.votes[x]).localeCompare(pname(s.votes[y]),'ar')||pname(x).localeCompare(pname(y),'ar');});
       h+='<div class="vwho" id="voteWho"><div class="vwho-h"><b>من صوّت لمين</b><span class="num">'+vlist.length+'</span>'+(vlist.length?'<span style="flex:1"></span><button class="lnk red" id="voteClearAll" onclick="clearVotes()">مسح كل التصويت</button>':'')+'</div>'+
-        (vlist.length?vlist.map(function(v){var c=s.votes[v];return '<div class="vrow" data-v="'+v+'"><span class="vfrom">'+esc(pname(v))+'</span><span class="varr">←</span><b class="vto">'+esc(pname(c))+'</b>'+(!inSess(s,v)?'<span class="vbad">ليس من لاعبي التمرين، لا يُحتسب</span>':c===v?'<span class="vbad">لنفسه، لا يُحتسب</span>':'')+'<span style="flex:1"></span><button class="vdel" aria-label="مسح الصوت" onclick="delVote(\''+v+'\')">'+ic('trash','s')+'</button></div>';}).join(''):'<div class="small muted">لا توجد أصوات بعد.</div>')+'</div>';
+        (vlist.length?vlist.map(function(v){var c=s.votes[v];return '<div class="vrow" data-v="'+v+'"><span class="vfrom">'+esc(pname(v))+'</span><span class="varr">←</span><b class="vto">'+esc(pname(c))+'</b>'+(!inSess(s,v)?'<span class="vbad">ليس من لاعبي التمرين، لا يُحتسب</span>':c===v?'<span class="vself">لنفسه</span>':'')+'<span style="flex:1"></span><button class="vdel" aria-label="مسح الصوت" onclick="delVote(\''+v+'\')">'+ic('trash','s')+'</button></div>';}).join(''):'<div class="small muted">لا توجد أصوات بعد.</div>')+'</div>';
       var byR=parts.slice().sort(function(a,b){return (typeof s.ratings[b]==='number'?s.ratings[b]:-1)-(typeof s.ratings[a]==='number'?s.ratings[a]:-1)||pname(a).localeCompare(pname(b),'ar');});
       h+='<select class="field" id="mvpSel" onchange="setMvp(this.value||null)"><option value="">تلقائي (تصويت اللاعبين ثم التقييم)'+(am?' — '+esc(pname(am)):'')+'</option>'+
         byR.map(function(id){var r=s.ratings[id];return '<option value="'+id+'"'+(s.mvp===id?' selected':'')+'>'+esc(pname(id))+(typeof r==='number'?' ('+r+')':'')+'</option>';}).join('')+'</select>';
