@@ -601,7 +601,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261115112858';
+var BUILD='20261115113133';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -1223,6 +1223,8 @@ function revertInto(s,map){
   var up=s.upd||{};
   Object.keys(up).forEach(function(id){var p=P(id),c=up[id]; if(!p||!c)return; if(c.d){var at=clone(p.attrs); Object.keys(c.d).forEach(function(k){at[k]=clamp((at[k]||0)-c.d[k],20,99);}); map['players/'+id+'/attrs']=at;} if(c.cd){var cr=clone(p.carry||{}); Object.keys(c.cd).forEach(function(k){cr[k]=Math.round(((cr[k]||0)-c.cd[k])*1000)/1000;}); map['players/'+id+'/carry']=cr;}});
 }
+// هل تغيّرت طاقات اللاعب في هذا التمرين؟
+function updChanged(c){return !!c&&((c.d&&Object.keys(c.d).some(function(k){return c.d[k];}))||c.ovrA!==c.ovrB);}
 function updList(){ // كل التغييرات مرتبة من الأقدم للأحدث
   return doneSessions().slice().reverse().filter(function(s){return s.upd;});
 }
@@ -2733,8 +2735,8 @@ function drawPoster(kind,s,logo,ph){
     }
   }
   if(kind==='attr'||(kind==='final'&&s.upd)){
-    var U=s.upd||{}, ids2=Object.keys(U).filter(function(id){return P(id)&&U[id];}).sort(function(a,b){return (U[b].ovrA-U[b].ovrB)-(U[a].ovrA-U[a].ovrB)||pname(a).localeCompare(pname(b),'ar');});
-    if(kind==='final') y=shead(y,'تغيّر الطاقات'); else { txt('تعدّلت الطاقات بعد انتهاء تصويت أفضل لاعب، حسب أداء كل لاعب',R,y-30,F(700,24),PST.mute); y+=20; }
+    var U=s.upd||{}, ids2=Object.keys(U).filter(function(id){return P(id)&&updChanged(U[id]);}).sort(function(a,b){return (U[b].ovrA-U[b].ovrB)-(U[a].ovrA-U[a].ovrB)||pname(a).localeCompare(pname(b),'ar');});
+    if(kind==='final'){ if(ids2.length) y=shead(y,'تغيّر الطاقات'); } else { txt('تعدّلت الطاقات بعد انتهاء تصويت أفضل لاعب، حسب أداء كل لاعب',R,y-30,F(700,24),PST.mute); y+=20; }
     ids2.forEach(function(id){
       var cc=U[id], dd=cc.ovrA-cc.ovrB, ks=Object.keys(cc.d||{}).filter(function(k){return cc.d[k];}).sort(function(a,b){return Math.abs(cc.d[b])-Math.abs(cc.d[a]);});
       var hh=ks.length?118:92; rowBox(y,hh); var cy7=y+(ks.length?42:hh/2);
@@ -3207,8 +3209,9 @@ function sessionDetailInner(id){
 
   var cis=Object.keys(s.checkin||{}).filter(function(pid){return P(pid);}).sort(function(a,b){return s.checkin[a]-s.checkin[b];});
   if(s.notes) h+=gh('الملاحظات')+'<div class="card pad" style="white-space:pre-wrap;line-height:1.7;font-size:15px">'+esc(s.notes)+'</div>';
-  if(s.upd){
-    var rows=Object.keys(s.upd).filter(function(pid){return P(pid);}).map(function(pid){return {id:pid,c:s.upd[pid]};}).sort(function(a,b){return (b.c.ovrA-b.c.ovrB)-(a.c.ovrA-a.c.ovrB);});
+  var updRows=s.upd?Object.keys(s.upd).filter(function(pid){return P(pid)&&updChanged(s.upd[pid]);}):[];
+  if(updRows.length){
+    var rows=updRows.map(function(pid){return {id:pid,c:s.upd[pid]};}).sort(function(a,b){return (b.c.ovrA-b.c.ovrB)-(a.c.ovrA-a.c.ovrB);});
     h+='<div id="updSec">'+gh('تغيّر الطاقات')+'<div class="card">'+rows.map(function(x){var c=x.c, dd=c.ovrA-c.ovrB;
       var det=c.d?Object.keys(c.d).map(function(k){var v=c.d[k];return '<span class="tag '+(v>0?'on':'')+'" style="'+(v<0?'color:var(--red)':'')+'">'+ATTR[k]+' <span class="ltr">'+(v>0?'+':'')+v+'</span></span>';}).join(' '):'<span class="small muted">بدون تغيير</span>';
       return '<div class="cell tap ind updrow" onclick="openPlayer(\''+x.id+'\')">'+avatar(x.id)+'<div class="body"><div class="t">'+esc(pname(x.id))+'</div>'+(c.perf!=null?'<div class="s">الأداء <b class="num" style="color:var(--label)">'+c.perf+'</b> · المتوقع <span class="num">'+c.exp+'</span></div>':'')+'<div class="s" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">'+det+'</div></div><span class="num muted">'+c.ovrB+'</span><span class="muted" style="display:inline-flex">'+ic('chev','xs')+'</span><span class="v strong num">'+c.ovrA+'</span></div>';
