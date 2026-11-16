@@ -172,6 +172,8 @@ select.field{appearance:none;-webkit-appearance:none;background-image:url("data:
 .seg button.on{background:var(--seg-on);box-shadow:0 3px 8px rgba(0,0,0,.12),0 1px 1px rgba(0,0,0,.04);}
 
 .att-gh{min-height:36px;padding:8px 16px;background:var(--fill2);font-size:13px;font-weight:600;color:var(--label2);}
+.att-sh{min-height:28px;padding:5px 16px;padding-inline-start:28px;font-size:12px;font-weight:700;color:var(--tint);background:var(--bg2,transparent);border-top:.5px solid var(--sep)}
+.posline{display:flex;align-items:center;gap:6px;min-width:0;white-space:nowrap}.pos2t{overflow:hidden;text-overflow:ellipsis;min-width:0;font-size:12px}.possel{flex:none;border:none;background:var(--fill2);color:var(--label2);font:inherit;font-size:12.5px;font-weight:600;border-radius:7px;padding:2px 6px;margin:1px 0;max-width:120px}
 .att-gh .lnk{background:none;border:none;color:var(--tint);font-size:13px;font-weight:600;margin-inline-start:auto;}
 .ck{width:24px;height:24px;border-radius:50%;border:1.6px solid var(--label3);flex:none;display:inline-flex;align-items:center;justify-content:center;color:transparent;transition:background .15s,border-color .15s;}
 .attrow.on .ck{background:var(--tint);border-color:var(--tint);color:var(--on-tint);}
@@ -2207,12 +2209,14 @@ function attDropdown(s,ps){
     var CRANK=function(p){var c=confOf(s,p.id);return c==='yes'?0:c==='called'?1:c==='no'?3:2;};
     var passF=function(p){return F==='all'?true:F==='in'?!!s.att[p.id]:confOf(s,p.id)===F;}, shown=0;
     GROUPS.forEach(function(g){
-      var gp=ps.filter(function(p){return POS_GROUP[p.pos]===g[0]&&passF(p);}).sort(function(a,b){return CRANK(a)-CRANK(b)||POS_ORDER.indexOf(a.pos)-POS_ORDER.indexOf(b.pos)||ovr(b)-ovr(a)||a.name.localeCompare(b.name,'ar');});
+      var gp=ps.filter(function(p){return POS_GROUP[p.pos]===g[0]&&passF(p);}).sort(function(a,b){return POS_ORDER.indexOf(a.pos)-POS_ORDER.indexOf(b.pos)||CRANK(a)-CRANK(b)||ovr(b)-ovr(a)||a.name.localeCompare(b.name,'ar');});
       if(!gp.length)return; shown+=gp.length;
       var gn=gp.filter(function(p){return s.att[p.id];}).length, all=gn===gp.length;
       h+='<div class="cell att-gh">'+g[1]+' · <span class="num">'+gn+'/'+gp.length+'</span><button class="lnk" id="attG-'+g[0]+'" onclick="groupAtt(\''+g[0]+'\','+(!all)+')">'+(all?'إلغاء الكل':'تحديد الكل')+'</button></div>';
+      var multi=gp.some(function(p){return p.pos!==gp[0].pos;})||POS_ORDER.filter(function(k){return POS_GROUP[k]===g[0];}).length>1, lastPos=null;
       gp.forEach(function(p){var on=!!s.att[p.id];
-        h+='<div class="cell tap attrow'+(on?' on':'')+'" style="'+(!on&&full?'opacity:.4':'')+'" data-id="'+p.id+'" onclick="toggleAtt(\''+p.id+'\')"><span class="ck">'+ic('check','xs')+'</span><div class="body"><div class="t">'+esc(p.name)+'</div><div class="s">'+POS[p.pos].ar+(p.pos2?' · '+POS[p.pos2].ar:'')+'</div></div><span class="v num attovr">'+ovr(p)+'</span>'+
+        if(multi&&p.pos!==lastPos){lastPos=p.pos;var sp=gp.filter(function(x){return x.pos===p.pos;});h+='<div class="cell att-sh" data-pos="'+p.pos+'">'+POS[p.pos].ar+' · <span class="num">'+sp.filter(function(x){return s.att[x.id];}).length+'/'+sp.length+'</span></div>';}
+        h+='<div class="cell tap attrow'+(on?' on':'')+'" style="'+(!on&&full?'opacity:.4':'')+'" data-id="'+p.id+'" onclick="toggleAtt(\''+p.id+'\')"><span class="ck">'+ic('check','xs')+'</span><div class="body"><div class="t">'+esc(p.name)+'</div><div class="s posline"><select class="possel" aria-label="مركز اللاعب" onclick="event.stopPropagation()" onchange="setMainPos(\''+p.id+'\',this.value)">'+POS_ORDER.map(function(k){return '<option value="'+k+'"'+(p.pos===k?' selected':'')+'>'+POS[k].ar+'</option>';}).join('')+'</select></div></div><span class="v num attovr">'+ovr(p)+'</span>'+
           (function(){var cv=confOf(s,p.id);return '<select class="confsel c-'+(cv||'none')+'" aria-label="حالة التأكيد" onclick="event.stopPropagation()" onchange="applyConf(\''+s.id+'\',\''+p.id+'\',this.value)">'+CONF.map(function(x){return '<option value="'+x[0]+'"'+(cv===x[0]?' selected':'')+'>'+x[1]+'</option>';}).join('')+'</select>';})()+'</div>';
       });
     });
@@ -2221,6 +2225,15 @@ function attDropdown(s,ps){
     if(needCopy) h+='<div class="cell" style="display:block"><button class="btn tinted block" id="confCopy" onclick="confCopy(\''+s.id+'\')">'+ic('upl','s')+'نسخ أسماء اللي ما أكّدوا</button></div>';
   }
   return h+'</div>';
+}
+// تغيير المركز الأساسي للاعب من قائمة التمرين (للإدارة): المركز الجديد أولاً وتبقى بقية تفضيلاته بعده
+function setMainPos(id,k){
+  var p=P(id); if(!p||!POS[k]||p.pos===k)return;
+  var old=prefsOf(p), pr=(k==='GK'||p.pos==='GK')?[k]:[k].concat(old.filter(function(q){return q!==k;})).slice(0,4);
+  var m={}, b='players/'+id+'/';
+  m[b+'pos']=pr[0]; m[b+'pos2']=pr[1]||''; m[b+'pos3']=pr[2]||''; m[b+'pos4']=pr[3]||'';
+  if(p.never&&p.never[k]) m[b+'never/'+k]=null;
+  putMany(m); toast(p.name+' صار '+POS[k].ar);
 }
 // الحد الأقصى لقائمة التمرين = لاعبو الملعب للفريقين + بديل واحد لكل فريق
 function maxList(s){return s.size*2+2;}
