@@ -434,7 +434,7 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .attfilter{flex-wrap:nowrap;overflow-x:auto;gap:6px;padding-bottom:2px}.attfilter .chip{flex:none}
 .attrow{flex-wrap:nowrap}.confseg.mini{flex:0 0 calc(100% - 40px);width:calc(100% - 40px);box-sizing:border-box;margin:4px 0 0;margin-inline-start:40px}.confseg.mini button{font-size:13px;height:30px}.attovr{min-width:26px;text-align:center}.confseg button{font-size:13px}.confseg button.on.c-called{background:#FF9500;color:#fff}.confseg button.on.c-yes{background:#34C759;color:#fff}.confseg button.on.c-no{background:#FF3B30;color:#fff}
 .kbtn{border:none;border-radius:999px;padding:8px 14px;font-size:14px;font-weight:800;background:var(--fill,rgba(120,120,128,.16));color:var(--label2);cursor:pointer;flex:none}
-.kbtn.on{background:var(--green,#34C759);color:#fff}.krow.paid .t{color:var(--label2)}
+.kself{color:var(--orange);font-weight:700}.kbtn.on{background:var(--green,#34C759);color:#fff}.krow.paid .t{color:var(--label2)}
 #sbxBar{position:fixed;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom) + 92px);z-index:60;background:linear-gradient(135deg,#6D28D9,#AF52DE);color:#fff;border-radius:18px;padding:8px 10px;box-shadow:0 12px 30px -10px rgba(80,20,140,.6);display:flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:560px;margin:0 auto}
 #sbxBar .sbx-t{font-weight:800;font-size:14px;flex:1;min-width:150px}#sbxBar .sbx-t span{font-weight:500;opacity:.85;font-size:12px}
 #sbxBar .sbx-b{display:flex;gap:6px;flex-wrap:wrap}#sbxBar button{border:none;border-radius:999px;padding:7px 11px;font-size:13px;font-weight:700;background:rgba(255,255,255,.2);color:#fff;cursor:pointer}
@@ -1468,6 +1468,7 @@ function renderHome(el){
     h+='<div class="card"><div class="empty"><div class="ei">'+ic('ball')+'</div><b>لا يوجد تمرين قادم</b>'+(isCoach?'<button class="btn sm" style="margin-top:12px" onclick="go(\'session\')">'+ic('plus','xs')+'إنشاء تمرين</button>':'سيظهر هنا عندما يُنشئ مجلس الإدارة تمريناً')+'</div></div>';
   }
 
+  h+=kittyMeH();
   if(ds.length){
     var last=ds[0], m=mvpOf(last);
     h+=gh('التمرين السابق',lnk('التفاصيل','openSessionDetail(\''+last.id+'\')'));
@@ -2044,11 +2045,37 @@ function kittyInner(sid){
   else{
     var order=ids.slice().sort(function(a,b){return (k.paid[a]?1:0)-(k.paid[b]?1:0)||pname(a).localeCompare(pname(b),'ar');});
     h+=gh('<span style="font-size:17px">اللاعبون</span>',m.unpaid.length?lnk('الكل دفع','kittyAll(\''+sid+'\',true)','kAll'):lnk('تصفير','kittyAll(\''+sid+'\',false)','kNone'))+'<div class="card">'+order.map(function(id){var pd=!!k.paid[id];
-      return '<div class="cell ind krow'+(pd?' paid':'')+'" data-id="'+id+'">'+avatar(id)+'<div class="body"><div class="t">'+esc(pname(id))+'</div><div class="s">'+(pd?'دفع'+(m.per?' '+money(m.per):''):'لم يدفع')+'</div></div>'+
+      return '<div class="cell ind krow'+(pd?' paid':'')+'" data-id="'+id+'">'+avatar(id)+'<div class="body"><div class="t">'+esc(pname(id))+'</div><div class="s">'+(pd?'دفع'+(m.per?' '+money(m.per):'')+(k.paid[id]==='self'?' · <span class="kself">سجّلها بنفسه</span>':''):'لم يدفع')+'</div></div>'+
         '<button type="button" class="kbtn'+(pd?' on':'')+'" onclick="kittyToggle(\''+sid+'\',\''+id+'\')">'+(pd?'✓ دفع':'لم يدفع')+'</button></div>';}).join('')+'</div>';
     if(m.unpaid.length&&m.per) h+='<div class="m-foot"><button class="btn tinted block" id="kRemind" onclick="kittyRemind(\''+sid+'\')">'+ic('upl','s')+'نسخ تذكير لمن لم يدفع</button></div>';
   }
   setModal(h);
+}
+// اللاعب يسجّل بنفسه إنه دفع القطة (تُحفظ «self» عشان مجلس الإدارة يعرف إنها من اللاعب)
+function kittyMeH(){
+  var me=myId(); if(isCoach||!me)return '';
+  var lim=Date.now()-21*86400000, h='';
+  Object.keys(S.sessions).map(function(k){return S.sessions[k];}).filter(function(s){
+    return s&&kPer(s)>0&&kPlayers(s).indexOf(me)>=0&&(s.status!=='done'||(s.finished||startTs(s))>=lim);
+  }).sort(function(a,b){return startTs(b)-startTs(a);}).forEach(function(s){
+    var pd=kOf(s).paid[me], per=money(kPer(s)), when=s.status==='done'?' · تمرين '+niceDate(s.date):'';
+    var card=function(id,color,t,sub,click){return '<div class="card" style="margin-top:10px"><div class="cell'+(click?' tap ind':'')+'" id="'+id+'" data-sid="'+s.id+'"'+(click?' onclick="'+click+'"':'')+'>'+tile(color,'trophy')+'<div class="body"><div class="t">'+t+'</div><div class="s">'+sub+'</div></div>'+(click?chev():'')+'</div></div>';};
+    if(!pd) h+=card('kMe','#FF9500','القطة: عليك '+per,'اضغط هنا إذا دفعت'+when,'kittyPaidMe(\''+s.id+'\')');
+    else if(s.status!=='done') h+=pd==='self'
+      ?card('kMeDone','#34C759','✓ دفعت القطة',per+' · سجّلتها بنفسك · اضغط للتراجع','kittyUnpayMe(\''+s.id+'\')')
+      :card('kMeDone','#34C759','✓ دفعت القطة',per+' · أكّدها مجلس الإدارة','');
+  });
+  return h;
+}
+function kittyPaidMe(sid){
+  var s=S.sessions[sid], me=myId(); if(!s||!me){askMe();return;}
+  if(kPlayers(s).indexOf(me)<0){toast('⚠️ اسمك مو في قائمة هذا التمرين');return;}
+  askConfirm('دفعت '+money(kPer(s))+' للقطة؟',function(){putVote('sessions/'+sid+'/kitty/paid/'+me,'self');toast('تم — سجّلنا إنك دفعت القطة');},'نعم، دفعت');
+}
+function kittyUnpayMe(sid){
+  var s=S.sessions[sid], me=myId(); if(!s||!me)return;
+  if(kOf(s).paid[me]!=='self')return; // اللي أكّده مجلس الإدارة ما يتغيّر من اللاعب
+  askConfirm('تراجع؟ يرجع اسمك «لم يدفع».',function(){putVote('sessions/'+sid+'/kitty/paid/'+me,null);},'تراجع');
 }
 function setKitty(sid,key,v){ var n=parseFloat(arNum(v)); put('sessions/'+sid+'/kitty/'+key,n>0?Math.round(n*100)/100:null); }
 function kittyToggle(sid,id){ var s=S.sessions[sid]; if(!s)return; var on=!kOf(s).paid[id]; put('sessions/'+sid+'/kitty/paid/'+id,on?true:null); }
