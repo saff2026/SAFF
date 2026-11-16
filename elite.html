@@ -644,7 +644,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261116125455';
+var BUILD='20261116130633';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -781,7 +781,7 @@ var mode = 'local';           // 'local' | 'cloud'
 var db = null, ready = false;
 var isCoach = false;
 var curTab = 'home';
-var ui = {pFilter:'all', pSort:'ovr', pDir:'desc', attOpen:false, pSearch:'', teamView:'both'};
+var ui = {pSel:{}, attFs:{}, pFilter:'all', pSort:'ovr', pDir:'desc', attOpen:false, pSearch:'', teamView:'both'};
 var QS = {}; location.search.replace(/^\?/,'').split('&').forEach(function(kv){if(!kv)return;var a=kv.split('=');QS[decodeURIComponent(a[0])]=decodeURIComponent(a[1]||'');});
 var LS_KEY = 'saff_elite_v1';
 
@@ -1509,7 +1509,7 @@ function renderPlayers(el){
   if(!isCoach&&ui.pFilter==='todo')ui.pFilter='all';
   var nTodo=isCoach?playersArr().filter(function(p){return missingOf(p).length;}).length:0;
   var caps=[['all','الكل'],['gk','حراس'],['def','دفاع'],['mid','وسط'],['att','هجوم']];
-  h+='<div class="caps" style="margin-top:12px">'+caps.map(function(f){return '<button class="cap'+(ui.pFilter===f[0]?' on':'')+'" onclick="ui.pFilter=\''+f[0]+'\';render()">'+f[1]+'</button>';}).join('')+'</div>';
+  h+='<div class="caps" style="margin-top:12px">'+caps.map(function(f){return '<button class="cap'+((f[0]==='all'?(ui.pFilter!=='todo'&&!Object.keys(ui.pSel).length):(ui.pFilter!=='todo'&&ui.pSel[f[0]]))?' on':'')+'" data-f="'+f[0]+'" onclick="pFTog(\''+f[0]+'\')">'+f[1]+'</button>';}).join('')+'</div>';
   h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px"><button class="cap" id="sortBtn" onclick="openSort()">'+ic('sort','xs')+'ترتيب: '+SORTS[ui.pSort].l+' · '+SORTS[ui.pSort][ui.pDir]+'</button>'+
     (isCoach?'<button class="cap todo'+(ui.pFilter==='todo'?' on':'')+'" id="todoCap" onclick="ui.pFilter=ui.pFilter===\'todo\'?\'all\':\'todo\';render()">'+ic('warn','xs')+'ناقص البيانات <span class="num">'+nTodo+'</span></button>':'')+'</div>';
   h+='<div id="pGrid"></div>';
@@ -1530,7 +1530,7 @@ function renderPlayerGrid(){
   var q=ui.pSearch.trim().replace(/\s+/g,'');
   var arr=playersArr().filter(function(p){
     if(ui.pFilter==='todo'){ if(!missingOf(p).length)return false; }
-    else if(ui.pFilter!=='all'&&POS_GROUP[p.pos]!==ui.pFilter)return false; // المركز الأساسي فقط
+    else if(Object.keys(ui.pSel).length&&!ui.pSel[POS_GROUP[p.pos]])return false; // المركز الأساسي فقط (تقدر تختار أكثر من مركز)
     if(q&&p.name.replace(/\s+/g,'').indexOf(q)<0)return false;
     return true;
   });
@@ -2202,12 +2202,12 @@ function attDropdown(s,ps){
     '<span class="ddchev" style="transform:rotate('+(open?'90deg':'-90deg')+')">'+ic('chev','s')+'</span></div>';
   var cs=confSum(s); h=h.replace('</div></div><span class="ddchev"','</div><div class="s" id="confSum">'+(cs.called?' · <span style="color:var(--orange)">كلّمته '+cs.called+'</span>':'')+(cs.no?' · <span style="color:var(--red)">اعتذر '+cs.no+'</span>':'')+(cs.called||cs.no?'':'')+'</div></div><span class="ddchev"');
   if(open){
-    var F=(ui.attF==null?'all':ui.attF), FL=[['all','الكل'],['yes','أكّد (في القائمة)'],['called','كلّمته'],['','لم أكلمه'],['no','اعتذر']];
+    var FS=ui.attFs||{}, FN=Object.keys(FS).length, FL=[['all','الكل'],['yes','أكّد (في القائمة)'],['called','كلّمته'],['','لم أكلمه'],['no','اعتذر']];
     var fcount=function(k){return ps.filter(function(p){return k==='all'?true:k==='in'?!!s.att[p.id]:confOf(s,p.id)===k;}).length;};
-    h+='<div class="cell" style="display:block"><div class="chips attfilter" id="attFilter">'+FL.map(function(x){return '<button type="button" class="chip'+(F===x[0]?' on':'')+'" data-f="'+x[0]+'" onclick="ui.attF=\''+x[0]+'\';render()">'+x[1]+' <span class="num">'+fcount(x[0])+'</span></button>';}).join('')+'</div>'+
+    h+='<div class="cell" style="display:block"><div class="chips attfilter" id="attFilter">'+FL.map(function(x){return '<button type="button" class="chip'+((x[0]==='all'?!FN:FS[x[0]])?' on':'')+'" data-f="'+x[0]+'" onclick="attFTog(\''+x[0]+'\')">'+x[1]+' <span class="num">'+fcount(x[0])+'</span></button>';}).join('')+'</div>'+
       '<div class="small muted" style="line-height:1.6;margin-top:8px"><b style="color:var(--green)">أكّد</b> = في قائمة التمرين. اضغط على اللاعب أو اختر «أكّد» لإضافته، وأي حالة ثانية تشيله من القائمة.</div></div>';
     var CRANK=function(p){var c=confOf(s,p.id);return c==='yes'?0:c==='called'?1:c==='no'?3:2;};
-    var passF=function(p){return F==='all'?true:F==='in'?!!s.att[p.id]:confOf(s,p.id)===F;}, shown=0;
+    var passF=function(p){return !FN||!!FS[confOf(s,p.id)];}, shown=0;
     GROUPS.forEach(function(g){
       var gp=ps.filter(function(p){return POS_GROUP[p.pos]===g[0]&&passF(p);}).sort(function(a,b){return POS_ORDER.indexOf(a.pos)-POS_ORDER.indexOf(b.pos)||CRANK(a)-CRANK(b)||ovr(b)-ovr(a)||a.name.localeCompare(b.name,'ar');});
       if(!gp.length)return; shown+=gp.length;
@@ -2235,6 +2235,10 @@ function setMainPos(id,k){
   if(p.never&&p.never[k]) m[b+'never/'+k]=null;
   putMany(m); toast(p.name+' صار '+POS[k].ar);
 }
+// الفلاتر تقبل أكثر من خيار: «الكل» يمسح الاختيار، وأي خيار ثاني يتبدّل (يتفعّل أو يتلغى)
+function multiTog(o,k,n){ if(k==='all')return {}; var m=Object.assign({},o); if(m[k])delete m[k]; else m[k]=true; return Object.keys(m).length>=n?{}:m; }
+function attFTog(k){ ui.attFs=multiTog(ui.attFs,k,4); render(); }
+function pFTog(k){ ui.pSel=multiTog(ui.pFilter==='todo'?{}:ui.pSel,k,4); ui.pFilter='all'; render(); }
 // الحد الأقصى لقائمة التمرين = لاعبو الملعب للفريقين + بديل واحد لكل فريق
 function maxList(s){return s.size*2+2;}
 function listCount(s){return attendees(s).filter(function(id){return P(id);}).length;}
