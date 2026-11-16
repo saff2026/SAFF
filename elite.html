@@ -2204,9 +2204,10 @@ function attDropdown(s,ps){
     var fcount=function(k){return ps.filter(function(p){return k==='all'?true:k==='in'?!!s.att[p.id]:confOf(s,p.id)===k;}).length;};
     h+='<div class="cell" style="display:block"><div class="chips attfilter" id="attFilter">'+FL.map(function(x){return '<button type="button" class="chip'+(F===x[0]?' on':'')+'" data-f="'+x[0]+'" onclick="ui.attF=\''+x[0]+'\';render()">'+x[1]+' <span class="num">'+fcount(x[0])+'</span></button>';}).join('')+'</div>'+
       '<div class="small muted" style="line-height:1.6;margin-top:8px"><b style="color:var(--green)">أكّد</b> = في قائمة التمرين. اضغط على اللاعب أو اختر «أكّد» لإضافته، وأي حالة ثانية تشيله من القائمة.</div></div>';
+    var CRANK=function(p){var c=confOf(s,p.id);return c==='yes'?0:c==='called'?1:c==='no'?3:2;};
     var passF=function(p){return F==='all'?true:F==='in'?!!s.att[p.id]:confOf(s,p.id)===F;}, shown=0;
     GROUPS.forEach(function(g){
-      var gp=ps.filter(function(p){return POS_GROUP[p.pos]===g[0]&&passF(p);}).sort(function(a,b){return POS_ORDER.indexOf(a.pos)-POS_ORDER.indexOf(b.pos)||ovr(b)-ovr(a)||a.name.localeCompare(b.name,'ar');});
+      var gp=ps.filter(function(p){return POS_GROUP[p.pos]===g[0]&&passF(p);}).sort(function(a,b){return CRANK(a)-CRANK(b)||POS_ORDER.indexOf(a.pos)-POS_ORDER.indexOf(b.pos)||ovr(b)-ovr(a)||a.name.localeCompare(b.name,'ar');});
       if(!gp.length)return; shown+=gp.length;
       var gn=gp.filter(function(p){return s.att[p.id];}).length, all=gn===gp.length;
       h+='<div class="cell att-gh">'+g[1]+' · <span class="num">'+gn+'/'+gp.length+'</span><button class="lnk" id="attG-'+g[0]+'" onclick="groupAtt(\''+g[0]+'\','+(!all)+')">'+(all?'إلغاء الكل':'تحديد الكل')+'</button></div>';
