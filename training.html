@@ -644,7 +644,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261116203958';
+var BUILD='20261116205611';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -946,6 +946,8 @@ function teamOf(s,pid){
 function slotPlayers(s,t){return vals(s.teams[t].slots).filter(function(id){return !!id;});}
 function subsOf(s,t){var o=s.teams[t].subs||{};return Object.keys(o).filter(function(k){return o[k];});}
 function teamPlayers(s,t){return slotPlayers(s,t).concat(subsOf(s,t));}
+// هل وُزّع اللاعبون على الفريقين؟ (إذا لا، ما نعرض ملعباً فاضياً)
+function hasLineup(s){return !!s&&teamPlayers(s,'A').concat(teamPlayers(s,'B')).some(function(id){return P(id);});}
 function lineupPath(s,pid){var tm=teamOf(s,pid); if(!tm)return null; return 'sessions/'+s.id+'/teams/'+tm.t+(tm.sub?'/subs/'+pid:'/slots/'+tm.slot);}
 function attendees(s){return Object.keys(s.att||{}).filter(function(k){return s.att[k];});}
 function participants(s){ // كل من شارك: الحضور + المسجلين في التشكيلة
@@ -1461,7 +1463,7 @@ function renderHome(el){
   h+=gh(os&&Date.now()>=startTs(os)?'التمرين الحالي':'التمرين القادم');
   if(os){
     if(sessLabel(os)) h+='<div class="sesslbl" id="sessLbl">'+esc(sessLabel(os))+'</div>';
-    h+='<div class="card cell tap" id="upcomingCard" style="display:block;padding:0" onclick="'+(isCoach?'go(\'session\')':'openSessionDetail(\''+os.id+'\')')+'">'+(liveState(os)?scoreCard(os,liveMeta(os)):upcomingCard(os))+'</div>'+(tmActive(os)?'<div class="tm-live" id="tmLive">'+(tmOf(os).run?'<i class="tm-dot"></i>':'⏸ ')+tmLabel(tmOf(os))+' · <span class="num" data-tm="'+os.id+'">'+tmFmt(tmElapsed(tmOf(os)))+'</span>'+(tmOf(os).run?'':' (متوقف)')+'</div>':'')+(isCoach?'':'<div class="foot" id="homeHint">اضغط لعرض '+(liveState(os)||os.ratingsPub?'التشكيلة والأهداف والتقييمات':'التشكيلة')+'</div>');
+    h+='<div class="card cell tap" id="upcomingCard" style="display:block;padding:0" onclick="'+(isCoach?'go(\'session\')':'openSessionDetail(\''+os.id+'\')')+'">'+(liveState(os)?scoreCard(os,liveMeta(os)):upcomingCard(os))+'</div>'+(tmActive(os)?'<div class="tm-live" id="tmLive">'+(tmOf(os).run?'<i class="tm-dot"></i>':'⏸ ')+tmLabel(tmOf(os))+' · <span class="num" data-tm="'+os.id+'">'+tmFmt(tmElapsed(tmOf(os)))+'</span>'+(tmOf(os).run?'':' (متوقف)')+'</div>':'')+(isCoach?'':'<div class="foot" id="homeHint">'+(function(){var a=[];if(hasLineup(os))a.push('التشكيلة');if(liveState(os))a.push('الأهداف');if(os.ratingsPub)a.push('التقييمات');return a.length?'اضغط لعرض '+(a.length>1?a.slice(0,-1).join('، ')+' و'+a[a.length-1]:a[0]):'اضغط لعرض تفاصيل التمرين';})()+'</div>');
     h+=selfCiH(os);
     if(vs){ h+=voteH; voteH=''; }
   }else{
@@ -3422,7 +3424,7 @@ function sessionDetailInner(id){
   if(isCoach) h+='<button class="btn tinted block" id="shareSess" style="margin-top:12px" onclick="openShare(\''+s.id+'\')">'+ic('upl','s')+'مشاركة '+(done?'ملخص التمرين':'التشكيلة')+'</button>';
   if(done&&voteOpen(s)) h+='<div class="card" style="margin-top:12px"><div class="cell tap ind" onclick="openVote(\''+s.id+'\')">'+tile('#D4A93C','star',true)+'<div class="body"><div class="t">التصويت لأفضل لاعب مفتوح</div><div class="s">حتى '+fmtWhen(voteEnd(s))+' — النتيجة تظهر بعدها</div></div>'+chev()+'</div></div>';
   else if(m) h+='<div class="card" style="margin-top:12px"><div class="mvp" onclick="openPlayer(\''+m+'\')"><div class="medal">'+icF('star')+'</div><div class="grow"><div class="k">أفضل لاعب في التمرين</div><div class="n">'+esc(pname(m))+'</div></div>'+rBadge(s.ratings[m])+'</div></div>';
-  h+=gh('التشكيلة',!done&&isCoach?lnk('صورة','lineupImage(\''+s.id+'\')','lineupImg2','down'):'')+'<div class="card pad">'+pitchHTML(s,false)+'</div>';
+  if(hasLineup(s)) h+=gh('التشكيلة',!done&&isCoach?lnk('صورة','lineupImage(\''+s.id+'\')','lineupImg2','down'):'')+'<div class="card pad">'+pitchHTML(s,false)+'</div>';
   if(!done&&isCoach) h+=rotationHTML(s,false);
   if(!done&&s.ratingsPub){ var rr=Object.keys(s.ratings||{}).filter(function(id){return P(id)&&typeof s.ratings[id]==='number';}).sort(function(a,b){return s.ratings[b]-s.ratings[a];});
     if(rr.length) h+=gh('التقييمات')+'<div class="card" id="pubRatings">'+rr.map(function(id,i){var tm=teamOf(s,id);return '<div class="cell tap" onclick="openPlayer(\''+id+'\')"><span class="num muted" style="width:20px;text-align:center">'+(i+1)+'</span>'+avatar(id)+'<div class="body"><div class="t">'+esc(pname(id))+'</div></div><span class="dot '+(tm?tm.t:'N')+'"></span><b class="rtag num '+rateCls(s.ratings[id])+'">'+s.ratings[id]+'</b></div>';}).join('')+'</div>'; }
