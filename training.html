@@ -172,7 +172,7 @@ select.field{appearance:none;-webkit-appearance:none;background-image:url("data:
 .seg button.on{background:var(--seg-on);box-shadow:0 3px 8px rgba(0,0,0,.12),0 1px 1px rgba(0,0,0,.04);}
 
 .att-gh{min-height:36px;padding:8px 16px;background:var(--fill2);font-size:13px;font-weight:600;color:var(--label2);}
-.att-sh{min-height:28px;padding:5px 16px;padding-inline-start:28px;font-size:12px;font-weight:700;color:var(--tint);background:var(--bg2,transparent);border-top:.5px solid var(--sep)}
+.att-gh,.att-sh{white-space:nowrap}.pinfo{display:inline-flex;align-items:center;gap:3px;margin-inline-start:8px;font-size:12px;font-weight:600;color:var(--label2)}.pinfo.done{color:var(--green)}.pinfo.over{color:var(--red)}.pinfo .i{width:13px;height:13px}.att-sh .pmore,.att-gh .pmore{background:none;border:none;color:var(--tint);font:inherit;font-size:12px;font-weight:700;margin-inline-start:auto;padding:0}.att-gh .pmore{margin-inline-start:10px}.att-sh{display:flex;align-items:center;min-height:28px;padding:5px 16px;padding-inline-start:28px;font-size:12px;font-weight:700;color:var(--tint);background:var(--bg2,transparent);border-top:.5px solid var(--sep)}
 .posline{display:flex;align-items:center;gap:6px;min-width:0;white-space:nowrap}.pos2t{overflow:hidden;text-overflow:ellipsis;min-width:0;font-size:12px}.possel{flex:none;border:none;background:var(--fill2);color:var(--label2);font:inherit;font-size:12.5px;font-weight:600;border-radius:7px;padding:2px 6px;margin:1px 0;max-width:120px}
 .att-gh .lnk{background:none;border:none;color:var(--tint);font-size:13px;font-weight:600;margin-inline-start:auto;}
 .ck{width:24px;height:24px;border-radius:50%;border:1.6px solid var(--label3);flex:none;display:inline-flex;align-items:center;justify-content:center;color:transparent;transition:background .15s,border-color .15s;}
@@ -644,7 +644,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261116130633';
+var BUILD='20261116142953';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -781,7 +781,7 @@ var mode = 'local';           // 'local' | 'cloud'
 var db = null, ready = false;
 var isCoach = false;
 var curTab = 'home';
-var ui = {pSel:{}, attFs:{}, pFilter:'all', pSort:'ovr', pDir:'desc', attOpen:false, pSearch:'', teamView:'both'};
+var ui = {posOpen:{}, pSel:{}, attFs:{}, pFilter:'all', pSort:'ovr', pDir:'desc', attOpen:false, pSearch:'', teamView:'both'};
 var QS = {}; location.search.replace(/^\?/,'').split('&').forEach(function(kv){if(!kv)return;var a=kv.split('=');QS[decodeURIComponent(a[0])]=decodeURIComponent(a[1]||'');});
 var LS_KEY = 'saff_training_v1';
 
@@ -2212,10 +2212,15 @@ function attDropdown(s,ps){
       var gp=ps.filter(function(p){return POS_GROUP[p.pos]===g[0]&&passF(p);}).sort(function(a,b){return POS_ORDER.indexOf(a.pos)-POS_ORDER.indexOf(b.pos)||CRANK(a)-CRANK(b)||ovr(b)-ovr(a)||a.name.localeCompare(b.name,'ar');});
       if(!gp.length)return; shown+=gp.length;
       var gn=gp.filter(function(p){return s.att[p.id];}).length, all=gn===gp.length;
-      h+='<div class="cell att-gh">'+g[1]+' · <span class="num">'+gn+'/'+gp.length+'</span><button class="lnk" id="attG-'+g[0]+'" onclick="groupAtt(\''+g[0]+'\','+(!all)+')">'+(all?'إلغاء الكل':'تحديد الكل')+'</button></div>';
       var multi=gp.some(function(p){return p.pos!==gp[0].pos;})||POS_ORDER.filter(function(k){return POS_GROUP[k]===g[0];}).length>1, lastPos=null;
-      gp.forEach(function(p){var on=!!s.att[p.id];
-        if(multi&&p.pos!==lastPos){lastPos=p.pos;var sp=gp.filter(function(x){return x.pos===p.pos;});h+='<div class="cell att-sh" data-pos="'+p.pos+'">'+POS[p.pos].ar+' · <span class="num">'+sp.filter(function(x){return s.att[x.id];}).length+'/'+sp.length+'</span></div>';}
+      // لاعبَين في كل مركز: إذا أكّد اثنان، نوضّحهم ونخفي الباقي (مع زر «عرض الباقي»)
+      var posInfo=function(k){var sp=gp.filter(function(x){return x.pos===k;}), a=sp.filter(function(x){return s.att[x.id];}).length, rest=sp.length-a, done=a>=PER_POS, col=!FN&&done&&!ui.posOpen[k];
+        return {col:col, h:'<span class="pinfo'+(a>PER_POS?' over':done?' done':'')+'">'+(done?ic('check','xs'):'')+'أكّد <span class="num">'+a+'</span> من <span class="num">'+PER_POS+'</span>'+(a===PER_POS?' · مكتمل':a>PER_POS?' · زيادة':'')+'</span>'+
+          (!FN&&done&&rest?'<button class="lnk pmore" data-pos="'+k+'" onclick="event.stopPropagation();ui.posOpen[\''+k+'\']=!ui.posOpen[\''+k+'\'];render()">'+(col?'عرض الباقي ('+rest+')':'إخفاء الباقي')+'</button>':'')};};
+      h+='<div class="cell att-gh">'+g[1]+(multi?' · <span class="num">'+gn+'/'+gp.length+'</span>':posInfo(gp[0].pos).h)+'<button class="lnk" id="attG-'+g[0]+'" onclick="groupAtt(\''+g[0]+'\','+(!all)+')">'+(all?'إلغاء الكل':'تحديد الكل')+'</button></div>';
+      var gv=gp.filter(function(p){return s.att[p.id]||!posInfo(p.pos).col;});
+      gv.forEach(function(p){var on=!!s.att[p.id];
+        if(multi&&p.pos!==lastPos){lastPos=p.pos;h+='<div class="cell att-sh" data-pos="'+p.pos+'">'+POS[p.pos].ar+posInfo(p.pos).h+'</div>';}
         h+='<div class="cell tap attrow'+(on?' on':'')+'" style="'+(!on&&full?'opacity:.4':'')+'" data-id="'+p.id+'" onclick="toggleAtt(\''+p.id+'\')"><span class="ck">'+ic('check','xs')+'</span><div class="body"><div class="t">'+esc(p.name)+'</div><div class="s posline"><select class="possel" aria-label="مركز اللاعب" onclick="event.stopPropagation()" onchange="setMainPos(\''+p.id+'\',this.value)">'+POS_ORDER.map(function(k){return '<option value="'+k+'"'+(p.pos===k?' selected':'')+'>'+POS[k].ar+'</option>';}).join('')+'</select></div></div><span class="v num attovr">'+ovr(p)+'</span>'+
           (function(){var cv=confOf(s,p.id);return '<select class="confsel c-'+(cv||'none')+'" aria-label="حالة التأكيد" onclick="event.stopPropagation()" onchange="applyConf(\''+s.id+'\',\''+p.id+'\',this.value)">'+CONF.map(function(x){return '<option value="'+x[0]+'"'+(cv===x[0]?' selected':'')+'>'+x[1]+'</option>';}).join('')+'</select>';})()+'</div>';
       });
@@ -2236,6 +2241,7 @@ function setMainPos(id,k){
   putMany(m); toast(p.name+' صار '+POS[k].ar);
 }
 // الفلاتر تقبل أكثر من خيار: «الكل» يمسح الاختيار، وأي خيار ثاني يتبدّل (يتفعّل أو يتلغى)
+var PER_POS=2; // كم لاعب نبي في كل مركز
 function multiTog(o,k,n){ if(k==='all')return {}; var m=Object.assign({},o); if(m[k])delete m[k]; else m[k]=true; return Object.keys(m).length>=n?{}:m; }
 function attFTog(k){ ui.attFs=multiTog(ui.attFs,k,4); render(); }
 function pFTog(k){ ui.pSel=multiTog(ui.pFilter==='todo'?{}:ui.pSel,k,4); ui.pFilter='all'; render(); }
