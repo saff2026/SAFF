@@ -612,6 +612,22 @@ body.v2 .pcard:has(.ovr.t-bronze){background:linear-gradient(180deg,rgba(196,131
 .pcard.inform .pc-photo{background:#2b2a24!important;color:#F3D98A!important}.pcard.inform .stars{color:#F3D98A}.pcard.inform .stars .off{color:rgba(255,255,255,.28);opacity:1}
 .if-tag{position:absolute;top:0;left:50%;transform:translateX(-50%);background:linear-gradient(90deg,#9C7419,#F3D98A,#9C7419);color:#1a1300;font-size:10.5px;font-weight:900;padding:2px 10px;border-radius:0 0 9px 9px;letter-spacing:.3px;z-index:1;white-space:nowrap}
 .pcard.inform .pc-top{margin-top:6px}
+@media (prefers-reduced-motion: no-preference){
+  .page.anim .card,.page.anim .pcard,.page.anim .gh,.page.anim .sesslbl{animation:fxRise .5s cubic-bezier(.2,.8,.2,1) both}
+  .nums.bump{animation:fxBump .9s cubic-bezier(.2,.8,.2,1)}
+  .pcard.inform:after{content:'';position:absolute;top:-60%;left:-70%;width:45%;height:220%;background:linear-gradient(100deg,transparent,rgba(255,235,170,.30),transparent);transform:rotate(14deg);animation:fxShine 4.2s ease-in-out infinite;pointer-events:none;z-index:2}
+  .if-tag{animation:fxTag 2.4s ease-in-out infinite}
+  .vopt.pop{animation:fxPop .55s cubic-bezier(.2,.9,.3,1.4)}
+  #geoOk .ei{animation:fxPop .6s cubic-bezier(.2,.9,.3,1.4) both,fxRing 1.4s .4s ease-out 2}
+  .mvp .medal{animation:fxMedal 3.2s ease-in-out infinite}
+}
+@keyframes fxRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes fxBump{0%{transform:scale(1)}25%{transform:scale(1.28);filter:drop-shadow(0 0 14px rgba(255,214,102,.9))}60%{transform:scale(.96)}100%{transform:scale(1);filter:none}}
+@keyframes fxShine{0%{left:-70%}55%,100%{left:140%}}
+@keyframes fxTag{0%,100%{filter:brightness(1)}50%{filter:brightness(1.25)}}
+@keyframes fxPop{0%{transform:scale(.6);opacity:.2}60%{transform:scale(1.12);opacity:1}100%{transform:scale(1)}}
+@keyframes fxRing{0%{box-shadow:0 0 0 0 rgba(52,199,89,.5)}100%{box-shadow:0 0 0 22px rgba(52,199,89,0)}}
+@keyframes fxMedal{0%,100%{box-shadow:0 0 0 0 rgba(212,169,60,0),0 8px 18px -8px rgba(212,169,60,.8)}50%{box-shadow:0 0 0 8px rgba(212,169,60,.18),0 8px 22px -6px rgba(212,169,60,.95)}}
 @media (hover:hover){ body.v2 .pcard:hover{transform:translateY(-3px);box-shadow:0 20px 40px -16px rgba(8,60,40,.3);} }
 body.v2 .ovr{box-shadow:0 6px 14px -6px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.5);}
 body.v2 .pc-photo{box-shadow:0 0 0 2px var(--card),0 0 0 4px rgba(11,122,75,.25);}
@@ -1090,7 +1106,7 @@ function voteInner(sid){
   setModal(h);
 }
 function inSess(s,id){return !!id&&participants(s).indexOf(id)>=0;}
-function castVote(sid,pid){var s=S.sessions[sid],me=myId(); if(!s||!me||!voteOpen(s))return; if(!inSess(s,me)){toast('⚠️ التصويت للاعبي هذا التمرين فقط');return;} if(!inSess(s,pid))return; putVote('sessions/'+sid+'/votes/'+me,pid); toast('تم تصويتك لـ '+pname(pid));}
+function castVote(sid,pid){fxPop('#ov.show .vopt[data-id="'+pid+'"]');var s=S.sessions[sid],me=myId(); if(!s||!me||!voteOpen(s))return; if(!inSess(s,me)){toast('⚠️ التصويت للاعبي هذا التمرين فقط');return;} if(!inSess(s,pid))return; putVote('sessions/'+sid+'/votes/'+me,pid); toast('تم تصويتك لـ '+pname(pid));}
 function goalCount(s){var g={},a={};vals(s.goals).forEach(function(x){if(x.s)g[x.s]=(g[x.s]||0)+1;if(x.a)a[x.a]=(a[x.a]||0)+1;});return {g:g,a:a};}
 // تصويت اللاعبين على أفضل لاعب
 var VOTE_AFTER=2*3600*1000, VOTE_LEN=12*3600*1000;
@@ -1382,12 +1398,12 @@ function upcomingCard(s){
 }
 function scoreCard(s,meta){
   var sc=scoreOf(s);
-  return '<div class="score"'+teamVars(s)+'><div class="tm"><span class="dot A"></span>'+esc(s.teams.A.name)+'</div><div><div class="nums num">'+numsHTML(sc)+'</div>'+(meta?'<div class="meta" style="margin-top:6px">'+meta+'</div>':'')+'</div><div class="tm"><span class="dot B"></span>'+esc(s.teams.B.name)+'</div></div>';
+  return '<div class="score" data-sid="'+s.id+'" data-sc="'+sc.A+'-'+sc.B+'"'+teamVars(s)+'><div class="tm"><span class="dot A"></span>'+esc(s.teams.A.name)+'</div><div><div class="nums num">'+numsHTML(sc)+'</div>'+(meta?'<div class="meta" style="margin-top:6px">'+meta+'</div>':'')+'</div><div class="tm"><span class="dot B"></span>'+esc(s.teams.B.name)+'</div></div>';
 }
 
 /* ---------- التنقل ---------- */
 function go(t){
-  curTab=t;
+  if(curTab!==t) FX.tab=t; curTab=t;
   document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-t')===t);});
   render(); window.scrollTo(0,0);
 }
@@ -1413,7 +1429,22 @@ function render(){
   var el=document.getElementById('pg-'+curTab); el.classList.add('active');
   ({home:renderHome,players:renderPlayers,session:renderSession,archive:renderArchive,stats:renderStats})[curTab](el);
   if(modalRefresh) modalRefresh();
+  afterRenderFx(el);
 }
+/* ---------- حركات خفيفة (تنطفي تلقائياً لمن مفعّل «تقليل الحركة») ---------- */
+var FX={tab:'home',score:{}};
+function fxOff(){try{return window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return false;}}
+function afterRenderFx(el){
+  // دخول البطاقات: فقط أول ما تفتح الصفحة، مو مع كل تحديث للبيانات
+  if(FX.tab===curTab&&!fxOff()){ FX.tab=null; el.classList.add('anim');
+    var items=el.querySelectorAll('.card,.pcard,.gh,.sesslbl'); for(var i=0;i<items.length&&i<16;i++) items[i].style.animationDelay=(i*45)+'ms';
+    clearTimeout(FX.t); FX.t=setTimeout(function(){el.classList.remove('anim');},1400); }
+  // هدف: نبضة على النتيجة إذا تغيّرت
+  document.querySelectorAll('.score[data-sid]').forEach(function(x){ var k=x.getAttribute('data-sid'), v=x.getAttribute('data-sc'), old=FX.score[k];
+    if(old!=null&&old!==v&&!fxOff()){ var n=x.querySelector('.nums'); if(n){ n.classList.remove('bump'); void n.offsetWidth; n.classList.add('bump'); } }
+    FX.score[k]=v; });
+}
+function fxPop(sel){ if(fxOff())return; [60,450].forEach(function(t){setTimeout(function(){var e=document.querySelector(sel); if(e&&!e.classList.contains('pop')){e.classList.add('pop');}},t);}); }
 window.addEventListener('scroll',function(){document.getElementById('nav').classList.toggle('scrolled',window.scrollY>48);},{passive:true});
 
 /* ---------- الرئيسية ---------- */
