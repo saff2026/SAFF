@@ -650,6 +650,25 @@ body.v2 .sheet{border-radius:24px 24px 0 0;}
 body.v2 .ico-tile{border-radius:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.25);}
 body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 
+/* التشكيلة كقائمتين جنب بعض */
+.lu{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;position:relative;margin-top:6px;}
+.lu:before{content:"";position:absolute;top:2px;bottom:2px;left:50%;width:.5px;background:var(--sep);}
+.lcol{min-width:0;display:flex;flex-direction:column;}
+.lu .lh{display:flex;align-items:center;gap:7px;font-weight:800;font-size:15px;margin:0 2px 6px;min-width:0;}
+.lu .lhn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lu .lsep{height:.5px;background:var(--sep);margin:3px 4px;}
+.lu .tok{position:relative;top:auto;left:auto;transform:none;flex-direction:row;align-items:center;width:auto;gap:9px;padding:6px 2px;border-radius:12px;transition:background .15s;z-index:auto;}
+.lu .tok.click:active{background:var(--fill2);}
+.lu .tok.click:active .sh{transform:none;}
+.lu .tok .sh,.lu .tok.subtok .sh{width:34px;height:34px;flex:none;font-size:13px;box-shadow:none;}
+.lu .tok.empty .sh{background:transparent;border:1.5px dashed var(--label3);color:var(--label2);}
+.lu .tok .lt2{min-width:0;flex:1;}
+.lu .tok .nm{margin:0;max-width:none;font-size:14px;line-height:1.3;font-weight:700;color:var(--label);background:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:0;border-radius:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lu .tok.empty .nm{color:var(--label3);font-weight:500;}
+.lu .tok .ps{font-size:12px;font-weight:500;color:var(--label2);direction:inherit;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lu .tok .subtag{position:static;display:inline-block;font-size:10px;line-height:1.6;}
+.lu .tok .ov{top:-6px;left:-9px;}
+
 /* ===== من اليسار لليمين (الإنجليزي والفرنسي) ===== */
 .cell+.cell:before{left:16px;right:0;}
 .cell.ind+.cell:before,.cell+.cell.ind:before{left:60px;right:0;}
@@ -668,10 +687,11 @@ select.field{background-position:calc(100% - 14px) 50%;padding-left:12px;padding
 .confsel{width:112px;font-size:12.5px;}
 .confseg{width:200px;} .confseg button{font-size:12px;padding-left:2px;padding-right:2px;}
 .confrow .body .t{unicode-bidi:plaintext;text-align:left;}
+.lu .tok .nm{unicode-bidi:plaintext;text-align:left;}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261117162422';
+var BUILD='20261117181500';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -1895,9 +1915,9 @@ function renderSession(el){
       '<div class="foot" style="margin:6px 2px 10px">'+(s.noSubs?'Each team plays with the formation’s number only, and extras stay on the bench.':'Each team has a sub, and every player rests once.')+'</div></div>'; }
   h+='<div class="card pad"><div class="teams-h2"><div class="th"><div class="tn"><span class="dot A"></span>'+esc(s.teams.A.name)+'</div><div class="thr">'+formBtn(s,'A',C)+'<span class="tag on num">OVR '+(sA||'—')+'</span></div></div><div class="th B"><div class="tn">'+esc(s.teams.B.name)+'<span class="dot B"></span></div><div class="thr"><span class="tag on num">OVR '+(sB||'—')+'</span>'+formBtn(s,'B',C)+'</div></div></div>';
   h+='<div class="balance"><i style="width:'+(sA/tot*100)+'%;background:var(--teamA)"></i><i style="width:'+(sB/tot*100)+'%;background:var(--teamBbar,#C7C7CC)"></i></div>';
-  h+=pitchHTML(s,C);
+  h+=pitchHTML(s,C,true);
   h+=benchHTML(s,C);
-  h+=(C?'<div class="foot" style="margin:12px 2px 0">Tap any position on the pitch to choose a player.</div>':'')+'</div>';
+  h+=(C?'<div class="foot" style="margin:12px 2px 0">Tap any player or empty position to change it.</div>':'')+'</div>';
   if(C) h+=lineupInfoHTML(s);
 
   h+=rotationHTML(s,C);
@@ -3022,13 +3042,14 @@ function setTeamForm(t,fk){
   m['sessions/'+s.id+'/teams/'+t+'/slots']=ids.length?assignSlots(ids.map(P),slotsOf(s2,t)):null;
   putMany(m); toast(s.teams[t].name+' formation: '+fk);
 }
-function pitchHTML(s,C){
-  var h='<div class="pitch'+(isBig(s)?' big':'')+'"'+teamVars(s)+'><div class="ln frame"></div><div class="ln mid"></div><div class="ln circ"></div><div class="ln boxT"></div><div class="ln boxB"></div><div class="pteam B">'+esc(s.teams.B.name)+'</div><div class="pteam A">'+esc(s.teams.A.name)+'</div>';
+// التشكيلة: قائمتان جنب بعض (الفريق الأول يمين والثاني يسار)، كل لاعب تحته مركزه — من الحارس للهجوم
+function pitchHTML(s,C,noHead){
+  var h='<div class="lu"'+teamVars(s)+'>';
   ['A','B'].forEach(function(t){
-    var sl=slotsOf(s,t);
+    var sl=slotsOf(s,t).slice().sort(function(a,b){return a.y-b.y||a.x-b.x;}), last=null;
+    h+='<div class="lcol '+t+'">'+(noHead?'':'<div class="lh"><span class="dot '+t+'"></span><span class="lhn">'+esc(s.teams[t].name)+'</span></div>');
     sl.forEach(function(x){
-      var top = t==='A' ? 96-x.y*0.48 : 4+x.y*0.48;
-      var left = t==='A' ? x.x : 100-x.x;
+      var g=POS_GROUP[x.pos]; if(last!==null&&g!==last) h+='<div class="lsep"></div>'; last=g;
       var pid=s.teams[t].slots[x.id], p=pid&&P(pid);
       var act=C?'onclick="openSlot(\''+t+'\',\''+x.id+'\')"':(p?'onclick="openPlayer(\''+pid+'\')"':'');
       var cls='tok '+t+(act?' click':'');
@@ -3036,19 +3057,20 @@ function pitchHTML(s,C){
         var fin=ratingsVisible(s), rr=s.ratings&&s.ratings[pid], badge=fin&&typeof rr==='number'?'<span class="ov rt num '+(rr>=7.5?'hi':rr>=5.5?'mid':'lo')+'">'+rr+'</span>':'';
         var face=photoSrc(p)?'<img src="'+photoSrc(p)+'" alt="">':esc(p.name.trim().charAt(0));
         var pin=C&&s.status!=='done'&&locksOf(s)[pid]?'<span class="pin">'+ic('lock','xs')+'</span>':'';
-        h+='<div class="'+cls+'" data-pid="'+pid+'" style="top:'+top+'%;left:'+left+'%" '+act+'><div class="sh">'+face+badge+pin+'</div><div class="nm">'+esc(shortName(pid))+'</div></div>';
+        h+='<div class="'+cls+'" data-pid="'+pid+'" '+act+'><div class="sh">'+face+badge+pin+'</div><div class="lt2"><div class="nm">'+esc(p.name)+'</div><div class="ps">'+POS[x.pos].ar+'</div></div></div>';
       }else{
-        h+='<div class="'+cls+' empty" style="top:'+top+'%;left:'+left+'%" '+act+'><div class="sh">'+(C?ic('plus','xs'):'')+'</div><div class="ps">'+POS[x.pos].ar+'</div></div>';
+        h+='<div class="'+cls+' empty" '+act+'><div class="sh">'+(C?ic('plus','xs'):'')+'</div><div class="lt2"><div class="nm">'+(C?'Choose a player':'—')+'</div><div class="ps">'+POS[x.pos].ar+'</div></div></div>';
       }
     });
-    // البديل في الزاوية بجانب منطقة جزاء فريقه
+    // البديل آخر القائمة
     subsOf(s,t).filter(function(id){return P(id);}).slice(0,1).forEach(function(id){
-      var p=P(id), top=t==='A'?91:9, fin=ratingsVisible(s), rr=s.ratings&&s.ratings[id];
+      var p=P(id), fin=ratingsVisible(s), rr=s.ratings&&s.ratings[id];
       var face=photoSrc(p)?'<img src="'+photoSrc(p)+'" alt="">':esc(p.name.trim().charAt(0));
       var badge=fin&&typeof rr==='number'?'<span class="ov rt num '+(rr>=7.5?'hi':rr>=5.5?'mid':'lo')+'">'+rr+'</span>':'';
-      h+='<div class="tok '+t+' click subtok" data-pid="'+id+'" style="top:'+top+'%;left:89%" onclick="'+(C?'openSubPicker(\''+t+'\')':'openPlayer(\''+id+'\')')+'"><span class="subtag">Sub</span><div class="sh">'+face+badge+'</div><div class="nm">'+esc(shortName(id))+'</div></div>';
+      h+='<div class="lsep"></div><div class="tok '+t+' click subtok" data-pid="'+id+'" onclick="'+(C?'openSubPicker(\''+t+'\')':'openPlayer(\''+id+'\')')+'"><div class="sh">'+face+badge+'</div><div class="lt2"><div class="nm">'+esc(p.name)+'</div><div class="ps"><span class="subtag">Sub</span></div></div></div>';
     });
-    if(C&&!s.noSubs&&!subsOf(s,t).filter(function(id){return P(id);}).length) h+='<div class="tok '+t+' click empty subtok" id="addSub-'+t+'" style="top:'+(t==='A'?91:9)+'%;left:89%" onclick="openSubPicker(\''+t+'\')"><span class="subtag">Sub</span><div class="sh">'+ic('plus','xs')+'</div></div>';
+    if(C&&!s.noSubs&&!subsOf(s,t).filter(function(id){return P(id);}).length) h+='<div class="lsep"></div><div class="tok '+t+' click empty subtok" id="addSub-'+t+'" onclick="openSubPicker(\''+t+'\')"><div class="sh">'+ic('plus','xs')+'</div><div class="lt2"><div class="nm">Add a sub</div><div class="ps"><span class="subtag">Sub</span></div></div></div>';
+    h+='</div>';
   });
   return h+'</div>';
 }
