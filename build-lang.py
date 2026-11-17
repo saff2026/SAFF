@@ -111,7 +111,6 @@ select.field{background-position:calc(100% - 14px) 50%;padding-left:12px;padding
 .confsel{width:112px;font-size:12.5px;}
 .confseg{width:200px;} .confseg button{font-size:12px;padding-left:2px;padding-right:2px;}
 .confrow .body .t{unicode-bidi:plaintext;text-align:left;}
-.lu .tok .nm{unicode-bidi:plaintext;text-align:left;}
 """
 EXTRA_CSS = {'en': '', 'fr': """
 .nav .org{font-size:17px;letter-spacing:-.2px;}
