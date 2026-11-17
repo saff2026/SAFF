@@ -3,9 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <script>/* اللغة: إذا اختار المستخدم لغة ثانية يفتح صفحتها مباشرة */
-var LANG='ar', PAGE_AR='training.html', PAGE_EN='training-en.html';
-try{var _lw=localStorage.getItem('saff_tr_lang');if(_lw&&_lw!==LANG&&!/[?&]nolang\b/.test(location.search))location.replace((_lw==='en'?PAGE_EN:PAGE_AR)+location.search+location.hash);}catch(e){}
-function switchLang(){var to=LANG==='ar'?'en':'ar';try{localStorage.setItem('saff_tr_lang',to);}catch(e){}location.replace((to==='en'?PAGE_EN:PAGE_AR)+location.search+location.hash);}
+var LANG='ar', LANG_PAGES={ar:'training.html',en:'training-en.html',fr:'training-fr.html'};
+var LANG_TITLE='اللغة';
+try{var _lw=localStorage.getItem('saff_tr_lang');if(_lw&&_lw!==LANG&&LANG_PAGES[_lw]&&!/[?&]nolang\b/.test(location.search))location.replace(LANG_PAGES[_lw]+location.search+location.hash);}catch(e){}
+function switchLang(to){try{localStorage.setItem('saff_tr_lang',to);}catch(e){}if(to===LANG){closeModal();return;}location.replace(LANG_PAGES[to]+location.search+location.hash);}
+function openLang(){var L=[['ar','العربية'],['en','English'],['fr','Français']].filter(function(x){return LANG_PAGES[x[0]];});openModal(mh(LANG_TITLE)+'<div class="card">'+L.map(function(x){return '<div class="cell tap" id="lang-'+x[0]+'" onclick="switchLang(\''+x[0]+'\')"><div class="body"><div class="t" lang="'+x[0]+'">'+x[1]+'</div></div>'+(x[0]===LANG?'<span style="color:var(--tint);font-weight:800">✓</span>':'')+'</div>';}).join('')+'</div>');} // i18n-skip
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -88,7 +90,6 @@ svg.i.f{fill:currentColor;stroke:none;}
 .coach-btn.coach{background:var(--tint-soft);color:var(--tint);}
 .theme-btn{width:32px;height:32px;border-radius:50%;border:none;background:var(--fill);color:var(--label);display:inline-flex;align-items:center;justify-content:center;flex:none;}
 .theme-btn:active{transform:scale(.92);}
-.lang-btn{font:700 12px/1 -apple-system,system-ui,sans-serif;letter-spacing:.02em;}
 .coach-btn:active{transform:scale(.95);}
 
 /* ============ العنوان الكبير ============ */
@@ -688,7 +689,7 @@ document.addEventListener('DOMContentLoaded',function(){applyTheme();});
     <picture><source srcset="saff-white.png" media="(prefers-color-scheme: dark)"><img class="logo" src="saff.png" alt="الاتحاد السعودي لكرة القدم"></picture>
     <div class="org">تمرين ساف</div>
     <div class="ntitle" id="navTitle">تمرين ساف</div>
-    <button class="theme-btn lang-btn" id="langBtn" onclick="switchLang()" aria-label="English" lang="en">EN</button>
+    <button class="theme-btn" id="langBtn" onclick="openLang()" aria-label="اللغة · Language · Langue"><svg class="i s" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.4 3.5 5.3 3.5 8.5s-1.1 6.1-3.5 8.5c-2.4-2.4-3.5-5.3-3.5-8.5S9.6 5.9 12 3.5z"/></svg></button> <!-- i18n-skip -->
     <button class="theme-btn" id="themeBtn" onclick="openTheme()" aria-label="المظهر"><svg class="i s" viewBox="0 0 24 24"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg></button>
     <button class="coach-btn" id="coachBtn" onclick="coachClick()" aria-label="صلاحيات مجلس الإدارة">صلاحيات مجلس الإدارة</button>
   </div>
@@ -1381,10 +1382,10 @@ function lateSummaryHTML(s){
   return h+'</div>';
 }
 /* ---------- ألوان الفرق (يختارها مجلس الإدارة لكل تمرين) ---------- */
-var TEAM_COLORS=[['#0A7D4F','أخضر','Green'],['#FFFFFF','أبيض','White'],['#E5484D','أحمر','Red'],['#1E6FD9','أزرق','Blue'],['#F5C518','أصفر','Yellow'],['#F08A24','برتقالي','Orange'],['#7E57C2','بنفسجي','Purple'],['#36B3E5','سماوي','Sky blue'],['#1C1C1E','أسود','Black'],['#8E8E93','رمادي','Grey']]; // i18n-skip
-// اسم لون الفريق بلغة الصفحة: «الأخضر» ⇄ «Green» (حتى لو حُفظ بلغة ثانية)
-function teamNameL(n){if(!n||typeof TEAM_COLORS==='undefined')return n;for(var i=0;i<TEAM_COLORS.length;i++){var c=TEAM_COLORS[i];if(n==='ال'+c[1]||n===c[2])return LANG==='en'?c[2]:'ال'+c[1];}return n;} // i18n-skip
-function colorNm(c){return LANG==='en'?c[2]:c[1];}
+var TEAM_COLORS=[['#0A7D4F','أخضر','Green','Vert'],['#FFFFFF','أبيض','White','Blanc'],['#E5484D','أحمر','Red','Rouge'],['#1E6FD9','أزرق','Blue','Bleu'],['#F5C518','أصفر','Yellow','Jaune'],['#F08A24','برتقالي','Orange','Orange'],['#7E57C2','بنفسجي','Purple','Violet'],['#36B3E5','سماوي','Sky blue','Bleu ciel'],['#1C1C1E','أسود','Black','Noir'],['#8E8E93','رمادي','Grey','Gris']]; // i18n-skip
+// اسم لون الفريق بلغة الصفحة: «الأخضر» ⇄ «Green» ⇄ «Vert» (حتى لو حُفظ بلغة ثانية)
+function teamNameL(n){if(!n||typeof TEAM_COLORS==='undefined')return n;for(var i=0;i<TEAM_COLORS.length;i++){var c=TEAM_COLORS[i];if(n==='ال'+c[1]||n===c[2]||n===c[3])return LANG==='en'?c[2]:LANG==='fr'?c[3]:'ال'+c[1];}return n;} // i18n-skip
+function colorNm(c){return LANG==='en'?c[2]:LANG==='fr'?c[3]:c[1];}
 function teamColor(s,t){var c=s&&s.teams&&s.teams[t]&&s.teams[t].color;return /^#[0-9A-Fa-f]{6}$/.test(c||'')?c.toUpperCase():(t==='A'?'#0A7D4F':'#FFFFFF');}
 function isLightColor(c){var r=parseInt(c.substr(1,2),16),g=parseInt(c.substr(3,2),16),b=parseInt(c.substr(5,2),16);return (0.299*r+0.587*g+0.114*b)>170;}
 function teamFg(s,t){var c=teamColor(s,t);if(t==='B'&&c==='#FFFFFF')return '#0A7D4F';return isLightColor(c)?'#1C1C1E':'#FFFFFF';}

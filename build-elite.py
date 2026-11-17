@@ -22,7 +22,8 @@ CHANGES = [
     ('الاتحاد السعودي لكرة القدم · ', '', 1),             # تذييل صور المشاركة
     ('var FEAT_JOKER = false;', 'var FEAT_JOKER = true;', 1),  # وسام الجوكر لنخبة السبت فقط
     ('var FEAT_SELFISH = true;', 'var FEAT_SELFISH = false;', 1),  # خاصية «أناني» لتمرين ساف فقط
-    ("PAGE_AR='training.html', PAGE_EN='training-en.html'", "PAGE_AR='elite.html', PAGE_EN='elite-en.html'", 1),  # زر اللغة
+    ("LANG_PAGES={ar:'training.html',en:'training-en.html',fr:'training-fr.html'}", "LANG_PAGES={ar:'elite.html'}", 1),  # نخبة السبت بالعربي فقط
+    ('    <button class="theme-btn" id="langBtn" onclick="openLang()"', '    <button class="theme-btn" id="langBtn" style="display:none" onclick="openLang()"', 1),  # بدون زر اللغة
 ]
 
 for old, new, at_least in CHANGES:
@@ -31,7 +32,7 @@ for old, new, at_least in CHANGES:
         sys.exit('خطأ: لم أجد "%s" (وجدت %d مرة، المتوقع %d على الأقل)' % (old, n, at_least))
     s = s.replace(old, new)
 
-for leftover in ['تمرين ساف', 'saff_tr_', 'saff_training_v1', 'var ROOT = "training";', 'saff.png', 'saff-white.png', 'icon-saff', 'الاتحاد السعودي', 'training.html', 'training-en.html']:
+for leftover in ['تمرين ساف', 'saff_tr_', 'saff_training_v1', 'var ROOT = "training";', 'saff.png', 'saff-white.png', 'icon-saff', 'الاتحاد السعودي', 'training.html', 'training-en.html', 'training-fr.html']:
     if leftover in s:
         sys.exit('خطأ: بقي "%s" في الملف الجديد' % leftover)
 

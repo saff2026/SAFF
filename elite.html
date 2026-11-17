@@ -3,9 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <script>/* اللغة: إذا اختار المستخدم لغة ثانية يفتح صفحتها مباشرة */
-var LANG='ar', PAGE_AR='elite.html', PAGE_EN='elite-en.html';
-try{var _lw=localStorage.getItem('saff_el_lang');if(_lw&&_lw!==LANG&&!/[?&]nolang\b/.test(location.search))location.replace((_lw==='en'?PAGE_EN:PAGE_AR)+location.search+location.hash);}catch(e){}
-function switchLang(){var to=LANG==='ar'?'en':'ar';try{localStorage.setItem('saff_el_lang',to);}catch(e){}location.replace((to==='en'?PAGE_EN:PAGE_AR)+location.search+location.hash);}
+var LANG='ar', LANG_PAGES={ar:'elite.html'};
+var LANG_TITLE='اللغة';
+try{var _lw=localStorage.getItem('saff_el_lang');if(_lw&&_lw!==LANG&&LANG_PAGES[_lw]&&!/[?&]nolang\b/.test(location.search))location.replace(LANG_PAGES[_lw]+location.search+location.hash);}catch(e){}
+function switchLang(to){try{localStorage.setItem('saff_el_lang',to);}catch(e){}if(to===LANG){closeModal();return;}location.replace(LANG_PAGES[to]+location.search+location.hash);}
+function openLang(){var L=[['ar','العربية'],['en','English'],['fr','Français']].filter(function(x){return LANG_PAGES[x[0]];});openModal(mh(LANG_TITLE)+'<div class="card">'+L.map(function(x){return '<div class="cell tap" id="lang-'+x[0]+'" onclick="switchLang(\''+x[0]+'\')"><div class="body"><div class="t" lang="'+x[0]+'">'+x[1]+'</div></div>'+(x[0]===LANG?'<span style="color:var(--tint);font-weight:800">✓</span>':'')+'</div>';}).join('')+'</div>');} // i18n-skip
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -88,7 +90,6 @@ svg.i.f{fill:currentColor;stroke:none;}
 .coach-btn.coach{background:var(--tint-soft);color:var(--tint);}
 .theme-btn{width:32px;height:32px;border-radius:50%;border:none;background:var(--fill);color:var(--label);display:inline-flex;align-items:center;justify-content:center;flex:none;}
 .theme-btn:active{transform:scale(.92);}
-.lang-btn{font:700 12px/1 -apple-system,system-ui,sans-serif;letter-spacing:.02em;}
 .coach-btn:active{transform:scale(.95);}
 
 /* ============ العنوان الكبير ============ */
@@ -688,7 +689,7 @@ document.addEventListener('DOMContentLoaded',function(){applyTheme();});
     <img class="logo" src="emblem.png?v=3" alt="">
     <div class="org">تمرين نخبة السبت</div>
     <div class="ntitle" id="navTitle">تمرين نخبة السبت</div>
-    <button class="theme-btn lang-btn" id="langBtn" onclick="switchLang()" aria-label="English" lang="en">EN</button>
+    <button class="theme-btn" id="langBtn" style="display:none" onclick="openLang()" aria-label="اللغة · Language · Langue"><svg class="i s" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.4 3.5 5.3 3.5 8.5s-1.1 6.1-3.5 8.5c-2.4-2.4-3.5-5.3-3.5-8.5S9.6 5.9 12 3.5z"/></svg></button> <!-- i18n-skip -->
     <button class="theme-btn" id="themeBtn" onclick="openTheme()" aria-label="المظهر"><svg class="i s" viewBox="0 0 24 24"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg></button>
     <button class="coach-btn" id="coachBtn" onclick="coachClick()" aria-label="صلاحيات مجلس الإدارة">صلاحيات مجلس الإدارة</button>
   </div>

@@ -3,10 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <script>/* اللغة: إذا اختار المستخدم لغة ثانية يفتح صفحتها مباشرة */
-var LANG='en', PAGE_AR='training.html', PAGE_EN='training-en.html';
-try{var _lw=localStorage.getItem('saff_tr_lang');if(_lw&&_lw!==LANG&&!/[?&]nolang\b/.test(location.search))location.replace((_lw==='en'?PAGE_EN:PAGE_AR)+location.search+location.hash);}catch(e){}
+var LANG='en', LANG_PAGES={ar:'training.html',en:'training-en.html',fr:'training-fr.html'};
+var LANG_TITLE='Language';
+try{var _lw=localStorage.getItem('saff_tr_lang');if(_lw&&_lw!==LANG&&LANG_PAGES[_lw]&&!/[?&]nolang\b/.test(location.search))location.replace(LANG_PAGES[_lw]+location.search+location.hash);}catch(e){}
 (function(){var P=CanvasRenderingContext2D.prototype,f=P.fillText,m=P.measureText;function w(c,t){t=String(t);return c.direction==='rtl'&&/[A-Za-z]/.test(t)?'\u2066'+t+'\u2069':t;}P.fillText=function(t,x,y,mw){return mw===undefined?f.call(this,w(this,t),x,y):f.call(this,w(this,t),x,y,mw);};P.measureText=function(t){return m.call(this,w(this,t));};})();
-function switchLang(){var to=LANG==='ar'?'en':'ar';try{localStorage.setItem('saff_tr_lang',to);}catch(e){}location.replace((to==='en'?PAGE_EN:PAGE_AR)+location.search+location.hash);}
+function switchLang(to){try{localStorage.setItem('saff_tr_lang',to);}catch(e){}if(to===LANG){closeModal();return;}location.replace(LANG_PAGES[to]+location.search+location.hash);}
+function openLang(){var L=[['ar','العربية'],['en','English'],['fr','Français']].filter(function(x){return LANG_PAGES[x[0]];});openModal(mh(LANG_TITLE)+'<div class="card">'+L.map(function(x){return '<div class="cell tap" id="lang-'+x[0]+'" onclick="switchLang(\''+x[0]+'\')"><div class="body"><div class="t" lang="'+x[0]+'">'+x[1]+'</div></div>'+(x[0]===LANG?'<span style="color:var(--tint);font-weight:800">✓</span>':'')+'</div>';}).join('')+'</div>');} // i18n-skip
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -89,7 +91,6 @@ svg.i.f{fill:currentColor;stroke:none;}
 .coach-btn.coach{background:var(--tint-soft);color:var(--tint);}
 .theme-btn{width:32px;height:32px;border-radius:50%;border:none;background:var(--fill);color:var(--label);display:inline-flex;align-items:center;justify-content:center;flex:none;}
 .theme-btn:active{transform:scale(.92);}
-.lang-btn{font:700 12px/1 -apple-system,system-ui,sans-serif;letter-spacing:.02em;}
 .coach-btn:active{transform:scale(.95);}
 
 /* ============ العنوان الكبير ============ */
@@ -649,7 +650,7 @@ body.v2 .sheet{border-radius:24px 24px 0 0;}
 body.v2 .ico-tile{border-radius:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.25);}
 body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 
-/* ===== English (left to right) ===== */
+/* ===== من اليسار لليمين (الإنجليزي والفرنسي) ===== */
 .cell+.cell:before{left:16px;right:0;}
 .cell.ind+.cell:before,.cell+.cell.ind:before{left:60px;right:0;}
 body.v2 .cell+.cell:before{right:16px;left:16px;}
@@ -708,7 +709,7 @@ document.addEventListener('DOMContentLoaded',function(){applyTheme();});
     <picture><source srcset="saff-white.png" media="(prefers-color-scheme: dark)"><img class="logo" src="saff.png" alt="Saudi Arabian Football Federation"></picture>
     <div class="org">SAFF Training</div>
     <div class="ntitle" id="navTitle">SAFF Training</div>
-    <button class="theme-btn lang-btn" id="langBtn" onclick="switchLang()" aria-label="العربية" lang="ar" style="font-size:15px">ع</button> <!-- i18n-skip -->
+    <button class="theme-btn" id="langBtn" onclick="openLang()" aria-label="اللغة · Language · Langue"><svg class="i s" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.4 3.5 5.3 3.5 8.5s-1.1 6.1-3.5 8.5c-2.4-2.4-3.5-5.3-3.5-8.5S9.6 5.9 12 3.5z"/></svg></button> <!-- i18n-skip -->
     <button class="theme-btn" id="themeBtn" onclick="openTheme()" aria-label="Appearance"><svg class="i s" viewBox="0 0 24 24"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg></button>
     <button class="coach-btn" id="coachBtn" onclick="coachClick()" aria-label="Board access">Board access</button>
   </div>
@@ -984,8 +985,8 @@ function participants(s){ // كل من شارك: الحضور + المسجلين
 }
 /* ---------- تمييز العدد بالعربية الصحيحة ----------
    1: هدف واحد · 2: هدفان (هدفين بعد حرف جر) · 3–10: أهداف · 11–99: هدفًا (منصوب منوّن) · 100: هدف */
-var NOUN={goal:['goal','goals'],vote:['vote','votes'],assist:['assist','assists'],time:['time','times'],player:['player','players'],session:['session','sessions'],minute:['minute','minutes'],year:['year','years'],photo:['photo','photos'],substitution:['substitution','substitutions'],late:['late','late'],SAR:['SAR','SAR']};
-function nounFor(n,w){var f=NOUN[w]||NOUN[String(w).toLowerCase()]; if(!f)return w; n=Math.abs(+n||0); return n===1?f[0]:f[1];}
+var NOUN={goal:['goal','goals'],vote:['vote','votes'],assist:['assist','assists'],time:['time','times'],player:['player','players'],session:['session','sessions'],minute:['minute','minutes'],year:['year','years'],photo:['photo','photos'],substitution:['substitution','substitutions'],late:['late','late'],sar:['SAR','SAR']};
+function nounFor(n,w){var f=NOUN[String(w).toLowerCase()]; if(!f)return w; n=Math.abs(+n||0); return n===1?f[0]:f[1];}
 function cnt(n,w,gen,tag){n=Math.round(+n||0); var num=tag?'<'+tag+'>'+n+'</'+tag.split(' ')[0]+'>':String(n); return num+' '+nounFor(n,w);}
 function scoreOf(s){var a=0,b=0;vals(s.goals).forEach(function(g){if(g.t==='A')a++;else if(g.t==='B')b++;});return {A:a,B:b};}
 function teamStrength(s,t){
@@ -1384,10 +1385,10 @@ function lateSummaryHTML(s){
   return h+'</div>';
 }
 /* ---------- ألوان الفرق (يختارها مجلس الإدارة لكل تمرين) ---------- */
-var TEAM_COLORS=[['#0A7D4F','أخضر','Green'],['#FFFFFF','أبيض','White'],['#E5484D','أحمر','Red'],['#1E6FD9','أزرق','Blue'],['#F5C518','أصفر','Yellow'],['#F08A24','برتقالي','Orange'],['#7E57C2','بنفسجي','Purple'],['#36B3E5','سماوي','Sky blue'],['#1C1C1E','أسود','Black'],['#8E8E93','رمادي','Grey']]; // i18n-skip
-// اسم لون الفريق بلغة الصفحة: «الأخضر» ⇄ «Green» (حتى لو حُفظ بلغة ثانية)
-function teamNameL(n){if(!n||typeof TEAM_COLORS==='undefined')return n;for(var i=0;i<TEAM_COLORS.length;i++){var c=TEAM_COLORS[i];if(n==='ال'+c[1]||n===c[2])return LANG==='en'?c[2]:'ال'+c[1];}return n;} // i18n-skip
-function colorNm(c){return LANG==='en'?c[2]:c[1];}
+var TEAM_COLORS=[['#0A7D4F','أخضر','Green','Vert'],['#FFFFFF','أبيض','White','Blanc'],['#E5484D','أحمر','Red','Rouge'],['#1E6FD9','أزرق','Blue','Bleu'],['#F5C518','أصفر','Yellow','Jaune'],['#F08A24','برتقالي','Orange','Orange'],['#7E57C2','بنفسجي','Purple','Violet'],['#36B3E5','سماوي','Sky blue','Bleu ciel'],['#1C1C1E','أسود','Black','Noir'],['#8E8E93','رمادي','Grey','Gris']]; // i18n-skip
+// اسم لون الفريق بلغة الصفحة: «الأخضر» ⇄ «Green» ⇄ «Vert» (حتى لو حُفظ بلغة ثانية)
+function teamNameL(n){if(!n||typeof TEAM_COLORS==='undefined')return n;for(var i=0;i<TEAM_COLORS.length;i++){var c=TEAM_COLORS[i];if(n==='ال'+c[1]||n===c[2]||n===c[3])return LANG==='en'?c[2]:LANG==='fr'?c[3]:'ال'+c[1];}return n;} // i18n-skip
+function colorNm(c){return LANG==='en'?c[2]:LANG==='fr'?c[3]:c[1];}
 function teamColor(s,t){var c=s&&s.teams&&s.teams[t]&&s.teams[t].color;return /^#[0-9A-Fa-f]{6}$/.test(c||'')?c.toUpperCase():(t==='A'?'#0A7D4F':'#FFFFFF');}
 function isLightColor(c){var r=parseInt(c.substr(1,2),16),g=parseInt(c.substr(3,2),16),b=parseInt(c.substr(5,2),16);return (0.299*r+0.587*g+0.114*b)>170;}
 function teamFg(s,t){var c=teamColor(s,t);if(t==='B'&&c==='#FFFFFF')return '#0A7D4F';return isLightColor(c)?'#1C1C1E':'#FFFFFF';}
@@ -1869,7 +1870,7 @@ function renderSession(el){
   if(!s){
     h+=largeTitle('Session','');
     h+='<div class="card"><div class="empty"><div class="ei">'+ic('ball')+'</div><b>No open session</b>'+
-      (isCoach?'Create a session to pick players and split the teams.<br><button class="btn" id="newSess" style="margin-top:14px" onclick="openNewSession()">'+ic('plus','s')+'New session</button>':'When the board creates a session, the lineup will show here.')+'</div></div>';
+      (isCoach?'Create a session to pick players and balance the teams.<br><button class="btn" id="newSess" style="margin-top:14px" onclick="openNewSession()">'+ic('plus','s')+'New session</button>':'When the board creates a session, the lineup will show here.')+'</div></div>';
     el.innerHTML=h; return;
   }
   var C=isCoach, att=attendees(s);
@@ -1885,9 +1886,9 @@ function renderSession(el){
   }
 
   var sA=teamStrength(s,'A'), sB=teamStrength(s,'B'), tot=(sA+sB)||1;
-  h+=gh('Lineup',C?lnk('Photo','lineupImage()','lineupImg','down')+lnk('Split','autoBalance()','autoBal','scale')+lnk('Rules','openLocks()','lockBtn','lock')+lnk('Clear','clearLineup()','clearL'):'');
+  h+=gh('Lineup',C?lnk('Photo','lineupImage()','lineupImg','down')+lnk('Balance','autoBalance()','autoBal','scale')+lnk('Rules','openLocks()','lockBtn','lock')+lnk('Clear','clearLineup()','clearL'):'');
   if(C){ var bp=BAL_PRI[s.balPri]?s.balPri:'mix';
-    h+='<div class="balpri"><span class="small muted">Auto-split priority</span><div class="seg" id="balPri">'+['str','mix','pos'].map(function(k){return '<button class="'+(bp===k?'on':'')+'" id="bp-'+k+'" onclick="setBalPri(\''+k+'\')">'+BAL_PRI[k].l+'</button>';}).join('')+'</div>'+
+    h+='<div class="balpri"><span class="small muted">Auto-balance priority</span><div class="seg" id="balPri">'+['str','mix','pos'].map(function(k){return '<button class="'+(bp===k?'on':'')+'" id="bp-'+k+'" onclick="setBalPri(\''+k+'\')">'+BAL_PRI[k].l+'</button>';}).join('')+'</div>'+
       '<div class="foot" style="margin:6px 2px 10px">'+{str:'Most important is that the two teams are very close in strength, even if some play in their second position.',mix:'Balances close strength with everyone playing in their positions.',pos:'Most important is that as many as possible play in their main (first) position, even if the strength gap grows a little.'}[bp]+'</div>'+
       '<span class="small muted">Subs</span><div class="seg" id="subsMode"><button class="'+(s.noSubs?'':'on')+'" id="subs-on" onclick="setSubsMode(false)">A sub per team</button><button class="'+(s.noSubs?'on':'')+'" id="subs-off" onclick="setSubsMode(true)">No subs</button></div>'+
       '<div class="foot" style="margin:6px 2px 10px">'+(s.noSubs?'Each team plays with the formation’s number only, and extras stay on the bench.':'Each team has a sub, and every player rests once.')+'</div></div>'; }
@@ -2042,16 +2043,16 @@ function money(n){n=Math.round(n*100)/100;return cnt(n,'SAR');}
 function kittyCardH(s){
   var m=kSum(s);
   var sub=!m.per?'Set the amount and track who paid':'per player '+money(m.per)+' · Paid <span class="num">'+m.paidN+'</span> of <span class="num">'+m.n+'</span>'+(m.left?' · <span style="color:var(--orange)">Remaining '+money(m.left)+'</span>':' · <span style="color:var(--green)">Complete ✓</span>');
-  return gh('Kitty')+'<div class="card"><div class="cell tap ind" id="kittyBtn" onclick="openKitty(\''+s.id+'\')">'+tile('#34C759','trophy')+'<div class="body"><div class="t">Kitty</div><div class="s">'+sub+'</div></div>'+chev()+'</div></div>';
+  return gh('Split')+'<div class="card"><div class="cell tap ind" id="kittyBtn" onclick="openKitty(\''+s.id+'\')">'+tile('#34C759','trophy')+'<div class="body"><div class="t">Split</div><div class="s">'+sub+'</div></div>'+chev()+'</div></div>';
 }
 function openKitty(sid){ if(!isCoach)return; openModal(''); kittyInner(sid); modalRefresh=function(){ if(!S.sessions[sid]){closeModal();return;} kittyInner(sid); }; }
 function arNum(v){return String(v||'').replace(/[٠-٩]/g,function(d){return '٠١٢٣٤٥٦٧٨٩'.indexOf(d);}).replace(/[^\d.]/g,'');}
 function kittyInner(sid){
   var s=S.sessions[sid]; if(!s)return; var k=kOf(s), m=kSum(s), ids=kPlayers(s);
-  var h=mh('Kitty');
+  var h=mh('Split');
   h+='<div class="card pad"><div class="kgrid"><label><span>Total cost (SAR)</span><input class="field num" id="kTotal" inputmode="decimal" placeholder="e.g. 350" value="'+(k.total||'')+'" onchange="setKitty(\''+sid+'\',\'total\',this.value)"></label>'+
      '<label><span>Per player (SAR)</span><input class="field num" id="kPer" inputmode="decimal" placeholder="'+(k.total&&m.n?Math.ceil(k.total/m.n):'e.g. 25')+'" value="'+(k.per||'')+'" onchange="setKitty(\''+sid+'\',\'per\',this.value)"></label></div>'+
-     '<div class="small muted" style="margin-top:8px">'+(k.total&&!k.per&&m.n?'Splitting '+money(k.total)+' between '+cnt(m.n,'Player')+' = <b style="color:var(--label)">'+money(m.per)+'</b> per player (rounded up).':'Enter the total cost and the amount is split automatically, or enter the per-player amount directly.')+'</div></div>';
+     '<div class="small muted" style="margin-top:8px">'+(k.total&&!k.per&&m.n?'Dividing '+money(k.total)+' between '+cnt(m.n,'Player')+' = <b style="color:var(--label)">'+money(m.per)+'</b> per player (rounded up).':'Enter the total cost and the amount is divided automatically, or enter the per-player amount directly.')+'</div></div>';
   if(m.per&&m.n){
     h+='<div class="kstats" id="kStats"><div><b class="num">'+m.paidN+'/'+m.n+'</b><span>Paid</span></div><div><b class="num">'+m.got+'</b><span>Collected (SAR)</span></div><div class="'+(m.left?'warn':'ok')+'"><b class="num">'+m.left+'</b><span>Remaining (SAR)</span></div></div>';
     if(m.total&&m.need>m.total) h+='<div class="small muted" style="text-align:center;margin:-4px 0 10px">If everyone pays: '+money(m.need)+' (over by '+money(m.need-m.total)+' due to rounding)</div>';
@@ -2075,17 +2076,17 @@ function kittyMeH(){
   }).sort(function(a,b){return startTs(b)-startTs(a);}).forEach(function(s){
     var pd=kOf(s).paid[me], per=money(kPer(s)), when=s.status==='done'?' · Session '+niceDate(s.date):'';
     var card=function(id,color,t,sub,click){return '<div class="card" style="margin-top:10px"><div class="cell'+(click?' tap ind':'')+'" id="'+id+'" data-sid="'+s.id+'"'+(click?' onclick="'+click+'"':'')+'>'+tile(color,'trophy')+'<div class="body"><div class="t">'+t+'</div><div class="s">'+sub+'</div></div>'+(click?chev():'')+'</div></div>';};
-    if(!pd) h+=card('kMe','#FF9500','Kitty: you owe '+per,'Tap here if you paid'+when,'kittyPaidMe(\''+s.id+'\')');
+    if(!pd) h+=card('kMe','#FF9500','Split: you owe '+per,'Tap here if you paid'+when,'kittyPaidMe(\''+s.id+'\')');
     else if(s.status!=='done') h+=pd==='self'
-      ?card('kMeDone','#34C759','✓ Kitty paid',per+' · You marked it yourself · tap to undo','kittyUnpayMe(\''+s.id+'\')')
-      :card('kMeDone','#34C759','✓ Kitty paid',per+' · Confirmed by the board','');
+      ?card('kMeDone','#34C759','✓ Split paid',per+' · You marked it yourself · tap to undo','kittyUnpayMe(\''+s.id+'\')')
+      :card('kMeDone','#34C759','✓ Split paid',per+' · Confirmed by the board','');
   });
   return h;
 }
 function kittyPaidMe(sid){
   var s=S.sessions[sid], me=myId(); if(!s||!me){askMe();return;}
   if(kPlayers(s).indexOf(me)<0){toast('⚠️ Your name isn’t on this session’s list');return;}
-  askConfirm('Did you pay '+money(kPer(s))+' for the kitty?',function(){putVote('sessions/'+sid+'/kitty/paid/'+me,'self');toast('Done — we’ve recorded that you paid the kitty');},'Yes, I paid');
+  askConfirm('Did you pay '+money(kPer(s))+' for the split?',function(){putVote('sessions/'+sid+'/kitty/paid/'+me,'self');toast('Done — we’ve recorded that you paid your split');},'Yes, I paid');
 }
 function kittyUnpayMe(sid){
   var s=S.sessions[sid], me=myId(); if(!s||!me)return;
@@ -2096,11 +2097,11 @@ function setKitty(sid,key,v){ var n=parseFloat(arNum(v)); put('sessions/'+sid+'/
 function kittyToggle(sid,id){ var s=S.sessions[sid]; if(!s)return; var on=!kOf(s).paid[id]; put('sessions/'+sid+'/kitty/paid/'+id,on?true:null); }
 function kittyAll(sid,on){ var s=S.sessions[sid]; if(!s)return;
   if(on){ var p={}; kPlayers(s).forEach(function(id){p[id]=true;}); put('sessions/'+sid+'/kitty/paid',p); }
-  else askConfirm('Reset the kitty? Everyone becomes “Not paid”.',function(){put('sessions/'+sid+'/kitty/paid',null);},'Delete'); }
-function kittyText(s){var m=kSum(s);return 'Kitty reminder 💰\n'+(sessLabel(s)||'SAFF Training')+' · '+niceDate(s.date)+'\nPer player: '+money(m.per)+'\n\nStill haven’t paid ('+m.unpaid.length+'):\n'+m.unpaid.map(function(id,i){return (i+1)+'. '+pname(id);}).join('\n');}
+  else askConfirm('Reset the split? Everyone becomes “Not paid”.',function(){put('sessions/'+sid+'/kitty/paid',null);},'Delete'); }
+function kittyText(s){var m=kSum(s);return 'Split reminder 💰\n'+(sessLabel(s)||'SAFF Training')+' · '+niceDate(s.date)+'\nPer player: '+money(m.per)+'\n\nStill haven’t paid ('+m.unpaid.length+'):\n'+m.unpaid.map(function(id,i){return (i+1)+'. '+pname(id);}).join('\n');}
 function kittyRemind(sid){ var s=S.sessions[sid]; if(!s)return; var t=kittyText(s);
   var done=function(){toast('Reminder copied — paste it in the group');};
-  var fallback=function(){openModal(mh('Kitty reminder')+'<textarea class="field" id="kText" rows="10" style="height:auto;padding:12px;line-height:1.7">'+esc(t)+'</textarea><div class="foot">Copy the text and paste it in the group.</div>');var x=document.getElementById('kText');if(x){x.focus();x.select();}};
+  var fallback=function(){openModal(mh('Split reminder')+'<textarea class="field" id="kText" rows="10" style="height:auto;padding:12px;line-height:1.7">'+esc(t)+'</textarea><div class="foot">Copy the text and paste it in the group.</div>');var x=document.getElementById('kText');if(x){x.focus();x.select();}};
   try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(done,fallback); return; } }catch(e){}
   fallback(); }
 /* ---------- وضع التجربة: نسخة منفصلة لمجلس الإدارة فقط ---------- */
@@ -2429,7 +2430,7 @@ function rotationHTML(s,C){
   var any=['A','B'].some(function(t){return subsOf(s,t).length;});
   h+=gh('Substitution order');
   if(C) h+='<div class="seg" style="margin-bottom:10px">'+[['att','Attack → Defence'],['def','Defence → Attack'],['best','Best fit for positions']].map(function(o){return '<button class="'+(dir===o[0]?'on':'')+'" id="rot-'+o[0]+'" onclick="put(\'sessions/'+s.id+'/rotDir\',\''+o[0]+'\')">'+o[1]+'</button>';}).join('')+'</div>';
-  if(!any){ return h+'<div class="card"><div class="cell"><div class="body"><div class="s">'+(s.noSubs?'No subs — All players play the whole session.':'No subs. '+(C?'Add a sub for each team below or tap “Split”.':''))+'</div></div></div></div>'; }
+  if(!any){ return h+'<div class="card"><div class="cell"><div class="body"><div class="s">'+(s.noSubs?'No subs — All players play the whole session.':'No subs. '+(C?'Add a sub for each team below or tap “Balance”.':''))+'</div></div></div></div>'; }
   ['A','B'].forEach(function(t){
     var plan=rotationPlan(s,t,dir);
     h+='<div class="foot" style="margin:12px 4px 6px;font-weight:600;color:var(--label);display:flex;align-items:center;gap:6px"><span class="dot '+t+'"></span>'+esc(s.teams[t].name)+'</div>';
@@ -2497,7 +2498,7 @@ function locksInner(){
   var pool=attendees(s).filter(function(id){return P(id);}); if(!pool.length)pool=playersArr().map(function(p){return p.id;});
   pool.sort(function(a,b){return pname(a).localeCompare(pname(b),'ar');});
   var opts=function(id){return '<select class="field" id="'+id+'"><option value="">Choose a player</option>'+pool.map(function(x){return '<option value="'+x+'">'+esc(pname(x))+'</option>';}).join('')+'</select>';};
-  h+='<div class="foot" style="margin:0 2px 12px">Rules are applied when you tap “Split”, and the rest are arranged around them in the best way.</div>';
+  h+='<div class="foot" style="margin:0 2px 12px">Rules are applied when you tap “Balance”, and the rest are arranged around them in the best way.</div>';
   h+=gh('<span style="font-size:17px">Lock a player</span>');
   var lk=Object.keys(L);
   if(lk.length) h+='<div class="card">'+lk.map(function(id){return '<div class="cell ind lockrow" data-id="'+id+'">'+avatar(id)+'<div class="body"><div class="t">'+esc(pname(id))+'</div><div class="s">'+lockText(s,L[id])+'</div></div><button class="m-x" aria-label="Cancel" onclick="put(\'sessions/'+s.id+'/locks/'+id+'\',null)">'+ic('x','xs')+'</button></div>';}).join('')+'</div>';
@@ -2545,11 +2546,11 @@ function lineupInfoHTML(s){
   var L=locksOf(s), Ap=apartOf(s), bad=0;
   Object.keys(L).forEach(function(id){var tm=teamOf(s,id),x=L[id]; if(!tm){bad++;return;} if(x.t&&tm.t!==x.t)bad++; else if(x.pos){ if(tm.sub)bad++; else { var z=slotsOf(s,tm.t).filter(function(q){return q.id===tm.slot;})[0]; if(!z||z.pos!==x.pos)bad++; } } });
   Ap.forEach(function(x){var a=teamOf(s,x.a),b=teamOf(s,x.b); if(a&&b&&a.t===b.t)bad++;});
-  if(Object.keys(L).length||Ap.length) rows.push('<div class="cell tap ind" onclick="openLocks()">'+tile(bad?'#FF3B30':'#8E8E93','lock')+'<div class="body"><div class="t">Rules: <b class="num">'+(Object.keys(L).length+Ap.length)+'</b></div><div class="s">'+(bad?'<span class="dn">'+bad+' not applied — tap “Split”</span>':'All applied')+'</div></div>'+chev()+'</div>');
+  if(Object.keys(L).length||Ap.length) rows.push('<div class="cell tap ind" onclick="openLocks()">'+tile(bad?'#FF3B30':'#8E8E93','lock')+'<div class="body"><div class="t">Rules: <b class="num">'+(Object.keys(L).length+Ap.length)+'</b></div><div class="s">'+(bad?'<span class="dn">'+bad+' not applied — tap “Balance”</span>':'All applied')+'</div></div>'+chev()+'</div>');
   var b=s.bal, note;
-  if(b&&b.sig===curSig(s)) note='<span class="up">✓ This is the best split</span> with priority “'+(BAL_PRI[b.pri]||BAL_PRI.mix).l+'” — '+(b.all?'I tried every possibility (<span class="num">'+fmtNum(b.n)+'</span>) and picked the best.':'I compared <span class="num">'+fmtNum(b.n)+'</span> splits and picked the best.');
-  else if(b) note='You edited the lineup manually after the auto split. Tap “Split” if you want the mathematically best one.';
-  else note='Tap “Split” to try every possibility and pick the best.';
+  if(b&&b.sig===curSig(s)) note='<span class="up">✓ This is the best balance</span> with priority “'+(BAL_PRI[b.pri]||BAL_PRI.mix).l+'” — '+(b.all?'I tried every possibility (<span class="num">'+fmtNum(b.n)+'</span>) and picked the best.':'I compared <span class="num">'+fmtNum(b.n)+'</span> lineups and picked the best.');
+  else if(b) note='You edited the lineup manually after the auto balance. Tap “Balance” if you want the mathematically best one.';
+  else note='Tap “Balance” to try every possibility and pick the best.';
   return gh('Why this lineup?')+'<div class="card" id="lineupInfo">'+rows.join('')+'</div><div class="foot" id="balNote">'+note+'</div>';
 }
 function openTheme(){
@@ -2577,7 +2578,7 @@ function lineupImage(sid){
   if(!isCoach)return; // تنزيل الصور لمجلس الإدارة فقط
   var s=sid?S.sessions[sid]:openSession(); if(!s)return;
   var ids=teamPlayers(s,'A').concat(teamPlayers(s,'B')).filter(function(id){return P(id);});
-  if(!ids.length){toast('⚠️ Split the teams first');return;}
+  if(!ids.length){toast('⚠️ Balance the teams first');return;}
   toast('Preparing the image…');
   var fontP=(document.fonts&&document.fonts.load)?Promise.all(['800 60px Tajawal','700 30px Tajawal','500 26px Tajawal','800 42px Changa','700 20px Changa'].map(function(f){return document.fonts.load(f).catch(function(){});})):Promise.resolve();
   Promise.all([fontP,loadImg('saff-white.png')].concat(ids.map(function(id){return loadImg(photoSrc(P(id)));}))).then(function(r){
@@ -2728,7 +2729,7 @@ function openShare(sid){
   if(ended) h+=opt('sh-post','flag','#FF9500','After the match','Score, goals, the session’s top scorer and playmaker, late players and a voting reminder','posterShare(\'post\',\''+s.id+'\')');
   if(done){ var hm=!!(mvpOf(s)&&P(mvpOf(s)));
     h+=opt('sh-final','star','#E0A100','Best player and ratings','Best player, player ratings and attribute changes'+(hm?'':' — No best player yet'),'posterShare(\'final\',\''+s.id+'\')',!hm); }
-  h+=opt('sh-lineup','ball','#0A7D4F','Lineup','The pitch with player photos'+(hasLineup?'':' — Split the teams first'),'lineupImage(\''+s.id+'\')',!hasLineup);
+  h+=opt('sh-lineup','ball','#0A7D4F','Lineup','The pitch with player photos'+(hasLineup?'':' — Balance the teams first'),'lineupImage(\''+s.id+'\')',!hasLineup);
   if(!done) h+=opt('sh-rot','undo','#AF52DE','Substitution order','Who comes in and who goes out'+(hasSubs?'':' — No subs'),'posterShare(\'rot\',\''+s.id+'\')',!hasSubs);
   h+='</div><div class="foot">You get a ready image to send in the group.</div>';
   openModal(h);
@@ -3098,7 +3099,7 @@ function saveSessionSettings(editId){
     if(openSession()){toast('⚠️ There’s already an open session');return;}
     var id=uid('s');
     put('sessions/'+id,{num:num,title:ttl,date:date,time:time,size:t.size,formation:t.fA,teams:{A:{name:an,formation:t.fA,slots:{},color:t.cA},B:{name:bn,formation:t.fB,slots:{},color:t.cB}},att:{},goals:{},ratings:{},status:'open',created:Date.now()});
-    toast('Session created — Choose the players, then split the teams');
+    toast('Session created — Choose the players, then balance the teams');
   }
   closeModal();
 }
@@ -3232,7 +3233,7 @@ function autoBalance(pri,noSubs){
   m[b+'teams/A/subs']=nA?r.subA:null; m[b+'teams/B/subs']=nB?r.subB:null;
   m[b+'bal']={n:r.total,all:r.exhaustive,sig:lineupSig(r.slotsA,r.slotsB,r.subA,r.subB),at:Date.now(),pri:pri}; m[b+'balPri']=pri;
   putMany(m);
-  toast('Teams split — '+(r.exhaustive?'I tried every possibility ('+fmtNum(r.total)+')':'compared '+fmtNum(r.total)+' splits')+(nA+nB?(nA===nB?' with a sub per team':' with '+(nA+nB)+(nA+nB===1?' sub':' subs')):(noSubs?' No subs':''))+(r.left.length?' — '+r.left.length+' on the bench':''));
+  toast('Teams balanced — '+(r.exhaustive?'I tried every possibility ('+fmtNum(r.total)+')':'compared '+fmtNum(r.total)+' lineups')+(nA+nB?(nA===nB?' with a sub per team':' with '+(nA+nB)+(nA+nB===1?' sub':' subs')):(noSubs?' No subs':''))+(r.left.length?' — '+r.left.length+' on the bench':''));
 }
 function setSubsMode(off){
   var s=openSession(); if(!s||!!s.noSubs===off)return;
@@ -3240,13 +3241,13 @@ function setSubsMode(off){
   if(auto&&attendees(s).length>=2){ put('sessions/'+s.id+'/noSubs',off||null); autoBalance(null,off); return; }
   var m={}; m['sessions/'+s.id+'/noSubs']=off||null;
   if(off){ m['sessions/'+s.id+'/teams/A/subs']=null; m['sessions/'+s.id+'/teams/B/subs']=null; }
-  putMany(m); toast(off?'No subs — subs moved to the bench':'With subs — tap “Split” or add a sub for each team');
+  putMany(m); toast(off?'No subs — subs moved to the bench':'With subs — tap “Balance” or add a sub for each team');
 }
 function setBalPri(k){
   var s=openSession(); if(!s||!BAL_PRI[k])return;
   var auto=!slotPlayers(s,'A').length&&!slotPlayers(s,'B').length||(s.bal&&s.bal.sig===curSig(s));
   if(auto&&attendees(s).length>=2) autoBalance(k); // التشكيلة تلقائية: نعيد التوزيع فوراً بالأولوية الجديدة
-  else { put('sessions/'+s.id+'/balPri',k); toast('Priority: '+BAL_PRI[k].l+' — tap “Split” to apply it'); }
+  else { put('sessions/'+s.id+'/balPri',k); toast('Priority: '+BAL_PRI[k].l+' — tap “Balance” to apply it'); }
 }
 function fmtNum(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
 
@@ -3259,7 +3260,7 @@ function openSlot(t,slotId){
   var h=mh(POS[sl.pos].ar+' · '+esc(s.teams[t].name));
   if(cur) h+='<button class="btn danger block sm" style="margin-bottom:12px" onclick="pickSlot(\''+t+'\',\''+slotId+'\',null)">Empty the position (moves to the bench)</button>';
   if(cur){ var lkc=locksOf(s)[cur];
-    h+='<button class="btn gray block sm" id="pinBtn" style="margin:-4px 0 12px" onclick="togglePin(\''+t+'\',\''+slotId+'\')">'+ic(lkc?'unlock':'lock','xs')+(lkc?'Unlock '+esc(shortName(cur)):'Lock '+esc(shortName(cur))+' here in the auto split')+'</button>'; }
+    h+='<button class="btn gray block sm" id="pinBtn" style="margin:-4px 0 12px" onclick="togglePin(\''+t+'\',\''+slotId+'\')">'+ic(lkc?'unlock':'lock','xs')+(lkc?'Unlock '+esc(shortName(cur)):'Lock '+esc(shortName(cur))+' here in the auto balance')+'</button>'; }
   var tn=function(k){return esc(s.teams[k].name);};
   var slotPos=function(k,id){var z=slotsOf(s,k).filter(function(q){return q.id===id;})[0];return z?POS[z.pos].ar:'';};
   var swapTxt=cur?'Swaps with '+esc(pname(cur)):'Moves to this position';
