@@ -650,24 +650,6 @@ body.v2 .sheet{border-radius:24px 24px 0 0;}
 body.v2 .ico-tile{border-radius:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.25);}
 body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 
-/* التشكيلة كقائمتين جنب بعض */
-.lu{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;position:relative;margin-top:6px;}
-.lu:before{content:"";position:absolute;top:2px;bottom:2px;left:50%;width:.5px;background:var(--sep);}
-.lcol{min-width:0;display:flex;flex-direction:column;}
-.lu .lh{display:flex;align-items:center;gap:7px;font-weight:800;font-size:15px;margin:0 2px 6px;min-width:0;}
-.lu .lhn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.lu .lsep{height:.5px;background:var(--sep);margin:3px 4px;}
-.lu .tok{position:relative;top:auto;left:auto;transform:none;flex-direction:row;align-items:center;width:auto;gap:9px;padding:6px 2px;border-radius:12px;transition:background .15s;z-index:auto;}
-.lu .tok.click:active{background:var(--fill2);}
-.lu .tok.click:active .sh{transform:none;}
-.lu .tok .sh,.lu .tok.subtok .sh{width:34px;height:34px;flex:none;font-size:13px;box-shadow:none;}
-.lu .tok.empty .sh{background:transparent;border:1.5px dashed var(--label3);color:var(--label2);}
-.lu .tok .lt2{min-width:0;flex:1;}
-.lu .tok .nm{margin:0;max-width:none;font-size:14px;line-height:1.3;font-weight:700;color:var(--label);background:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:0;border-radius:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.lu .tok.empty .nm{color:var(--label3);font-weight:500;}
-.lu .tok .ps{font-size:12px;font-weight:500;color:var(--label2);direction:inherit;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.lu .tok .subtag{position:static;display:inline-block;font-size:10px;line-height:1.6;}
-.lu .tok .ov{top:-6px;left:-9px;}
 
 /* ===== من اليسار لليمين (الإنجليزي والفرنسي) ===== */
 .cell+.cell:before{left:16px;right:0;}
@@ -687,7 +669,6 @@ select.field{background-position:calc(100% - 14px) 50%;padding-left:12px;padding
 .confsel{width:112px;font-size:12.5px;}
 .confseg{width:200px;} .confseg button{font-size:12px;padding-left:2px;padding-right:2px;}
 .confrow .body .t{unicode-bidi:plaintext;text-align:left;}
-.lu .tok .nm{unicode-bidi:plaintext;text-align:left;}
 
 .nav .org{font-size:17px;letter-spacing:-.2px;}
 @media(max-width:430px){.gh .lnk .i{display:none;} .gh .acts{gap:11px;} .coach-btn .lbl2{display:none;}}
@@ -697,7 +678,7 @@ select.field{background-position:calc(100% - 14px) 50%;padding-left:12px;padding
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261117181500';
+var BUILD='20261117190733';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -789,6 +770,7 @@ var firebaseConfig = {
 // اسم المجلد داخل قاعدة البيانات
 var ROOT = "training";
 var FEAT_JOKER = false;
+var LATE_BASE = null; // قائمة المتأخرين العامة (لنخبة السبت): {from: أول تمرين يُحسب, ids: من كان متأخر مرة قبله}
 var FEAT_TRAITS = true; // «يلعب تحت الضغط» و«لياقة عالية»: في تمرين ساف فقط (نخبة السبت بدونها)
 var FEAT_SELFISH = true; // خاصية «أناني»: في تمرين ساف فقط // وسام الجوكر: يُفعَّل في تمرين نخبة السبت فقط
 
@@ -924,18 +906,30 @@ function startCloud(){
     db = firebase.database();
   }catch(e){ console.error(e); showErr('Impossible de démarrer Firebase.'); startLocal(); return; }
   var to = setTimeout(function(){ if(!ready) showErr('⏳ La connexion à la base de données prend plus de temps que d’habitude… Vérifiez internet puis actualisez la page.'); },12000);
-  firebase.auth().onAuthStateChanged(function(user){
-    if(!user) return;
+  // الاستماع للبيانات: إذا انقطع (مثلاً انتهت صلاحية الدخول والتطبيق في الخلفية) نعيد الدخول ونرجع نستمع تلقائياً
+  var subOn=false, subTries=0;
+  function subscribe(){
+    if(subOn) return; subOn=true;
     db.ref(ROOT).on('value',function(snap){
-      clearTimeout(to);
+      clearTimeout(to); subTries=0;
       document.getElementById('bnErr').classList.remove('show');
       var raw=snap.val()||{}; RAW_SBX=SBX?null:(raw.sandbox||null); S = normalize(raw); ready=true; render(); maybeAskMe();
     },function(err){
-      clearTimeout(to); console.error(err);
-      showErr('🔒 La base de données a refusé la lecture. Vous devez publier les nouvelles règles (fichier <b>database.rules.json</b>) dans Firebase → Realtime Database → Rules → Publish.');
+      subOn=false; console.error(err); subTries++;
+      if(subTries<=5){ // نحاول من جديد بهدوء قبل ما نظهر أي تنبيه
+        setTimeout(function(){
+          var u=firebase.auth().currentUser;
+          (u?u.getIdToken(true):firebase.auth().signInAnonymously()).catch(function(){ return firebase.auth().signInAnonymously(); }).catch(function(){}).then(function(){ if(firebase.auth().currentUser) subscribe(); });
+        },Math.min(8000,700*subTries));
+        return;
+      }
+      clearTimeout(to);
+      showErr('🔒 Connexion à la base de données perdue. <a href="#" onclick="event.preventDefault();location.reload()">Actualisez la page</a>, et si cela se reproduit, vérifiez votre connexion internet.');
       document.getElementById('loading').style.display='none';
     });
-  });
+  }
+  firebase.auth().onAuthStateChanged(function(user){ if(user) subscribe(); });
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden&&!subOn&&firebase.auth().currentUser){ subTries=0; subscribe(); } });
   firebase.auth().signInAnonymously().catch(function(e){
     clearTimeout(to); console.error(e);
     if(e&&e.code==='auth/unauthorized-domain') showErr('L’adresse de cette page n’est pas autorisée dans Firebase. Ouvrez le lien publié (https) et non le fichier de votre appareil.');
@@ -1221,6 +1215,53 @@ function fmtClock(ts){try{return new Date(ts).toLocaleTimeString('fr-FR',{hour:'
 function fmtStart(s){return fmtClock(startTs(s));}
 // التأخير: بالوقت تلقائياً، ويقدر مجلس الإدارة يحدده يدوياً
 function isLate(s,pid){var o=(s.lateSet||{})[pid]; if(o===true)return true; if(o===false)return false; return !!s.checkin[pid]&&lateMin(s,s.checkin[pid])>0;}
+/* ---------- قائمة المتأخرين العامة (لمجلس الإدارة) ----------
+   تأخيران = قائمة الحرمان، والمحروم يوقف عن 3 تمارين متتالية، وحضور تمرينين في الوقت يمحو تأخيرًا واحدًا */ // i18n-skip (نخبة السبت فقط)
+var LATE_BAN=3;
+function lateBoard(){
+  var B=LATE_BASE||{from:1,ids:[]}, st={};
+  playersArr().forEach(function(p){st[p.id]={late:0,ok:0,ban:0,at:null};});
+  (B.ids||[]).forEach(function(id){if(st[id])st[id].late=1;});
+  var done=doneSessions().filter(function(s){return (+s.num||0)>=B.from;}).sort(function(a,b){return startTs(a)-startTs(b);}), warn=[];
+  done.forEach(function(s){
+    var came=function(id){return !(s.absent||{})[id]&&(!!s.checkin[id]||(s.lateSet||{})[id]===true||(s.lateSet||{})[id]===false);};
+    Object.keys(st).forEach(function(id){var x=st[id];
+      if(x.ban>0){x.ban--; if(came(id))warn.push(pname(id)+' حضر التمرين '+(s.num||'')+' وهو موقوف'); return;} // i18n-skip (نخبة السبت فقط)
+      if(!came(id))return;
+      if(isLate(s,id)){x.late++;x.ok=0; if(x.late>=2){x.ban=LATE_BAN;x.at=s.num;x.late=0;}}
+      else if(x.late>0){x.ok++; if(x.ok>=2){x.late--;x.ok=0;}}
+    });
+  });
+  var last=done.length?(+done[done.length-1].num||0):B.from-1, ord=function(a,b){return pname(a).localeCompare(pname(b),'ar');};
+  var banned=Object.keys(st).filter(function(id){return st[id].ban>0;}).sort(ord).map(function(id){var n=st[id].ban,a=[];for(var k=1;k<=n;k++)a.push(last+k);return {id:id,left:n,nums:a,at:st[id].at};});
+  var once=Object.keys(st).filter(function(id){return !st[id].ban&&st[id].late>0;}).sort(ord).map(function(id){return {id:id,ok:st[id].ok};});
+  return {banned:banned,once:once,warn:warn,counted:done.map(function(s){return s.num;})};
+}
+function lateCardH(){
+  if(!isCoach||!LATE_BASE)return '';
+  var L=lateBoard(), os=openSession(), inList=os?L.banned.filter(function(x){return os.att[x.id];}):[];
+  return '<div class="card" style="margin-top:14px"><div class="cell tap ind" id="lateCard" onclick="openLateBoard()">'+tile('#FF3B30','warn')+'<div class="body"><div class="t">قائمة المتأخرين</div><div class="s">موقوف <b class="num">'+L.banned.length+'</b> · متأخر مرة <b class="num">'+L.once.length+'</b>'+(inList.length?' · <span style="color:var(--red)">'+inList.length+' موقوف في قائمة التمرين</span>':'')+'</div></div>'+chev()+'</div></div>'; // i18n-skip (نخبة السبت فقط)
+}
+function openLateBoard(){
+  var L=lateBoard(), os=openSession(), h=mh('قائمة المتأخرين'); // i18n-skip (نخبة السبت فقط)
+  h+='<div class="foot" style="margin:0 4px 10px">تأخيران = قائمة الحرمان · المحروم يوقف عن 3 تمارين متتالية · حضور تمرينين في الوقت يمحو تأخيرًا واحدًا. تتحدّث تلقائياً بعد كل تمرين ينتهي.</div>'; // i18n-skip (نخبة السبت فقط)
+  h+=gh('<span style="font-size:17px">⛔ قائمة الحرمان</span>')+'<div class="card" id="lateBanned">'+(L.banned.length?L.banned.map(function(x){var inL=os&&os.att[x.id]; // i18n-skip (نخبة السبت فقط)
+    return '<div class="cell ind">'+avatar(x.id)+'<div class="body"><div class="t">'+esc(pname(x.id))+'</div><div class="s">موقوف عن '+(x.nums.length>1?'التمارين ':'التمرين ')+x.nums.join(' و')+(inL?' · <b style="color:var(--red)">موجود في قائمة التمرين '+(os.num||'')+'</b>':'')+'</div></div><span class="rb r-lo">باقي <b class="num">'+x.left+'</b></span></div>';}).join(''):'<div class="cell"><div class="body"><div class="s">لا يوجد أحد في قائمة الحرمان</div></div></div>')+'</div>'; // i18n-skip (نخبة السبت فقط)
+  h+=gh('<span style="font-size:17px">🟠 متأخر مرة</span>')+'<div class="card" id="lateOnce">'+(L.once.length?L.once.map(function(x){ // i18n-skip (نخبة السبت فقط)
+    return '<div class="cell ind">'+avatar(x.id)+'<div class="body"><div class="t">'+esc(pname(x.id))+'</div><div class="s">حضر في الوقت '+x.ok+' من 2 · باقي '+(2-x.ok===1?'تمرين واحد':'تمرينين')+' ويُمحى</div></div><span class="rb r-mid num">1/2</span></div>';}).join(''):'<div class="cell"><div class="body"><div class="s">لا يوجد</div></div></div>')+'</div>'; // i18n-skip (نخبة السبت فقط)
+  if(L.warn.length) h+='<div class="notice" style="margin-top:12px">'+L.warn.map(esc).join('<br>')+'</div>';
+  h+='<div class="m-foot"><button class="btn tinted" id="lateCopy" onclick="lateCopy()">'+ic('upl','s')+'نسخ القائمة للقروب</button></div>'; // i18n-skip (نخبة السبت فقط)
+  openModal(h);
+}
+function lateCopy(){
+  var L=lateBoard(), t='⏰ قائمة المتأخرين — '+document.title+'\n'; // i18n-skip (نخبة السبت فقط)
+  t+='\n⛔ قائمة الحرمان:\n'+(L.banned.length?L.banned.map(function(x){return '• '+pname(x.id)+' — موقوف عن '+(x.nums.length>1?'التمارين ':'التمرين ')+x.nums.join(' و');}).join('\n'):'لا يوجد')+'\n'; // i18n-skip (نخبة السبت فقط)
+  t+='\n🟠 متأخر مرة:\n'+(L.once.length?L.once.map(function(x){return '• '+pname(x.id)+' — حضر في الوقت '+x.ok+' من 2';}).join('\n'):'لا يوجد')+'\n'; // i18n-skip (نخبة السبت فقط)
+  t+='\nتأخيران = حرمان 3 تمارين · حضور تمرينين في الوقت يمحو تأخيرًا'; // i18n-skip (نخبة السبت فقط)
+  var done=function(){toast('تم نسخ القائمة');}, fb=function(){openModal(mh('قائمة المتأخرين')+'<textarea class="field" id="lateText" rows="12" style="height:auto;padding:12px;line-height:1.7">'+esc(t)+'</textarea><div class="foot">انسخ النص والصقه في القروب.</div>');}; // i18n-skip (نخبة السبت فقط)
+  try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(done,fb); return; } }catch(e){} fb();
+}
+
 function lateBadge(s,pid,tap){
   var m=s.checkin[pid]?lateMin(s,s.checkin[pid]):0, late=isLate(s,pid);
   var b=late?'<span class="rb r-mid num">Retard'+(m>0&&(s.lateSet||{})[pid]!==true?' '+m+' min':(m>0?' '+m+' min':''))+'</span>':'<span class="rb r-hi">À l’heure</span>';
@@ -1541,6 +1582,7 @@ function renderHome(el){
   }
   if(ps.length) h+='<div class="foot" style="text-align:center;margin-top:22px"><a href="#" id="tourLink" style="color:var(--tint);font-weight:600" onclick="event.preventDefault();openTour()">🧭 Visite rapide de l’application</a></div>';
   if(isCoach&&!SBX) h+='<div class="card" style="margin-top:14px"><div class="cell tap ind" id="sbxEnter" onclick="enterSandbox()">'+tile('#AF52DE','star',true)+'<div class="body"><div class="t">🧪 Séance d’essai</div><div class="s">Testez tout (pointage, vote, score…) sans que les joueurs le voient</div></div>'+chev()+'</div></div>';
+  h+=lateCardH();
   if(isCoach) h+='<div class="card" style="margin-top:26px"><div class="cell tap ind" onclick="openSettings()">'+tile('#8E8E93','gear')+'<div class="body"><div class="t">Réglages et sauvegarde</div></div>'+chev()+'</div></div>';
   el.innerHTML=h;
 }
@@ -1921,9 +1963,9 @@ function renderSession(el){
       '<div class="foot" style="margin:6px 2px 10px">'+(s.noSubs?'Chaque équipe joue avec le nombre de la formation, les autres restent sur le banc.':'Chaque équipe a un remplaçant, et chaque joueur se repose une fois.')+'</div></div>'; }
   h+='<div class="card pad"><div class="teams-h2"><div class="th"><div class="tn"><span class="dot A"></span>'+esc(s.teams.A.name)+'</div><div class="thr">'+formBtn(s,'A',C)+'<span class="tag on num">Note '+(sA||'—')+'</span></div></div><div class="th B"><div class="tn">'+esc(s.teams.B.name)+'<span class="dot B"></span></div><div class="thr"><span class="tag on num">Note '+(sB||'—')+'</span>'+formBtn(s,'B',C)+'</div></div></div>';
   h+='<div class="balance"><i style="width:'+(sA/tot*100)+'%;background:var(--teamA)"></i><i style="width:'+(sB/tot*100)+'%;background:var(--teamBbar,#C7C7CC)"></i></div>';
-  h+=pitchHTML(s,C,true);
+  h+=pitchHTML(s,C);
   h+=benchHTML(s,C);
-  h+=(C?'<div class="foot" style="margin:12px 2px 0">Appuyez sur un joueur ou un poste libre pour le changer.</div>':'')+'</div>';
+  h+=(C?'<div class="foot" style="margin:12px 2px 0">Appuyez sur un poste du terrain pour choisir un joueur.</div>':'')+'</div>';
   if(C) h+=lineupInfoHTML(s);
 
   h+=rotationHTML(s,C);
@@ -3048,14 +3090,13 @@ function setTeamForm(t,fk){
   m['sessions/'+s.id+'/teams/'+t+'/slots']=ids.length?assignSlots(ids.map(P),slotsOf(s2,t)):null;
   putMany(m); toast('Formation '+s.teams[t].name+' : '+fk);
 }
-// التشكيلة: قائمتان جنب بعض (الفريق الأول يمين والثاني يسار)، كل لاعب تحته مركزه — من الحارس للهجوم
-function pitchHTML(s,C,noHead){
-  var h='<div class="lu"'+teamVars(s)+'>';
+function pitchHTML(s,C){
+  var h='<div class="pitch'+(isBig(s)?' big':'')+'"'+teamVars(s)+'><div class="ln frame"></div><div class="ln mid"></div><div class="ln circ"></div><div class="ln boxT"></div><div class="ln boxB"></div><div class="pteam B">'+esc(s.teams.B.name)+'</div><div class="pteam A">'+esc(s.teams.A.name)+'</div>';
   ['A','B'].forEach(function(t){
-    var sl=slotsOf(s,t).slice().sort(function(a,b){return a.y-b.y||a.x-b.x;}), last=null;
-    h+='<div class="lcol '+t+'">'+(noHead?'':'<div class="lh"><span class="dot '+t+'"></span><span class="lhn">'+esc(s.teams[t].name)+'</span></div>');
+    var sl=slotsOf(s,t);
     sl.forEach(function(x){
-      var g=POS_GROUP[x.pos]; if(last!==null&&g!==last) h+='<div class="lsep"></div>'; last=g;
+      var top = t==='A' ? 96-x.y*0.48 : 4+x.y*0.48;
+      var left = t==='A' ? x.x : 100-x.x;
       var pid=s.teams[t].slots[x.id], p=pid&&P(pid);
       var act=C?'onclick="openSlot(\''+t+'\',\''+x.id+'\')"':(p?'onclick="openPlayer(\''+pid+'\')"':'');
       var cls='tok '+t+(act?' click':'');
@@ -3063,20 +3104,19 @@ function pitchHTML(s,C,noHead){
         var fin=ratingsVisible(s), rr=s.ratings&&s.ratings[pid], badge=fin&&typeof rr==='number'?'<span class="ov rt num '+(rr>=7.5?'hi':rr>=5.5?'mid':'lo')+'">'+rr+'</span>':'';
         var face=photoSrc(p)?'<img src="'+photoSrc(p)+'" alt="">':esc(p.name.trim().charAt(0));
         var pin=C&&s.status!=='done'&&locksOf(s)[pid]?'<span class="pin">'+ic('lock','xs')+'</span>':'';
-        h+='<div class="'+cls+'" data-pid="'+pid+'" '+act+'><div class="sh">'+face+badge+pin+'</div><div class="lt2"><div class="nm">'+esc(p.name)+'</div><div class="ps">'+POS[x.pos].ar+'</div></div></div>';
+        h+='<div class="'+cls+'" data-pid="'+pid+'" style="top:'+top+'%;left:'+left+'%" '+act+'><div class="sh">'+face+badge+pin+'</div><div class="nm">'+esc(shortName(pid))+'</div></div>';
       }else{
-        h+='<div class="'+cls+' empty" '+act+'><div class="sh">'+(C?ic('plus','xs'):'')+'</div><div class="lt2"><div class="nm">'+(C?'Choisir un joueur':'—')+'</div><div class="ps">'+POS[x.pos].ar+'</div></div></div>';
+        h+='<div class="'+cls+' empty" style="top:'+top+'%;left:'+left+'%" '+act+'><div class="sh">'+(C?ic('plus','xs'):'')+'</div><div class="ps">'+POS[x.pos].ar+'</div></div>';
       }
     });
-    // البديل آخر القائمة
+    // البديل في الزاوية بجانب منطقة جزاء فريقه
     subsOf(s,t).filter(function(id){return P(id);}).slice(0,1).forEach(function(id){
-      var p=P(id), fin=ratingsVisible(s), rr=s.ratings&&s.ratings[id];
+      var p=P(id), top=t==='A'?91:9, fin=ratingsVisible(s), rr=s.ratings&&s.ratings[id];
       var face=photoSrc(p)?'<img src="'+photoSrc(p)+'" alt="">':esc(p.name.trim().charAt(0));
       var badge=fin&&typeof rr==='number'?'<span class="ov rt num '+(rr>=7.5?'hi':rr>=5.5?'mid':'lo')+'">'+rr+'</span>':'';
-      h+='<div class="lsep"></div><div class="tok '+t+' click subtok" data-pid="'+id+'" onclick="'+(C?'openSubPicker(\''+t+'\')':'openPlayer(\''+id+'\')')+'"><div class="sh">'+face+badge+'</div><div class="lt2"><div class="nm">'+esc(p.name)+'</div><div class="ps"><span class="subtag">Remplaçant</span></div></div></div>';
+      h+='<div class="tok '+t+' click subtok" data-pid="'+id+'" style="top:'+top+'%;left:89%" onclick="'+(C?'openSubPicker(\''+t+'\')':'openPlayer(\''+id+'\')')+'"><span class="subtag">Remplaçant</span><div class="sh">'+face+badge+'</div><div class="nm">'+esc(shortName(id))+'</div></div>';
     });
-    if(C&&!s.noSubs&&!subsOf(s,t).filter(function(id){return P(id);}).length) h+='<div class="lsep"></div><div class="tok '+t+' click empty subtok" id="addSub-'+t+'" onclick="openSubPicker(\''+t+'\')"><div class="sh">'+ic('plus','xs')+'</div><div class="lt2"><div class="nm">Ajouter un remplaçant</div><div class="ps"><span class="subtag">Remplaçant</span></div></div></div>';
-    h+='</div>';
+    if(C&&!s.noSubs&&!subsOf(s,t).filter(function(id){return P(id);}).length) h+='<div class="tok '+t+' click empty subtok" id="addSub-'+t+'" style="top:'+(t==='A'?91:9)+'%;left:89%" onclick="openSubPicker(\''+t+'\')"><span class="subtag">Remplaçant</span><div class="sh">'+ic('plus','xs')+'</div></div>';
   });
   return h+'</div>';
 }
