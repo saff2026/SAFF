@@ -924,18 +924,30 @@ function startCloud(){
     db = firebase.database();
   }catch(e){ console.error(e); showErr('Impossible de démarrer Firebase.'); startLocal(); return; }
   var to = setTimeout(function(){ if(!ready) showErr('⏳ La connexion à la base de données prend plus de temps que d’habitude… Vérifiez internet puis actualisez la page.'); },12000);
-  firebase.auth().onAuthStateChanged(function(user){
-    if(!user) return;
+  // الاستماع للبيانات: إذا انقطع (مثلاً انتهت صلاحية الدخول والتطبيق في الخلفية) نعيد الدخول ونرجع نستمع تلقائياً
+  var subOn=false, subTries=0;
+  function subscribe(){
+    if(subOn) return; subOn=true;
     db.ref(ROOT).on('value',function(snap){
-      clearTimeout(to);
+      clearTimeout(to); subTries=0;
       document.getElementById('bnErr').classList.remove('show');
       var raw=snap.val()||{}; RAW_SBX=SBX?null:(raw.sandbox||null); S = normalize(raw); ready=true; render(); maybeAskMe();
     },function(err){
-      clearTimeout(to); console.error(err);
-      showErr('🔒 La base de données a refusé la lecture. Vous devez publier les nouvelles règles (fichier <b>database.rules.json</b>) dans Firebase → Realtime Database → Rules → Publish.');
+      subOn=false; console.error(err); subTries++;
+      if(subTries<=5){ // نحاول من جديد بهدوء قبل ما نظهر أي تنبيه
+        setTimeout(function(){
+          var u=firebase.auth().currentUser;
+          (u?u.getIdToken(true):firebase.auth().signInAnonymously()).catch(function(){ return firebase.auth().signInAnonymously(); }).catch(function(){}).then(function(){ if(firebase.auth().currentUser) subscribe(); });
+        },Math.min(8000,700*subTries));
+        return;
+      }
+      clearTimeout(to);
+      showErr('🔒 Connexion à la base de données perdue. <a href="#" onclick="event.preventDefault();location.reload()">Actualisez la page</a>, et si cela se reproduit, vérifiez votre connexion internet.');
       document.getElementById('loading').style.display='none';
     });
-  });
+  }
+  firebase.auth().onAuthStateChanged(function(user){ if(user) subscribe(); });
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden&&!subOn&&firebase.auth().currentUser){ subTries=0; subscribe(); } });
   firebase.auth().signInAnonymously().catch(function(e){
     clearTimeout(to); console.error(e);
     if(e&&e.code==='auth/unauthorized-domain') showErr('L’adresse de cette page n’est pas autorisée dans Firebase. Ouvrez le lien publié (https) et non le fichier de votre appareil.');

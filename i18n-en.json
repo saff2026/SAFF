@@ -892,5 +892,8 @@
 "اللغة": "Language",
 "فوز · تعادل · خسارة": "Win · Draw · Loss",
 "إضافة بديل": "Add a sub",
-"اضغط على أي لاعب أو مركز فاضي لتغييره.": "Tap any player or empty position to change it."
+"اضغط على أي لاعب أو مركز فاضي لتغييره.": "Tap any player or empty position to change it.",
+"انقطع الاتصال بقاعدة البيانات.": "Lost the connection to the database.",
+"حدّث الصفحة": "Refresh the page",
+"وإذا تكرر تأكد من الإنترنت.": "and if it keeps happening, check your internet."
 }

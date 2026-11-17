@@ -132,7 +132,6 @@ OVERRIDES = [
     ("toLocaleTimeString(AR_LOC,{hour:'numeric',minute:'2-digit'})", "toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})", "toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})", 1),
     ("desc:'أ ← ي',asc:'ي ← أ'", "desc:'A → Z',asc:'Z → A'", S, 1),
     ("[['att','هجوم ← دفاع'],['def','دفاع ← هجوم'],", "[['att','Attack → Defence'],['def','Defence → Attack'],", "[['att','Attaque → Défense'],['def','Défense → Attaque'],", 1),
-    ("Firebase ← Realtime Database ← Rules ← Publish", "Firebase → Realtime Database → Rules → Publish", S, 1),
     ('<span class="varr">←</span>', '<span class="varr">→</span>', S, 1),
     ('في الآيفون: الإعدادات ← الخصوصية والأمان ← خدمات الموقع ← مواقع Safari ← «أثناء الاستخدام»',
      'On iPhone: Settings → Privacy & Security → Location Services → Safari Websites → “While Using”',

@@ -918,18 +918,30 @@ function startCloud(){
     db = firebase.database();
   }catch(e){ console.error(e); showErr('Couldn’t start Firebase.'); startLocal(); return; }
   var to = setTimeout(function(){ if(!ready) showErr('⏳ Connecting to the database is taking longer than usual… Check your internet, then refresh the page.'); },12000);
-  firebase.auth().onAuthStateChanged(function(user){
-    if(!user) return;
+  // الاستماع للبيانات: إذا انقطع (مثلاً انتهت صلاحية الدخول والتطبيق في الخلفية) نعيد الدخول ونرجع نستمع تلقائياً
+  var subOn=false, subTries=0;
+  function subscribe(){
+    if(subOn) return; subOn=true;
     db.ref(ROOT).on('value',function(snap){
-      clearTimeout(to);
+      clearTimeout(to); subTries=0;
       document.getElementById('bnErr').classList.remove('show');
       var raw=snap.val()||{}; RAW_SBX=SBX?null:(raw.sandbox||null); S = normalize(raw); ready=true; render(); maybeAskMe();
     },function(err){
-      clearTimeout(to); console.error(err);
-      showErr('🔒 The database refused to read. You need to publish the new rules (file <b>database.rules.json</b>) in Firebase → Realtime Database → Rules → Publish.');
+      subOn=false; console.error(err); subTries++;
+      if(subTries<=5){ // نحاول من جديد بهدوء قبل ما نظهر أي تنبيه
+        setTimeout(function(){
+          var u=firebase.auth().currentUser;
+          (u?u.getIdToken(true):firebase.auth().signInAnonymously()).catch(function(){ return firebase.auth().signInAnonymously(); }).catch(function(){}).then(function(){ if(firebase.auth().currentUser) subscribe(); });
+        },Math.min(8000,700*subTries));
+        return;
+      }
+      clearTimeout(to);
+      showErr('🔒 Lost the connection to the database. <a href="#" onclick="event.preventDefault();location.reload()">Refresh the page</a>, and if it keeps happening, check your internet.');
       document.getElementById('loading').style.display='none';
     });
-  });
+  }
+  firebase.auth().onAuthStateChanged(function(user){ if(user) subscribe(); });
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden&&!subOn&&firebase.auth().currentUser){ subTries=0; subscribe(); } });
   firebase.auth().signInAnonymously().catch(function(e){
     clearTimeout(to); console.error(e);
     if(e&&e.code==='auth/unauthorized-domain') showErr('This page address isn’t allowed in Firebase. Open the published link (https) not the file from your device.');
