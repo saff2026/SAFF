@@ -671,7 +671,7 @@ select.field{background-position:calc(100% - 14px) 50%;padding-left:12px;padding
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261117140544';
+var BUILD='20261117162422';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -1839,7 +1839,7 @@ function openPlayerInner(id){
   if(isCoach) h+='<div class="pinrow" id="pinRow">'+(hasPin(id)?'<span>🔒 Has a password</span><button class="lnk" id="pinReset" onclick="resetPin(\''+id+'\')">Reset password</button>':'<span>🔓 Hasn’t chosen a password yet</span>')+'</div>';
   h+='<div class="card sgrid" style="margin-top:16px">'+
     '<div><b class="num">'+st.apps+'</b><span>'+nounFor(st.apps,'Session')+'</span></div><div><b class="num">'+st.goals+'</b><span>'+nounFor(st.goals,'Goal')+'</span></div><div><b class="num">'+st.assists+'</b><span>'+nounFor(st.assists,'Assist')+'</span></div>'+
-    '<div><b class="num">'+st.mvp+'</b><span>Best player</span></div><div><b class="num">'+(st.avg==null?'—':st.avg)+'</b><span>Average rating</span></div><div><b class="num ltr" style="font-size:18px">'+st.w+'-'+st.d+'-'+st.l+'</b><span>Win-draw-loss</span></div></div>'+(st.late?'<div class="foot" style="text-align:center;color:var(--orange)">Late '+cnt(st.late,'Time')+' · total '+cnt(st.lateMin,'Minute')+'</div>':'');
+    '<div><b class="num">'+st.mvp+'</b><span>Best player</span></div><div><b class="num">'+(st.avg==null?'—':st.avg)+'</b><span>Average rating</span></div><div id="profWDL"><b class="num" style="font-size:18px"><i style="font-style:normal;color:var(--green)">'+st.w+'</i> · '+st.d+' · <i style="font-style:normal;color:var(--red)">'+st.l+'</i></b><span>Win · Draw · Loss</span></div></div>'+(st.late?'<div class="foot" style="text-align:center;color:var(--orange)">Late '+cnt(st.late,'Time')+' · total '+cnt(st.lateMin,'Minute')+'</div>':'');
   var showA=relAttrs(p);
   h+=gh('Attributes')+'<div class="card pad abars">'+showA.map(function(a){var v=p.attrs[a];return '<div class="at"><div class="r"><span>'+({pac:'PAC',sho:'SHO',pas:'PAS',dri:'DRI',def:'DEF',phy:'PHY',gk:'GK'}[a]||ATTR[a])+'</span><b class="num">'+v+'</b></div><div class="bar"><i class="'+barCls(v)+'" style="width:'+v+'%"></i></div></div>';}).join('')+'</div><div class="foot" id="attrNote">Attributes update after every session, once the best-player vote ends.</div>';
   var hist=[]; updList().forEach(function(ss){var c=ss.upd[id]; if(c){ if(!hist.length)hist.push({v:c.ovrB}); hist.push({v:c.ovrA,d:c.ovrA-c.ovrB,s:ss,c:c}); }});
