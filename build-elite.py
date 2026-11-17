@@ -21,7 +21,8 @@ CHANGES = [
     ("loadImg('saff-white.png')", "loadImg('emblem.png?v=3')", 2),  # صور المشاركة
     ('الاتحاد السعودي لكرة القدم · ', '', 1),             # تذييل صور المشاركة
     ('var FEAT_JOKER = false;', 'var FEAT_JOKER = true;', 1),  # وسام الجوكر لنخبة السبت فقط
-    ('var FEAT_SELFISH = true;', 'var FEAT_SELFISH = false;', 1),  # خاصية «أناني» لتمرين ساف فقط
+    ('var FEAT_SELFISH = true;', 'var FEAT_SELFISH = false;', 1),
+    ('var FEAT_TRAITS = true;', 'var FEAT_TRAITS = false;', 1),  # بدون «يلعب تحت الضغط» و«لياقة عالية» في نخبة السبت  # خاصية «أناني» لتمرين ساف فقط
     ("LANG_PAGES={ar:'training.html',en:'training-en.html',fr:'training-fr.html'}", "LANG_PAGES={ar:'elite.html'}", 1),  # نخبة السبت بالعربي فقط
     ('    <button class="theme-btn" id="langBtn" onclick="openLang()"', '    <button class="theme-btn" id="langBtn" style="display:none" onclick="openLang()"', 1),  # بدون زر اللغة
 ]
