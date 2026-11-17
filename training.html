@@ -651,7 +651,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261117125137';
+var BUILD='20261117140544';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -743,6 +743,7 @@ var firebaseConfig = {
 // اسم المجلد داخل قاعدة البيانات
 var ROOT = "training";
 var FEAT_JOKER = false;
+var FEAT_TRAITS = true; // «يلعب تحت الضغط» و«لياقة عالية»: في تمرين ساف فقط (نخبة السبت بدونها)
 var FEAT_SELFISH = true; // خاصية «أناني»: في تمرين ساف فقط // وسام الجوكر: يُفعَّل في تمرين نخبة السبت فقط
 
 /* ===================================================================== */
@@ -768,7 +769,7 @@ var W = {
   ST:{sho:.5,pac:.2,dri:.15,phy:.15}
 };
 // خصائص فنية: تساعد في التوزيع والمراكز، ولا تؤثر على التقييم
-var TRAITS=[['press','يلعب تحت الضغط'],['stamina','لياقة عالية']].concat(FEAT_SELFISH?[['selfish','أناني']]:[]);
+var TRAITS=(FEAT_TRAITS?[['press','يلعب تحت الضغط'],['stamina','لياقة عالية']]:[]).concat(FEAT_SELFISH?[['selfish','أناني']]:[]);
 var TRAIT_POS={selfish:[],press:['CM','CB'],link:['CM','ST'],stamina:['RB','LB','RW','LW','CM'],leader:[],aerial:['CB','ST'],vision:['CM'],hipress:['ST','RW','LW'],positioning:['CB','LB','RB','GK']};
 function traitsOf(p){var t=p&&p.traits||{};return TRAITS.filter(function(x){return t[x[0]];}).map(function(x){return x[0];});}
 function traitFit(p,pos){return traitsOf(p).filter(function(k){return TRAIT_POS[k].indexOf(pos)>=0;}).length;}
@@ -1592,7 +1593,7 @@ function openPlayerForm(id){
   h+='<div class="hstack" style="align-items:flex-start"><div class="grow"><span class="lbl">نجوم المهارة</span>'+starPick('f_sm','sm',p.sm||3)+'</div></div>';
   h+='<span class="lbl">القدم المفضلة</span><div class="seg" id="f_foot">'+['R','L','B'].map(function(k){return '<button type="button" class="'+(p.foot===k?'on':'')+'" onclick="pf.p.foot=\''+k+'\';this.parentNode.querySelectorAll(\'button\').forEach(function(b){b.classList.remove(\'on\')});this.classList.add(\'on\')">'+FOOT[k]+'</button>';}).join('')+'</div>';
   if(FEAT_JOKER) h+='<div class="card" style="margin-top:14px"><div class="cell tap" id="f_joker" onclick="pf.p.joker=!pf.p.joker;this.querySelector(\'.tgl\').classList.toggle(\'on\',!!pf.p.joker)"><div class="body"><div class="t">وسام الجوكر 🃏</div><div class="s">يلعب في مراكز كثيرة — يظهر للجميع في بطاقته</div></div><span class="tgl'+(p.joker?' on':'')+'"><i></i></span></div></div>';
-  h+='<span class="lbl">خصائص فنية <span style="opacity:.7">(تساعد في التشكيلة ولا تؤثر على التقييم)</span></span><div class="chips" id="f_traits">'+TRAITS.map(function(x){var on=!!(p.traits||{})[x[0]];return '<span class="chip trait'+(on?' on':'')+'" data-k="'+x[0]+'" onclick="pf.p.traits=pf.p.traits||{};pf.p.traits[\''+x[0]+'\']=!pf.p.traits[\''+x[0]+'\'];this.classList.toggle(\'on\')">'+x[1]+'</span>';}).join('')+'</div>';
+  if(TRAITS.length) h+='<span class="lbl">خصائص فنية <span style="opacity:.7">(تساعد في التشكيلة ولا تؤثر على التقييم)</span></span><div class="chips" id="f_traits">'+TRAITS.map(function(x){var on=!!(p.traits||{})[x[0]];return '<span class="chip trait'+(on?' on':'')+'" data-k="'+x[0]+'" onclick="pf.p.traits=pf.p.traits||{};pf.p.traits[\''+x[0]+'\']=!pf.p.traits[\''+x[0]+'\'];this.classList.toggle(\'on\')">'+x[1]+'</span>';}).join('')+'</div>';
   h+='<span class="lbl">نجوم القدم الضعيفة</span>'+starPick('f_wf','wf',p.wf||3);
   h+='<span class="lbl">مراكزه بالترتيب <span style="opacity:.7">(الأول هو الأساسي)</span></span><div class="card prefs" id="f_prefs">'+
      [['f_pos','pos','الأول'],['f_pos2','pos2','الثاني'],['f_pos3','pos3','الثالث'],['f_pos4','pos4','الرابع']].map(function(x,i){
@@ -2539,7 +2540,7 @@ function lineupInfoHTML(s){
   var trc=function(t,k){return teamPlayers(s,t).filter(function(id){return P(id)&&(P(id).traits||{})[k];}).length;};
   var tr='<div class="trtab"><span></span><span class="th"><span class="dot A"></span>'+esc(s.teams.A.name)+'</span><span class="th"><span class="dot B"></span>'+esc(s.teams.B.name)+'</span>'+
     TRAITS.map(function(x){return '<span class="tl">'+x[1]+'</span><b class="num">'+trc('A',x[0])+'</b><b class="num">'+trc('B',x[0])+'</b>';}).join('')+'</div>';
-  rows.push('<div class="cell">'+tile('#AF52DE','people')+'<div class="body"><div class="t">توزيع الخصائص</div>'+tr+'</div></div>');
+  if(TRAITS.length) rows.push('<div class="cell">'+tile('#AF52DE','people')+'<div class="body"><div class="t">توزيع الخصائص</div>'+tr+'</div></div>');
   var L=locksOf(s), Ap=apartOf(s), bad=0;
   Object.keys(L).forEach(function(id){var tm=teamOf(s,id),x=L[id]; if(!tm){bad++;return;} if(x.t&&tm.t!==x.t)bad++; else if(x.pos){ if(tm.sub)bad++; else { var z=slotsOf(s,tm.t).filter(function(q){return q.id===tm.slot;})[0]; if(!z||z.pos!==x.pos)bad++; } } });
   Ap.forEach(function(x){var a=teamOf(s,x.a),b=teamOf(s,x.b); if(a&&b&&a.t===b.t)bad++;});
