@@ -280,6 +280,13 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .pc-name{margin-top:12px;font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sortrow{gap:10px}.sortrow.cur .t{color:var(--tint);font-weight:800}.sortseg{flex:none;width:190px}.sortseg button{font-size:13px}
 .pc-attrs .at.hl .r span,.pc-attrs .at.hl .r b{color:var(--tint);font-weight:900}
+.pcard.bday{background:radial-gradient(120% 60% at 85% 0%,rgba(255,105,180,.28),transparent 60%),linear-gradient(160deg,#3a1030 0%,#1a0a1f 55%,#2a1608 100%)!important;border:1.5px solid rgba(255,140,200,.8);color:#fff}
+.pcard.bday .pc-name,.pcard.bday .pc-meta,.pcard.bday .pc-stars,.pcard.bday .at .r span,.pcard.bday .at .r b{color:#fff!important}
+.pcard.bday .bar{background:rgba(255,255,255,.14)}.pcard.bday .pc-meta,.pcard.bday .pc-stars{color:rgba(255,200,230,.9)!important}
+.bd-tag{position:absolute;top:0;left:50%;transform:translateX(-50%);background:linear-gradient(90deg,#E0559A,#FFC2E0,#E0559A);color:#3a0020;font-size:10.5px;font-weight:900;padding:2px 10px;border-radius:0 0 9px 9px;z-index:1;white-space:nowrap}
+.bd-conf{position:absolute;top:-10px;inset-inline-start:-6px;font-size:24px;z-index:2;transform:rotate(-12deg)}
+.bd-prof{margin:8px auto 4px;padding:8px 16px;border-radius:14px;background:linear-gradient(90deg,rgba(224,85,154,.16),rgba(255,194,224,.22));border:1px solid rgba(224,85,154,.45);font-weight:800;font-size:15px;width:max-content;max-width:100%;text-align:center}
+.bd-home{margin-top:10px;border:1.5px solid rgba(224,85,154,.5);background:linear-gradient(90deg,rgba(224,85,154,.10),var(--card))}
 .potm-b{display:inline-flex;align-items:center;gap:1px;margin-inline-start:5px;font-size:14px;vertical-align:1px}.potm-b b{font-size:11px;font-weight:800;color:#B8902C}
 .potm-win{margin-top:10px;padding:18px 16px 16px;text-align:center;cursor:pointer;background:linear-gradient(160deg,#2B2208,#120E04);color:#fff;border:1px solid rgba(212,169,60,.45)}
 .potm-win .pw-k{font-size:13px;font-weight:800;color:#E6CC78;letter-spacing:.3px}.potm-win .avatar.pw-av{width:84px;height:84px;font-size:30px;margin:12px auto 8px;box-shadow:0 0 0 3px #D4A93C,0 6px 18px rgba(212,169,60,.35)}
@@ -1331,6 +1338,7 @@ function lateCopy(){
   try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(done,fb); return; } }catch(e){} fb();
 }
 
+function bdayHomeH(){var b=playersArr().filter(isBday); if(!b.length)return ''; return b.map(function(p){return '<div class="card bd-home" id="bdHome" onclick="openPlayer(\''+p.id+'\')"><div class="cell ind">'+avatar(p.id,true)+'<div class="body"><div class="t">🎂 اليوم يوم ميلاد '+esc(p.name)+'</div><div class="s">لا تنسون تهنّونه 🎉</div></div>'+chev()+'</div></div>';}).join('');}
 /* ---------- لاعب الشهر: تصويت اللاعبين بين أفضل 3 في الشهر ---------- */
 // التصويت من يوم 1 إلى يوم 5 من الشهر اللي بعده. إذا تعادلوا (أو ما صوّت أحد) يفوز الأفضل أداءً.
 var POTM_FROM='2026-11', POTM_DAYS=5, POTM_SAT=false; // POTM_SAT: التصويت من بعد آخر سبت في الشهر إلى السبت اللي بعده (يوم الهدية)
@@ -1677,11 +1685,14 @@ var TITLES={home:'تمرين ساف',players:'اللاعبون',session:'الت�
 function starsHTML(n,cls){n=clamp(+n||0,0,5);return '<span class="stars '+(cls||'')+'" aria-label="'+n+' من 5">'+'★'.repeat(n)+'<span class="off">'+'★'.repeat(5-n)+'</span></span>';}
 function starPick(id,key,val){return '<div class="starpick" id="'+id+'">'+[1,2,3,4,5].map(function(i){return '<button type="button" class="'+(i<=val?'on':'')+'" data-v="'+i+'" onclick="pf.p.'+key+'='+i+';this.parentNode.querySelectorAll(\'button\').forEach(function(b){b.classList.toggle(\'on\',+b.dataset.v<='+i+')})" aria-label="'+i+'">★</button>';}).join('')+'</div>';}
 // وسام الجوكر: يمنحه مجلس الإدارة لمن يلعب في مراكز كثيرة
+// يوم الميلاد: «MM-DD» — في يومه تتلوّن بطاقته
+function isBday(p){if(!p||!p.bday)return false; var d=new Date(); return p.bday===('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
 function isJoker(p){return FEAT_JOKER&&!!(p&&p.joker);}
 function jokerBadge(big){return '<span class="joker'+(big?' big':'')+'" title="الجوكر: يلعب في مراكز كثيرة">🃏 الجوكر</span>';}
 function cardHTML(p){
   var o=ovr(p), tr=lastTrend(p.id), inf=tr>0; // زاد تقييمه في آخر تمرين: بطاقة «في الفورمة» سوداء وذهبية
-  return '<div class="pcard'+(inf?' inform':'')+'" onclick="openPlayer(\''+p.id+'\')">'+(inf?'<div class="if-tag">في الفورمة ▲</div>':'')+
+  var bd=isBday(p);
+  return '<div class="pcard'+(bd?' bday':inf?' inform':'')+'" onclick="openPlayer(\''+p.id+'\')">'+(bd?'<div class="bd-tag">🎂 يوم ميلاده</div><div class="bd-conf" aria-hidden="true">🎈</div>':inf?'<div class="if-tag">في الفورمة ▲</div>':'')+
     '<div class="pc-top">'+(isJoker(p)?'<div class="pc-ph">'+photoHTML(p,'pc-photo')+'<div class="pc-joker">'+jokerBadge()+'</div></div>':photoHTML(p,'pc-photo'))+
     '<div><div class="ovr '+tier(o)+'"><b class="num">'+o+'</b></div>'+
     (tr?'<div class="trend '+(tr>0?'up':'dn')+'">'+(tr>0?'▲ ':'▼ ')+Math.abs(tr)+'</div>':'')+'</div></div>'+
@@ -1819,7 +1830,7 @@ function renderHome(el){
     h+='<div class="card"><div class="empty"><div class="ei">'+ic('ball')+'</div><b>لا يوجد تمرين قادم</b>'+(isCoach?'<button class="btn sm" style="margin-top:12px" onclick="go(\'session\')">'+ic('plus','xs')+'إنشاء تمرين</button>':'سيظهر هنا عندما يُنشئ مجلس الإدارة تمريناً')+'</div></div>';
   }
 
-  h+=kittyMeH(); h+=potmHomeH(); h+=crowdCardH();
+  h+=bdayHomeH(); h+=kittyMeH(); h+=potmHomeH(); h+=crowdCardH();
   if(ds.length){
     var last=ds[0], m=mvpOf(last);
     h+=gh('التمرين السابق',lnk('التفاصيل','openSessionDetail(\''+last.id+'\')'));
@@ -1937,6 +1948,7 @@ function openPlayerForm(id){
   h+='<div class="photo-edit"><div id="f_pv">'+pfPhotoBox()+'</div><div class="hstack"><label class="btn sm tinted" style="cursor:pointer">'+ic('cam','xs')+'اختيار صورة<input type="file" accept="image/*" id="f_file" style="display:none" onchange="pickPhoto(this)"></label><button type="button" class="btn sm gray" id="f_adjphoto" onclick="adjustPhoto()">ضبط</button><button type="button" class="btn sm gray" id="f_rmphoto" onclick="pf.p.photo=\'\';document.getElementById(\'f_pv\').innerHTML=pfPhotoBox()">إزالة</button></div></div>';
   h+='<span class="lbl">الاسم</span><input class="field" id="f_name" maxlength="30" value="'+esc(p.name)+'" placeholder="مثال: سالم الدوسري">';
   h+='<span class="lbl">العمر</span><input class="field num" id="f_age" type="number" inputmode="numeric" min="5" max="60" value="'+esc(p.age)+'">';
+  var bdp=String(p.bday||'').split('-'); h+='<span class="lbl">يوم الميلاد (اختياري)</span><div style="display:flex;gap:8px"><select class="field" id="f_bd" style="flex:1"><option value="">اليوم</option>'+Array.from({length:31},function(_,i){var v=('0'+(i+1)).slice(-2);return '<option value="'+v+'"'+(bdp[1]===v?' selected':'')+'>'+(i+1)+'</option>';}).join('')+'</select><select class="field" id="f_bm" style="flex:2"><option value="">الشهر</option>'+Array.from({length:12},function(_,i){var v=('0'+(i+1)).slice(-2);return '<option value="'+v+'"'+(bdp[0]===v?' selected':'')+'>'+ymName('2026-'+v)+'</option>';}).join('')+'</select></div>';
   h+='<span class="lbl">القدم المفضلة</span><div class="seg" id="f_foot">'+['R','L','B'].map(function(k){return '<button type="button" class="'+(p.foot===k?'on':'')+'" onclick="pf.p.foot=\''+k+'\';this.parentNode.querySelectorAll(\'button\').forEach(function(b){b.classList.remove(\'on\')});this.classList.add(\'on\')">'+FOOT[k]+'</button>';}).join('')+'</div>';
   h+='<span class="lbl">نجوم القدم الضعيفة</span>'+starPick('f_wf','wf',p.wf||3);
   h+='<div class="hstack" style="align-items:flex-start"><div class="grow"><span class="lbl">نجوم المهارة</span>'+starPick('f_sm','sm',p.sm||3)+'</div></div>';
@@ -2160,7 +2172,7 @@ function savePlayer(){
   var nv={}; Object.keys(p.never||{}).forEach(function(k){if(p.never[k]&&POS[k]&&pr.indexOf(k)<0)nv[k]=true;});
   var dup=playersArr().filter(function(x){return x.id!==pf.id&&x.name===p.name;});
   if(dup.length){toast('⚠️ يوجد لاعب بنفس الاسم');return;}
-  var id=pf.id||uid('p'); var tr={}; TRAITS.forEach(function(x){if((p.traits||{})[x[0]])tr[x[0]]=true;}); var rec={joker:FEAT_JOKER&&p.joker?true:null,name:p.name,age:p.age,foot:p.foot,traits:tr,sm:clamp(+p.sm||3,1,5),wf:clamp(+p.wf||3,1,5),pos:p.pos,pos2:p.pos2,pos3:p.pos3,pos4:p.pos4,never:nv,attrs:p.attrs,created:p.created||Date.now()}; if(p.carry)rec.carry=p.carry; if(photoSrc(p))rec.photo=p.photo;
+  var id=pf.id||uid('p'); var tr={}; TRAITS.forEach(function(x){if((p.traits||{})[x[0]])tr[x[0]]=true;}); var rec={joker:FEAT_JOKER&&p.joker?true:null,name:p.name,age:p.age,foot:p.foot,traits:tr,sm:clamp(+p.sm||3,1,5),wf:clamp(+p.wf||3,1,5),pos:p.pos,pos2:p.pos2,pos3:p.pos3,pos4:p.pos4,never:nv,attrs:p.attrs,created:p.created||Date.now()}; if(p.carry)rec.carry=p.carry; if(p.crowdAdj)rec.crowdAdj=p.crowdAdj; var bm=document.getElementById('f_bm').value, bd=document.getElementById('f_bd').value; if(bm&&bd)rec.bday=bm+'-'+bd; if(photoSrc(p))rec.photo=p.photo;
   put('players/'+id,rec); closeModal(); toast(pf.id?'تم حفظ التعديلات':'تمت إضافة '+p.name);
 }
 function deletePlayer(id){
@@ -2179,6 +2191,7 @@ function openPlayerInner(id){
   var h=mh('');
   if(isCoach) h=h.replace('<span class="side"></span>','<button class="m-edit" id="editPlayer" onclick="openPlayerForm(\''+id+'\')">'+ic('pencil','xs')+'تعديل</button>');
   h+='<div class="prof">'+ring(o,POS[p.pos].ar,photoSrc(p))+'<div class="nm">'+esc(p.name)+'</div>'+(isJoker(p)?'<div id="profJoker" style="margin:6px 0 4px">'+jokerBadge(true)+'<div class="small muted" style="margin-top:6px">يلعب في مراكز كثيرة</div></div>':'')+'<div class="mt">'+(p.age?cnt(+p.age||0,'سنة')+' · ':'')+'القدم: '+(FOOT[p.foot]||'—')+'</div><div class="mt" style="display:flex;gap:16px;justify-content:center;margin-top:8px"><span>المهارة '+starsHTML(p.sm,'big')+'</span><span>القدم الضعيفة '+starsHTML(p.wf,'big')+'</span></div>'+(isCoach&&traitsOf(p).length?'<div class="chips" id="profTraits" style="justify-content:center;gap:6px;margin-top:10px">'+traitsOf(p).map(function(k){return '<span class="tag on">'+TRAITS.filter(function(x){return x[0]===k;})[0][1]+'</span>';}).join('')+'</div>':'')+'</div>';
+  if(isBday(p)) h+='<div class="bd-prof" id="profBday">🎉 عيد ميلاد سعيد يا '+esc(p.name.split(' ')[0])+'! 🎂</div>';
   var pw=potmWins(id); if(pw.length) h+='<div class="potm-prof" id="profPotm"><span class="pp-m">🏅</span><div><b>لاعب الشهر'+(pw.length>1?' <span class="num ltr" dir="ltr">×'+pw.length+'</span>':'')+'</b><span>'+pw.map(function(ym){return ymName(ym)+' '+ym.slice(0,4);}).join(' · ')+'</span></div></div>';
   if(!isCoach&&myId()===id) h+='<div style="text-align:center;margin:4px 0 8px"><button class="lnk" id="myAgeBtn" style="background:none;border:none;color:var(--tint);font-size:15px;font-weight:700;cursor:pointer" onclick="editMyAge()">✎ '+(p.age?'تعديل عمري':'أضف عمري')+'</button></div>';
   if(isCoach) h+='<div class="pinrow" id="pinRow">'+(hasPin(id)?'<span>🔒 عنده كلمة سر</span><button class="lnk" id="pinReset" onclick="resetPin(\''+id+'\')">إعادة تعيين كلمة السر</button>':'<span>🔓 ما اختار كلمة سر بعد</span>')+'</div>';
