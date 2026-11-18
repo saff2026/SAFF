@@ -1338,7 +1338,7 @@ function lateCopy(){
   try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(done,fb); return; } }catch(e){} fb();
 }
 
-function bdayHomeH(){var b=playersArr().filter(isBday); if(!b.length)return ''; return b.map(function(p){return '<div class="card bd-home" id="bdHome" onclick="openPlayer(\''+p.id+'\')"><div class="cell ind">'+avatar(p.id,true)+'<div class="body"><div class="t">🎂 اليوم يوم ميلاد '+esc(p.name)+'</div><div class="s">لا تنسون تهنّونه 🎉</div></div>'+chev()+'</div></div>';}).join('');}
+function bdayHomeH(){var b=playersArr().filter(isBday); if(!b.length)return ''; return b.map(function(p){return '<div class="card bd-home" id="bdHome" onclick="openPlayer(\''+p.id+'\')"><div class="cell ind">'+avatar(p.id,true)+'<div class="body"><div class="t">🎂 '+(isBdayToday(p)?'اليوم يوم ميلاد ':'أمس كان يوم ميلاد ')+esc(p.name)+'</div><div class="s">'+(isBdayToday(p)?'لا تنسون تهنّونه 🎉':'باقي وقت تباركون له 🎉')+'</div></div>'+chev()+'</div></div>';}).join('');}
 /* ---------- لاعب الشهر: تصويت اللاعبين بين أفضل 3 في الشهر ---------- */
 // التصويت من يوم 1 إلى يوم 5 من الشهر اللي بعده. إذا تعادلوا (أو ما صوّت أحد) يفوز الأفضل أداءً.
 var POTM_FROM='2026-11', POTM_DAYS=5, POTM_SAT=false; // POTM_SAT: التصويت من بعد آخر سبت في الشهر إلى السبت اللي بعده (يوم الهدية)
@@ -1686,7 +1686,9 @@ function starsHTML(n,cls){n=clamp(+n||0,0,5);return '<span class="stars '+(cls||
 function starPick(id,key,val){return '<div class="starpick" id="'+id+'">'+[1,2,3,4,5].map(function(i){return '<button type="button" class="'+(i<=val?'on':'')+'" data-v="'+i+'" onclick="pf.p.'+key+'='+i+';this.parentNode.querySelectorAll(\'button\').forEach(function(b){b.classList.toggle(\'on\',+b.dataset.v<='+i+')})" aria-label="'+i+'">★</button>';}).join('')+'</div>';}
 // وسام الجوكر: يمنحه مجلس الإدارة لمن يلعب في مراكز كثيرة
 // يوم الميلاد: «MM-DD» — في يومه تتلوّن بطاقته
-function isBday(p){if(!p||!p.bday)return false; var d=new Date(); return p.bday===('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+function mdOf(d){return ('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+function isBdayToday(p){return !!(p&&p.bday)&&p.bday===mdOf(new Date());}
+function isBday(p){if(!p||!p.bday)return false; var y=new Date(); y.setDate(y.getDate()-1); return p.bday===mdOf(new Date())||p.bday===mdOf(y);} // يومه واليوم اللي بعده
 function isJoker(p){return FEAT_JOKER&&!!(p&&p.joker);}
 function jokerBadge(big){return '<span class="joker'+(big?' big':'')+'" title="الجوكر: يلعب في مراكز كثيرة">🃏 الجوكر</span>';}
 function cardHTML(p){
