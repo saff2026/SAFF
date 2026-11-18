@@ -286,6 +286,7 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .potm-win .pw-n{font-size:20px;font-weight:800}.potm-win .pw-s{font-size:13px;color:rgba(255,255,255,.75);margin-top:4px}
 .potm-prof{display:flex;align-items:center;gap:10px;justify-content:center;margin:8px auto 4px;padding:8px 14px;border-radius:14px;background:color-mix(in srgb,#D4A93C 14%,var(--card));border:1px solid color-mix(in srgb,#D4A93C 40%,transparent);width:max-content;max-width:100%}
 .potm-prof .pp-m{font-size:24px}.potm-prof b{display:block;font-size:14px}.potm-prof div span{font-size:12px;color:var(--label2)}
+.og-tag{font-size:11px;font-weight:700;color:var(--red);background:color-mix(in srgb,var(--red) 12%,transparent);padding:1px 6px;border-radius:6px;margin-inline-start:4px}
 .crowd-bar{height:6px;border-radius:3px;background:var(--fill);overflow:hidden;margin:4px 2px 0}.crowd-bar i{display:block;height:100%;background:var(--tint);border-radius:3px;transition:width .25s}
 .crowd-q{text-align:center;font-size:21px;font-weight:800;margin:18px 0 16px}
 .crowd-two{display:flex;align-items:stretch;gap:8px}.crowd-or{align-self:center;font-size:13px;color:var(--label2);font-weight:700}
@@ -1146,7 +1147,7 @@ function voteInner(sid){
 }
 function inSess(s,id){return !!id&&participants(s).indexOf(id)>=0;}
 function castVote(sid,pid){fxPop('#ov.show .vopt[data-id="'+pid+'"]');var s=S.sessions[sid],me=myId(); if(!s||!me||!voteOpen(s))return; if(!inSess(s,me)){toast('⚠️ التصويت للاعبي هذا التمرين فقط');return;} if(!inSess(s,pid))return; putVote('sessions/'+sid+'/votes/'+me,pid); toast('تم تصويتك لـ '+pname(pid));}
-function goalCount(s){var g={},a={};vals(s.goals).forEach(function(x){if(x.s)g[x.s]=(g[x.s]||0)+1;if(x.a)a[x.a]=(a[x.a]||0)+1;});return {g:g,a:a};}
+function goalCount(s){var g={},a={};vals(s.goals).forEach(function(x){if(x.og)return; if(x.s)g[x.s]=(g[x.s]||0)+1;if(x.a)a[x.a]=(a[x.a]||0)+1;});return {g:g,a:a};}
 // تصويت اللاعبين على أفضل لاعب
 var VOTE_AFTER=2*3600*1000, VOTE_LEN=12*3600*1000;
 function voteStart(s){return startTs(s)+VOTE_AFTER;}
@@ -1343,7 +1344,7 @@ function monthStats(ym){
   doneSessions().filter(function(s){return String(s.date||'').slice(0,7)===ym;}).forEach(function(s){
     var m=mvpOf(s), add=function(id){return st[id]=st[id]||{id:id,apps:0,goals:0,assists:0,mvp:0,rSum:0,rN:0};};
     participants(s).forEach(function(id){if(!P(id))return; var x=add(id); x.apps++; var r=s.ratings[id]; if(typeof r==='number'){x.rSum+=r;x.rN++;}});
-    vals(s.goals).forEach(function(g){ if(g.s&&P(g.s))add(g.s).goals++; if(g.a&&P(g.a))add(g.a).assists++; });
+    vals(s.goals).forEach(function(g){ if(g.og)return; if(g.s&&P(g.s))add(g.s).goals++; if(g.a&&P(g.a))add(g.a).assists++; });
     if(m&&P(m))add(m).mvp++;
   });
   Object.keys(st).forEach(function(k){var x=st[k]; x.score=x.mvp*5+x.goals*2+x.assists*1.5+x.apps+(x.rN?(x.rSum/x.rN-6)*x.rN*0.5:0);});
@@ -1541,7 +1542,7 @@ function computeStats(){
       var r=s.ratings[id]; if(typeof r==='number'&&ratingsVisible(s)){x.rSum+=r;x.rN++;x.ratings.push({sid:s.id,date:s.date,r:r});}
       var tm=teamOf(s,id); if(tm){var my=sc[tm.t],op=sc[tm.t==='A'?'B':'A']; if(my>op)x.w++;else if(my<op)x.l++;else x.d++;}
     });
-    vals(s.goals).forEach(function(g){ if(g.s&&st[g.s])st[g.s].goals++; if(g.a&&st[g.a])st[g.a].assists++; });
+    vals(s.goals).forEach(function(g){ if(g.og){if(g.s&&st[g.s])st[g.s].og=(st[g.s].og||0)+1;return;} if(g.s&&st[g.s])st[g.s].goals++; if(g.a&&st[g.a])st[g.a].assists++; });
     if(m&&st[m])st[m].mvp++;
     Object.keys(s.checkin||{}).forEach(function(id){var x=st[id]; if(x&&isLate(s,id)){x.late++;x.lateMin+=lateMin(s,s.checkin[id]);}});
   });
@@ -3188,7 +3189,7 @@ function drawPoster(kind,s,logo,ph){
       rowBox(y-6,n*rh+18);
       c.fillStyle=PST.line; c.fillRect(W/2,y+6,1.5,n*rh-6);
       var gl=function(g,i,right){ var yy=y+18+i*rh+18, half=W/2-P0-60; c.font=F(800,30);
-        var nm=fitTxt(c,g.s?pname(g.s):'غير محدد',half), x=right?R-34:P0+34;
+        var nm=fitTxt(c,(g.s?pname(g.s):'غير محدد')+(g.og?' (عكسي)':''),half), x=right?R-34:P0+34;
         c.beginPath();c.arc(right?x-2:x+2,yy,7,0,Math.PI*2);c.fillStyle=PST.gold;c.fill();
         txt(nm,right?x-22:x+22,yy,F(800,30),'#fff',right?'right':'left');
         if(g.a){c.font=F(600,20);txt(fitTxt(c,'صناعة: '+pname(g.a),half),right?x-22:x+22,yy+30,F(600,20),PST.mute,right?'right':'left');} };
@@ -3432,7 +3433,7 @@ function goalsHTML(s,C){
   if(!gs.length)return '<div class="cell"><div class="body" style="text-align:center"><div class="s">لم تُسجَّل أهداف بعد</div></div></div>';
   var col=function(t){var xs=gs.filter(function(g){return g.t===t;});
     return '<div class="gcol '+t+'">'+xs.map(function(g){
-      return '<div class="gl gitem"><span class="gi">'+ic('ball','xs')+'</span><div class="gb"><div class="gn">'+(g.s?esc(pname(g.s)):'غير محدد')+(g.m?' <span class="gmin num">'+g.m+'′'+(g.h===2?' <small>ش2</small>':'')+'</span>':'')+'</div>'+(g.a?'<div class="ga">صناعة: '+esc(pname(g.a))+'</div>':'')+'</div>'+
+      return '<div class="gl gitem"><span class="gi">'+ic('ball','xs')+'</span><div class="gb"><div class="gn">'+(g.s?esc(pname(g.s)):'غير محدد')+(g.og?' <span class="og-tag">هدف عكسي</span>':'')+(g.m?' <span class="gmin num">'+g.m+'′'+(g.h===2?' <small>ش2</small>':'')+'</span>':'')+'</div>'+(g.a?'<div class="ga">صناعة: '+esc(pname(g.a))+'</div>':'')+'</div>'+
         (C?'<button class="m-x gx" onclick="delGoal(\''+s.id+'\',\''+g._k+'\')" aria-label="حذف الهدف">'+ic('x','xs')+'</button>':'')+'</div>';}).join('')+'</div>';};
   return '<div class="gcols">'+col('A')+col('B')+'</div>';
 }
@@ -3674,20 +3675,22 @@ function pickSlot(t,slotId,pid){
 
 function openGoal(){
   if(!openSession())return;
-  window._g={t:'A',s:'',a:''};
+  window._g={t:'A',s:'',a:'',og:false};
   renderGoalModal(true);
 }
 function renderGoalModal(first){
   var s=openSession(), g=window._g;
-  var teamIds=teamPlayers(s,g.t).filter(function(id){return P(id);});
+  var gt=g.og?(g.t==='A'?'B':'A'):g.t; // العكسي: اللاعب من الفريق الثاني
+  var teamIds=teamPlayers(s,gt).filter(function(id){return P(id);});
   var bench=attendees(s).filter(function(id){return P(id)&&!teamOf(s,id);});
   var opts=function(sel,exclude){return '<option value="">'+(exclude!==undefined?'بدون':'غير محدد')+'</option>'+
-    (teamIds.length?'<optgroup label="'+esc(s.teams[g.t].name)+'">'+teamIds.filter(function(id){return id!==exclude;}).map(function(id){return '<option value="'+id+'"'+(sel===id?' selected':'')+'>'+esc(pname(id))+'</option>';}).join('')+'</optgroup>':'')+
+    (teamIds.length?'<optgroup label="'+esc(s.teams[gt].name)+'">'+teamIds.filter(function(id){return id!==exclude;}).map(function(id){return '<option value="'+id+'"'+(sel===id?' selected':'')+'>'+esc(pname(id))+'</option>';}).join('')+'</optgroup>':'')+
     (bench.length?'<optgroup label="الاحتياط">'+bench.filter(function(id){return id!==exclude;}).map(function(id){return '<option value="'+id+'"'+(sel===id?' selected':'')+'>'+esc(pname(id))+'</option>';}).join('')+'</optgroup>':'');};
   var h=mh('تسجيل هدف');
   h+='<span class="lbl">الفريق</span><div class="seg">'+['A','B'].map(function(t){return '<button type="button" class="'+(g.t===t?'on':'')+'" onclick="window._g.t=\''+t+'\';window._g.s=\'\';window._g.a=\'\';renderGoalModal()"><span class="dot '+t+'"></span>'+esc(s.teams[t].name)+'</button>';}).join('')+'</div>';
-  h+='<span class="lbl">الهدّاف</span><select class="field" id="g_s" onchange="window._g.s=this.value;renderGoalModal()">'+opts(g.s)+'</select>';
-  h+='<span class="lbl">صانع الهدف (اختياري)</span><select class="field" id="g_a" onchange="window._g.a=this.value">'+opts(g.a,g.s||'__')+'</select>';
+  h+='<div class="card" style="margin-top:12px"><div class="cell tap" id="g_og" onclick="window._g.og=!window._g.og;window._g.s=\'\';window._g.a=\'\';renderGoalModal()"><div class="body"><div class="t">هدف عكسي</div><div class="s">لاعب من '+esc(s.teams[g.t==='A'?'B':'A'].name)+' سجّل في مرماه، والهدف يُحسب لـ '+esc(s.teams[g.t].name)+'</div></div><span class="tgl'+(g.og?' on':'')+'"><i></i></span></div></div>';
+  h+='<span class="lbl">'+(g.og?'اللاعب اللي سجّل في مرماه':'الهدّاف')+'</span><select class="field" id="g_s" onchange="window._g.s=this.value;renderGoalModal()">'+opts(g.s)+'</select>';
+  if(!g.og) h+='<span class="lbl">صانع الهدف (اختياري)</span><select class="field" id="g_a" onchange="window._g.a=this.value">'+opts(g.a,g.s||'__')+'</select>';
   h+='<div class="m-foot"><button class="btn" id="g_save" onclick="saveGoal()">تسجيل الهدف</button></div>';
   if(first)openModal(h);else setModal(h);
 }
@@ -3736,10 +3739,10 @@ function timerHTML(s){
 setInterval(function(){document.querySelectorAll('[data-tm]').forEach(function(e){var s=S.sessions[e.getAttribute('data-tm')];if(!s)return;var t=tmOf(s);var v=(e.getAttribute('data-tm-pre')||'')+tmFmt(tmElapsed(t));if(e.textContent!==v)e.textContent=v;});},1000);
 function saveGoal(){
   var s=openSession(), g=window._g;
-  var a=document.getElementById('g_a').value; if(a===g.s)a='';
-  var rec={t:g.t,at:Date.now()}; if(g.s)rec.s=g.s; if(a)rec.a=a;
+  var ae=document.getElementById('g_a'), a=g.og||!ae?'':ae.value; if(a===g.s)a='';
+  var rec={t:g.t,at:Date.now()}; if(g.s)rec.s=g.s; if(a)rec.a=a; if(g.og)rec.og=true;
   var tm=tmOf(s); if(tmActive(s)){rec.h=tm.half; rec.m=Math.floor(tmElapsed(tm)/60000)+1;} // دقيقة الهدف
-  put('sessions/'+s.id+'/goals/'+uid('g'),rec); closeModal(); toast('هدف لـ '+s.teams[g.t].name);
+  put('sessions/'+s.id+'/goals/'+uid('g'),rec); closeModal(); toast((g.og?'هدف عكسي لـ ':'هدف لـ ')+s.teams[g.t].name);
 }
 function delGoal(sid,gk){askConfirm('<b>حذف هذا الهدف؟</b>',function(){put('sessions/'+sid+'/goals/'+gk,null);},'حذف');}
 function rate(pid,d){
