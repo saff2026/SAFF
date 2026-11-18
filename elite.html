@@ -286,7 +286,7 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .pc-name{margin-top:12px;font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sortrow{gap:10px}.sortrow.cur .t{color:var(--tint);font-weight:800}.sortseg{flex:none;width:190px}.sortseg button{font-size:13px}
 .pc-attrs .at.hl .r span,.pc-attrs .at.hl .r b{color:var(--tint);font-weight:900}
-.valcol{flex:none;width:96px;display:flex;align-items:baseline;justify-content:flex-start;gap:7px;margin-inline-start:8px}.valcol b{font-size:17px;font-weight:800;color:var(--label);min-width:22px;text-align:right}.valcol span{font-size:13px;color:var(--label2)}.valcol .up{font-size:13px;color:var(--green);font-weight:700}
+.valcol{flex:none;width:auto;display:flex;align-items:baseline;justify-content:flex-start;gap:7px;margin-inline-start:8px}.valcol b{font-size:17px;font-weight:800;color:var(--label);min-width:22px;text-align:right}.valcol span{font-size:13px;color:var(--label2)}.valcol .up{font-size:13px;color:var(--green);font-weight:700}
 .pc-meta{font-size:12.5px;color:var(--label2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .pc-attrs{display:grid;grid-template-columns:1fr 1fr;gap:7px 12px;margin-top:12px;}
 .at{font-size:11.5px;color:var(--label2);}
@@ -1638,7 +1638,16 @@ function renderHome(el){
   if(isCoach&&!SBX) h+='<div class="card" style="margin-top:14px"><div class="cell tap ind" id="sbxEnter" onclick="enterSandbox()">'+tile('#AF52DE','star',true)+'<div class="body"><div class="t">🧪 تمرين تجريبي</div><div class="s">جرّب كل شي (التحضير، التصويت، النتيجة…) بدون ما يشوفه اللاعبون</div></div>'+chev()+'</div></div>';
   h+=lateCardH();
   if(isCoach) h+='<div class="card" style="margin-top:26px"><div class="cell tap ind" onclick="openSettings()">'+tile('#8E8E93','gear')+'<div class="body"><div class="t">الإعدادات والنسخ الاحتياطي</div></div>'+chev()+'</div></div>';
-  el.innerHTML=h;
+  el.innerHTML=h; fitValcols(el);
+}
+// عمود الأرقام: بعرض أطول قيمة في نفس البطاقة (بدون فراغ، والأرقام على نفس المحاذاة)
+function fitValcols(el){
+  var go=function(){ el.querySelectorAll('.card').forEach(function(c){
+    var v=c.querySelectorAll('.valcol'); if(!v.length)return; var m=0;
+    v.forEach(function(x){x.style.width='auto'; m=Math.max(m,Math.ceil(x.getBoundingClientRect().width));});
+    if(m>0) v.forEach(function(x){x.style.width=m+'px';});
+  });};
+  go(); try{ if(document.fonts&&document.fonts.ready) document.fonts.ready.then(go); }catch(e){}
 }
 
 /* ---------- اللاعبون ---------- */
