@@ -672,7 +672,7 @@ select.field{background-position:calc(100% - 14px) 50%;padding-left:12px;padding
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261118094837';
+var BUILD='20261118101420';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -2019,6 +2019,7 @@ function renderSession(el){
   h+='<div class="card pad"><div class="teams-h2"><div class="th"><div class="tn"><span class="dot A"></span>'+esc(s.teams.A.name)+'</div><div class="thr">'+formBtn(s,'A',C)+'<span class="tag on num">OVR '+(sA||'—')+'</span></div></div><div class="th B"><div class="tn">'+esc(s.teams.B.name)+'<span class="dot B"></span></div><div class="thr"><span class="tag on num">OVR '+(sB||'—')+'</span>'+formBtn(s,'B',C)+'</div></div></div>';
   h+='<div class="balance"><i style="width:'+(sA/tot*100)+'%;background:var(--teamA)"></i><i style="width:'+(sB/tot*100)+'%;background:var(--teamBbar,#C7C7CC)"></i></div>';
   h+=pitchHTML(s,C);
+  h+=refHTML(s,C);
   h+=benchHTML(s,C);
   h+=(C?'<div class="foot" style="margin:12px 2px 0">Tap any position on the pitch to choose a player.</div>':'')+'</div>';
   if(C) h+=lineupInfoHTML(s);
@@ -2586,6 +2587,30 @@ function subsHTML(s,C){
 }
 // اللاعبون الحاضرون بدون مركز ولا بديل (الاحتياط)
 function benchOf(s){return Object.keys(s.att).filter(function(id){return s.att[id]&&P(id)&&!teamOf(s,id)&&!(s.absent&&s.absent[id]);});}
+/* ---------- الحكم: يختاره مجلس الإدارة لكل تمرين (من اللاعبين أو اسم من خارجهم) ---------- */
+function refOf(s){if(!s)return null; if(s.ref&&P(s.ref))return {id:s.ref,name:pname(s.ref)}; var n=String(s.refName||'').trim(); return n?{name:n}:null;}
+function refHTML(s,C){
+  var r=refOf(s); if(!r&&!C)return '';
+  var face=r&&r.id?avatar(r.id):'<span class="avatar" style="display:inline-flex;align-items:center;justify-content:center;background:#F5C518;color:#2b2000;font-weight:800">'+(r?esc(r.name.charAt(0)):'🟨')+'</span>';
+  return '<div class="card" style="margin-top:10px"><div class="cell'+(C?' tap ind':'')+'" id="refRow"'+(C?' onclick="openRef()"':(r&&r.id?' onclick="openPlayer(\''+r.id+'\')"':''))+'>'+face+'<div class="body"><div class="s">Referee</div><div class="t" id="refName">'+(r?esc(r.name):'<span class="muted">Tap to choose the referee</span>')+'</div></div>'+(C?chev():'')+'</div></div>';
+}
+function openRef(){
+  var s=openSession(); if(!s||!isCoach)return; var r=refOf(s), other=!!(r&&!r.id);
+  var ps=playersArr().slice().sort(function(a,b){return a.name.localeCompare(b.name,'ar');});
+  var h=mh('Referee')+'<div class="card pad"><select class="field" id="refSel" onchange="document.getElementById(\'refOtherBox\').style.display=this.value===\'__other\'?\'block\':\'none\'">'+
+    '<option value="">No referee</option>'+ps.map(function(p){return '<option value="'+p.id+'"'+(r&&r.id===p.id?' selected':'')+'>'+esc(p.name)+'</option>';}).join('')+
+    '<option value="__other"'+(other?' selected':'')+'>Someone outside the players…</option></select>'+
+    '<div id="refOtherBox" style="display:'+(other?'block':'none')+';margin-top:10px"><input class="field" id="refOther" placeholder="Referee name" value="'+(other?esc(r.name):'')+'"></div>'+
+    '<div class="foot" style="margin-top:8px">If you choose one of the players, their photo appears on the lineup image.</div></div>'+
+    '<div class="m-foot"><button class="btn" id="refSave" onclick="saveRef()">Save</button></div>';
+  openModal(h);
+}
+function saveRef(){
+  var s=openSession(); if(!s)return; var v=document.getElementById('refSel').value, m={};
+  if(v==='__other'){ var n=document.getElementById('refOther').value.trim(); if(!n){toast('⚠️ Enter the referee name');return;} m['sessions/'+s.id+'/ref']=null; m['sessions/'+s.id+'/refName']=n; }
+  else { m['sessions/'+s.id+'/ref']=v||null; m['sessions/'+s.id+'/refName']=null; }
+  putMany(m); closeModal(); toast(v?'Referee saved':'Referee removed');
+}
 function benchHTML(s,C){
   var b=benchOf(s); if(!b.length)return '';
   b.sort(function(x,y){return ovr(P(y))-ovr(P(x));});
@@ -2703,6 +2728,7 @@ function lineupImage(sid){
   var s=sid?S.sessions[sid]:openSession(); if(!s)return;
   var ids=teamPlayers(s,'A').concat(teamPlayers(s,'B')).filter(function(id){return P(id);});
   if(!ids.length){toast('⚠️ Balance the teams first');return;}
+  var rf=refOf(s); if(rf&&rf.id&&ids.indexOf(rf.id)<0) ids.push(rf.id); // صورة الحكم
   toast('Preparing the image…');
   var fontP=(document.fonts&&document.fonts.load)?Promise.all(['800 60px Tajawal','700 30px Tajawal','500 26px Tajawal','800 42px Changa','700 20px Changa'].map(function(f){return document.fonts.load(f).catch(function(){});})):Promise.resolve();
   Promise.all([fontP,loadImg('saff-white.png')].concat(ids.map(function(id){return loadImg(photoSrc(P(id)));}))).then(function(r){
@@ -2730,7 +2756,7 @@ function saveImg(noShare){
 function hexMix(h,t,a){var p=function(x){return [parseInt(x.slice(1,3),16),parseInt(x.slice(3,5),16),parseInt(x.slice(5,7),16)];},A=p(h),B=p(t);return 'rgb('+A.map(function(v,i){return Math.round(v+(B[i]-v)*a);}).join(',')+')';}
 function hexA(h,a){return 'rgba('+parseInt(h.slice(1,3),16)+','+parseInt(h.slice(3,5),16)+','+parseInt(h.slice(5,7),16)+','+a+')';}
 function drawLineup2(s,ph){
-  var W=1080,H=1080, cv=document.createElement('canvas'); cv.width=W; cv.height=H; var c=cv.getContext('2d'); c.direction='rtl'; c.textBaseline='middle';
+  var REF=refOf(s), W=1080,H=REF?1200:1080, cv=document.createElement('canvas'); cv.width=W; cv.height=H; var c=cv.getContext('2d'); c.direction='rtl'; c.textBaseline='middle';
   var HF='"Changa",'+IMG_FONT, F=function(w,z,ff){return w+' '+z+'px '+(ff||IMG_FONT);};
   var txt=function(t,x,y,font,color,align){c.font=font;c.fillStyle=color;c.textAlign=align||'center';c.fillText(t,x,y);};
   var col={A:teamColor(s,'A'),B:teamColor(s,'B')};
@@ -2775,6 +2801,18 @@ function drawLineup2(s,ph){
   var vy=PT+(PB-PT)/2; c.save(); c.translate(W/2,vy); c.rotate(Math.PI/4); var vg=c.createLinearGradient(-42,-42,42,42); vg.addColorStop(0,hexMix(col.A,'#000000',.72)); vg.addColorStop(1,hexMix(col.B,'#000000',.72));
   c.shadowColor='rgba(0,0,0,.6)'; c.shadowBlur=40; c.shadowOffsetY=14; rrect(c,-42,-42,84,84,22); c.fillStyle=vg; c.fill(); c.shadowColor='transparent'; c.strokeStyle='rgba(255,255,255,.5)'; c.lineWidth=2; c.stroke(); c.restore();
   c.save(); c.direction='ltr'; txt('VS',W/2,vy+2,F(800,30,HF),'#fff'); c.restore();
+  // الحكم: صورته واسمه في الأسفل
+  if(REF){ var ry=H-66, rr=40, im=REF.id&&ph[REF.id];
+    var sl=c.createLinearGradient(0,0,W,0); sl.addColorStop(0,'rgba(255,255,255,0)'); sl.addColorStop(.5,'rgba(255,255,255,.35)'); sl.addColorStop(1,'rgba(255,255,255,0)'); c.fillStyle=sl; c.fillRect(80,H-136,W-160,1.5);
+    c.font=F(800,30,HF); var nmW=Math.min(520,c.measureText(REF.name).width), gw=rr*2+22+Math.max(nmW,90), gx=W/2+gw/2, ax=gx-rr;
+    c.beginPath(); c.arc(ax,ry,rr+4,0,Math.PI*2); var yg=c.createLinearGradient(ax-rr,ry-rr,ax+rr,ry+rr); yg.addColorStop(0,'#FBE38E'); yg.addColorStop(1,'#C99A2E'); c.fillStyle=yg; c.fill();
+    c.save(); c.beginPath(); c.arc(ax,ry,rr,0,Math.PI*2); c.clip();
+    if(im){var sc=Math.max(2*rr/im.naturalWidth,2*rr/im.naturalHeight),iw=im.naturalWidth*sc,ih=im.naturalHeight*sc;c.drawImage(im,ax-iw/2,ry-ih/2,iw,ih);}
+    else{c.fillStyle='#2a2208';c.fillRect(ax-rr,ry-rr,2*rr,2*rr); txt(REF.name.trim().charAt(0),ax,ry+3,F(800,34),'#FBE38E');}
+    c.restore();
+    var tx=ax-rr-22; txt('🟨 Referee',tx,ry-20,F(700,20,HF),'#E6CC78','right');
+    var nm=REF.name; c.font=F(800,30,HF); while(nm.length>2&&c.measureText(nm).width>520)nm=nm.slice(0,-1);
+    txt(nm,tx,ry+16,F(800,30,HF),'#fff','right'); }
   return cv.toDataURL('image/png');
 }
 function drawLineup(s,logo,ph){
@@ -3562,7 +3600,7 @@ function sessionDetailInner(id){
   if(isCoach) h+='<button class="btn tinted block" id="shareSess" style="margin-top:12px" onclick="openShare(\''+s.id+'\')">'+ic('upl','s')+'Share '+(done?'the summary':'the lineup')+'</button>';
   if(done&&voteOpen(s)) h+='<div class="card" style="margin-top:12px"><div class="cell tap ind" onclick="openVote(\''+s.id+'\')">'+tile('#D4A93C','star',true)+'<div class="body"><div class="t">Best-player voting is open</div><div class="s">Until '+fmtWhen(voteEnd(s))+' — the result shows after that</div></div>'+chev()+'</div></div>';
   else if(m) h+='<div class="card" style="margin-top:12px"><div class="mvp" onclick="openPlayer(\''+m+'\')"><div class="medal">'+icF('star')+'</div><div class="grow"><div class="k">Best player of the session</div><div class="n">'+esc(pname(m))+'</div></div>'+rBadge(s.ratings[m])+'</div></div>';
-  if(hasLineup(s)) h+=gh('Lineup',!done&&isCoach?lnk('Photo','lineupImage(\''+s.id+'\')','lineupImg2','down'):'')+'<div class="card pad">'+pitchHTML(s,false)+'</div>';
+  if(hasLineup(s)) h+=gh('Lineup',!done&&isCoach?lnk('Photo','lineupImage(\''+s.id+'\')','lineupImg2','down'):'')+'<div class="card pad">'+pitchHTML(s,false)+'</div>'+refHTML(s,false);
   if(!done&&isCoach) h+=rotationHTML(s,false);
   if(!done&&s.ratingsPub){ var rr=Object.keys(s.ratings||{}).filter(function(id){return P(id)&&typeof s.ratings[id]==='number';}).sort(function(a,b){return s.ratings[b]-s.ratings[a];});
     if(rr.length) h+=gh('Ratings')+'<div class="card" id="pubRatings">'+rr.map(function(id,i){var tm=teamOf(s,id);return '<div class="cell tap" onclick="openPlayer(\''+id+'\')"><span class="num muted" style="width:20px;text-align:center">'+(i+1)+'</span>'+avatar(id)+'<div class="body"><div class="t">'+esc(pname(id))+'</div></div><span class="dot '+(tm?tm.t:'N')+'"></span><b class="rtag num '+rateCls(s.ratings[id])+'">'+s.ratings[id]+'</b></div>';}).join('')+'</div>'; }
