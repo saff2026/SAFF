@@ -19,7 +19,6 @@ CHANGES = [
      '<img class="logo" src="emblem.png?v=3" alt="">', 1),
     ('icon-saff-192.png', 'icon-elite-192.png?v=3', 2),       # أيقونة الشاشة الرئيسية
     ("loadImg('saff-white.png')", "loadImg('emblem.png?v=3')", 2),  # صور المشاركة
-    ('الاتحاد السعودي لكرة القدم · ', '', 1),             # تذييل صور المشاركة
     ('var FEAT_JOKER = false;', 'var FEAT_JOKER = true;', 1),  # وسام الجوكر لنخبة السبت فقط
     ('var FEAT_SELFISH = true;', 'var FEAT_SELFISH = false;', 1),
     ('var FEAT_TRAITS = true;', 'var FEAT_TRAITS = false;', 1),
