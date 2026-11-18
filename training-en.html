@@ -3665,8 +3665,8 @@ function rulesHTML(){
   var h='<div id="rulesSec">'+gh('Rating system');
   h+='<div class="card" style="overflow:hidden"><div style="padding:20px 18px;background:linear-gradient(135deg,#0E4A35,#06231B);color:#fff">'+
      '<div style="font-size:12px;letter-spacing:.5px;color:#E6CC78;font-weight:700">A professional rating model</div>'+
-     '<div style="font-size:21px;font-weight:800;margin:6px 0 8px">Attributes update automatically after every session</div>'+
-     '<div style="font-size:14px;line-height:1.75;color:rgba(255,255,255,.82)">Based on the “Elo” method (Elo), the same mathematical basis FIFA has used to rank national teams since 2018, comparing each player’s performance with what was expected of them.</div></div>'+
+     '<div style="font-size:clamp(17px,5vw,21px);font-weight:800;margin:6px 0 8px;line-height:1.35;text-wrap:balance">Attributes update automatically after every session</div>'+
+     '<div style="font-size:14px;line-height:1.75;color:rgba(255,255,255,.82);text-wrap:pretty">Based on the “Elo” method (Elo), the same mathematical basis FIFA has used to rank national teams since 2018, comparing each player’s performance with what was expected of them.</div></div>'+
      f('star','#D4A93C','Technical committee rating')+f('ball','var(--tint)','Goals and assists by position')+f('scale','#0A84FF','Result and opponent’s strength')+f('trend','#5856D6','Player’s level and experience')+f('check','var(--orange)','Attendance commitment')+'</div>';
   return h+'</div>';
 }

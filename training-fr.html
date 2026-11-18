@@ -3671,8 +3671,8 @@ function rulesHTML(){
   var h='<div id="rulesSec">'+gh('Système de notation');
   h+='<div class="card" style="overflow:hidden"><div style="padding:20px 18px;background:linear-gradient(135deg,#0E4A35,#06231B);color:#fff">'+
      '<div style="font-size:12px;letter-spacing:.5px;color:#E6CC78;font-weight:700">Un modèle de notation professionnel</div>'+
-     '<div style="font-size:21px;font-weight:800;margin:6px 0 8px">Les attributs sont mis à jour automatiquement après chaque séance</div>'+
-     '<div style="font-size:14px;line-height:1.75;color:rgba(255,255,255,.82)">Basé sur la méthode « Elo » (Elo), la même base mathématique que la FIFA utilise pour classer les sélections depuis 2018 : elle compare la performance de chaque joueur à celle attendue.</div></div>'+
+     '<div style="font-size:clamp(17px,5vw,21px);font-weight:800;margin:6px 0 8px;line-height:1.35;text-wrap:balance">Les attributs sont mis à jour automatiquement après chaque séance</div>'+
+     '<div style="font-size:14px;line-height:1.75;color:rgba(255,255,255,.82);text-wrap:pretty">Basé sur la méthode « Elo » (Elo), la même base mathématique que la FIFA utilise pour classer les sélections depuis 2018 : elle compare la performance de chaque joueur à celle attendue.</div></div>'+
      f('star','#D4A93C','Note du comité technique')+f('ball','var(--tint)','Buts et passes selon le poste')+f('scale','#0A84FF','Résultat et force de l’adversaire')+f('trend','#5856D6','Niveau et expérience du joueur')+f('check','var(--orange)','Assiduité')+'</div>';
   return h+'</div>';
 }
