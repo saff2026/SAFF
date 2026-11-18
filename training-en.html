@@ -1223,13 +1223,14 @@ function lateBoard(){
       if(x.ban>0){x.ban--; if(came(id))warn.push(pname(id)+' حضر التمرين '+(s.num||'')+' وهو موقوف'); return;} // i18n-skip (نخبة السبت فقط)
       if(!came(id))return;
       if(isLate(s,id)){x.late++;x.ok=0; if(x.late>=2){x.ban=LATE_BAN;x.at=s.num;x.late=0;}}
-      else if(x.late>0){x.ok++; if(x.ok>=2){x.late--;x.ok=0;}}
+      else if(x.late>0){x.ok++; if(x.ok>=2){x.late--;x.ok=0; if(!x.late)x.cleared=s.num;}}
     });
   });
   var last=done.length?(+done[done.length-1].num||0):B.from-1, ord=function(a,b){return pname(a).localeCompare(pname(b),'ar');};
   var banned=Object.keys(st).filter(function(id){return st[id].ban>0;}).sort(ord).map(function(id){var n=st[id].ban,a=[];for(var k=1;k<=n;k++)a.push(last+k);return {id:id,left:n,nums:a,at:st[id].at};});
   var once=Object.keys(st).filter(function(id){return !st[id].ban&&st[id].late>0;}).sort(ord).map(function(id){return {id:id,ok:st[id].ok};});
-  return {banned:banned,once:once,warn:warn,counted:done.map(function(s){return s.num;})};
+  var cleared=done.length?Object.keys(st).filter(function(id){return !st[id].ban&&!st[id].late&&st[id].cleared===last;}).sort(ord):[];
+  return {banned:banned,once:once,cleared:cleared,warn:warn,counted:done.map(function(s){return s.num;})};
 }
 function lateCardH(){
   if(!isCoach||!LATE_BASE)return '';
@@ -1244,8 +1245,66 @@ function openLateBoard(){
   h+=gh('<span style="font-size:17px">🟠 متأخر مرة</span>')+'<div class="card" id="lateOnce">'+(L.once.length?L.once.map(function(x){ // i18n-skip (نخبة السبت فقط)
     return '<div class="cell ind">'+avatar(x.id)+'<div class="body"><div class="t">'+esc(pname(x.id))+'</div><div class="s">حضر في الوقت '+x.ok+' من 2 · باقي '+(2-x.ok===1?'تمرين واحد':'تمرينين')+' ويُمحى</div></div><span class="rb r-mid num">1/2</span></div>';}).join(''):'<div class="cell"><div class="body"><div class="s">لا يوجد</div></div></div>')+'</div>'; // i18n-skip (نخبة السبت فقط)
   if(L.warn.length) h+='<div class="notice" style="margin-top:12px">'+L.warn.map(esc).join('<br>')+'</div>';
-  h+='<div class="m-foot"><button class="btn tinted" id="lateCopy" onclick="lateCopy()">'+ic('upl','s')+'نسخ القائمة للقروب</button></div>'; // i18n-skip (نخبة السبت فقط)
+  h+='<div class="m-foot"><button class="btn" id="lateImg" onclick="lateImage()">'+ic('down','s')+'صورة القائمة</button><button class="btn tinted" id="lateCopy" onclick="lateCopy()">'+ic('upl','s')+'نسخ القائمة للقروب</button></div>'; // i18n-skip (نخبة السبت فقط)
   openModal(h);
+}
+// صورة «قائمة المتأخرين» (نفس التصميم المنشور في القروب)
+function lateImage(){
+  var L=lateBoard(), rows=[];
+  L.banned.forEach(function(x){rows.push({id:x.id,k:'ban',sub:'محروم · باقي '+(x.left===1?'تمرين واحد':x.left===2?'تمرينين':x.left+' تمارين')+' من الإيقاف'});}); // i18n-skip (نخبة السبت فقط)
+  L.cleared.forEach(function(id){rows.push({id:id,k:'clr',sub:'مبروووك، مُحي التأخير'});}); // i18n-skip (نخبة السبت فقط)
+  L.once.forEach(function(x){rows.push({id:x.id,k:'once',ok:x.ok,sub:'تأخّر مرة · باقي '+(x.ok?'تمرين واحد':'تمرينين')+' ويُمحى'});}); // i18n-skip (نخبة السبت فقط)
+  if(!rows.length){toast('القائمة فاضية، ما فيه أحد متأخر');return;} // i18n-skip (نخبة السبت فقط)
+  toast('جارِ تجهيز الصورة…'); // i18n-skip (نخبة السبت فقط)
+  var fontP=(document.fonts&&document.fonts.load)?Promise.all(['900 80px Tajawal','800 30px Tajawal','700 20px Tajawal'].map(function(f){return document.fonts.load(f).catch(function(){});})):Promise.resolve();
+  Promise.all([fontP].concat(rows.map(function(r){return loadImg(photoSrc(P(r.id)));}))).then(function(res){
+    rows.forEach(function(r,i){r.img=res[i+1];});
+    var url; try{url=drawLateImage(rows);}catch(e){console.error(e);toast('⚠️ تعذّر تجهيز الصورة');return;} // i18n-skip (نخبة السبت فقط)
+    showShareImg(url,'late-list.png','قائمة المتأخرين'); // i18n-skip (نخبة السبت فقط)
+  });
+}
+function drawLateImage(rows){
+  var W=1080, P0=60, CW=(W-2*P0-24)/2, CH=76, GAP=12, top=450, nR=Math.ceil(rows.length/2), H=Math.max(1080,top+nR*(CH+GAP)+150);
+  var cv=document.createElement('canvas'); cv.width=W; cv.height=H; var c=cv.getContext('2d'); c.direction='rtl'; c.textBaseline='middle';
+  var F=function(w,sz){return w+' '+sz+'px '+IMG_FONT;};
+  var txt=function(t,x,y,font,col,al){c.font=font;c.fillStyle=col;c.textAlign=al||'right';c.fillText(t,x,y);};
+  var GOLD='#E8B53A', GOLD2='#C99A2E';
+  c.fillStyle='#0B0B0B'; c.fillRect(0,0,W,H);
+  var g=c.createRadialGradient(W/2,-80,40,W/2,-80,720); g.addColorStop(0,'rgba(232,181,58,.30)'); g.addColorStop(1,'rgba(232,181,58,0)'); c.fillStyle=g; c.fillRect(0,0,W,H);
+  txt('قائمة المتأخرين',W/2,82,F(900,78),'#FFFFFF','center'); // i18n-skip (نخبة السبت فقط)
+  txt(document.title,W/2,140,F(700,26),GOLD,'center');
+  // نظام التأخير
+  var bx=P0, by=172, bw=W-2*P0, bh=230; rrect(c,bx,by,bw,bh,26); c.fillStyle='rgba(255,255,255,.04)'; c.fill(); c.strokeStyle='rgba(232,181,58,.28)'; c.lineWidth=1.5; c.stroke();
+  txt('نظام التأخير',bx+bw-34,by+42,F(800,26),GOLD); // i18n-skip (نخبة السبت فقط)
+  [['2','تأخيران يدخلانك قائمة الحرمان','rgba(232,181,58,.16)',GOLD],['3','المحروم يوقف عن ثلاثة تمارين متتالية','rgba(255,90,90,.16)','#FF8A8A'],['-1','حضور تمرينين في الوقت يمحو تأخيرًا واحدًا','rgba(70,210,120,.16)','#5BE08F']].forEach(function(r,i){ // i18n-skip (نخبة السبت فقط)
+    var y=by+96+i*56, sx=bx+bw-34-44; rrect(c,sx,y-22,44,44,10); c.fillStyle=r[2]; c.fill(); c.strokeStyle=r[3]; c.globalAlpha=.5; c.lineWidth=1.5; c.stroke(); c.globalAlpha=1;
+    c.save(); c.direction='ltr'; txt(r[0],sx+22,y+2,F(900,24),r[3],'center'); c.restore();
+    txt(r[1],sx-18,y+1,F(700,24),'#F2F2F2');
+  });
+  // اللاعبون
+  rows.forEach(function(r,i){
+    var col=i%2, row=Math.floor(i/2), x=W-P0-CW-col*(CW+24), y=top+row*(CH+GAP);
+    var accent=r.k==='ban'?'#FF5A5A':r.k==='clr'?'#46D278':GOLD;
+    rrect(c,x,y,CW,CH,16); c.fillStyle=r.k==='ban'?'rgba(255,90,90,.10)':r.k==='clr'?'rgba(70,210,120,.10)':'rgba(255,255,255,.05)'; c.fill();
+    c.strokeStyle=r.k==='ban'?'rgba(255,90,90,.45)':r.k==='clr'?'rgba(70,210,120,.45)':'rgba(255,255,255,.10)'; c.lineWidth=1.5; c.stroke();
+    var ax=x+CW-16-28, ay=y+CH/2;
+    c.save(); c.beginPath(); c.arc(ax,ay,27,0,Math.PI*2); c.closePath(); c.fillStyle='#2A2A2A'; c.fill(); c.clip();
+    if(r.img){var im=r.img,sc=Math.max(54/im.width,54/im.height); c.drawImage(im,ax-im.width*sc/2,ay-im.height*sc/2,im.width*sc,im.height*sc);}
+    else { txt((P(r.id)||{name:'?'}).name.trim().charAt(0),ax,ay+2,F(800,24),'#FFFFFF','center'); }
+    c.restore(); c.beginPath(); c.arc(ax,ay,28,0,Math.PI*2); c.strokeStyle=accent; c.lineWidth=3; c.stroke();
+    var tx=ax-40, maxW=CW-16-56-40-120;
+    c.font=F(800,26); var nm=(P(r.id)||{}).name||''; while(c.measureText(nm).width>maxW&&nm.length>2)nm=nm.slice(0,-1); txt(nm,tx,ay-13,F(800,26),'#FFFFFF');
+    c.font=F(700,17); var sb=r.sub; while(c.measureText(sb).width>maxW+40&&sb.length>2)sb=sb.slice(0,-1); txt(sb,tx,ay+19,F(700,17),accent);
+    // النقاط
+    var filled=r.k==='clr'?2:r.k==='ban'?2:(r.ok||0), lbl=r.k==='ban'?'2/2':r.k==='clr'?'2/2':(r.ok||0)+'/2';
+    c.save(); c.direction='ltr'; txt(lbl,x+18,ay+2,F(900,24),accent,'left'); c.restore();
+    for(var d=0;d<2;d++){ var dx=x+98+d*30; c.beginPath(); c.arc(dx,ay,10,0,Math.PI*2);
+      if(d<filled){c.fillStyle=accent;c.fill();} else {c.setLineDash([4,3]);c.strokeStyle='rgba(255,255,255,.45)';c.lineWidth=1.5;c.stroke();c.setLineDash([]);} }
+  });
+  // التذييل
+  var fy=H-50; c.strokeStyle='rgba(232,181,58,.25)'; c.lineWidth=1; c.beginPath(); c.moveTo(P0,fy); c.lineTo(W/2-200,fy); c.moveTo(W/2+200,fy); c.lineTo(W-P0,fy); c.stroke();
+  txt('الالتزام بالوقت شهامة، مروءة، واحترام',W/2,fy+1,F(700,22),'#CFCFCF','center'); // i18n-skip (نخبة السبت فقط)
+  return cv.toDataURL('image/png');
 }
 function lateCopy(){
   var L=lateBoard(), t='⏰ قائمة المتأخرين — '+document.title+'\n'; // i18n-skip (نخبة السبت فقط)
