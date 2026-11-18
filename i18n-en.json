@@ -895,5 +895,14 @@
 "اضغط على أي لاعب أو مركز فاضي لتغييره.": "Tap any player or empty position to change it.",
 "انقطع الاتصال بقاعدة البيانات.": "Lost the connection to the database.",
 "حدّث الصفحة": "Refresh the page",
-"وإذا تكرر تأكد من الإنترنت.": "and if it keeps happening, check your internet."
+"وإذا تكرر تأكد من الإنترنت.": "and if it keeps happening, check your internet.",
+"الحكم": "Referee",
+"اضغط لاختيار الحكم": "Tap to choose the referee",
+"بدون حكم": "No referee",
+"شخص من خارج اللاعبين…": "Someone outside the players…",
+"اسم الحكم": "Referee name",
+"إذا اخترته من اللاعبين تطلع صورته في صورة التشكيلة.": "If you choose one of the players, their photo appears on the lineup image.",
+"اكتب اسم الحكم": "Enter the referee name",
+"تم حفظ الحكم": "Referee saved",
+"تم إلغاء الحكم": "Referee removed"
 }

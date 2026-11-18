@@ -895,5 +895,14 @@
 "اضغط على أي لاعب أو مركز فاضي لتغييره.": "Appuyez sur un joueur ou un poste libre pour le changer.",
 "انقطع الاتصال بقاعدة البيانات.": "Connexion à la base de données perdue.",
 "حدّث الصفحة": "Actualisez la page",
-"وإذا تكرر تأكد من الإنترنت.": "et si cela se reproduit, vérifiez votre connexion internet."
+"وإذا تكرر تأكد من الإنترنت.": "et si cela se reproduit, vérifiez votre connexion internet.",
+"الحكم": "Arbitre",
+"اضغط لاختيار الحكم": "Appuyez pour choisir l’arbitre",
+"بدون حكم": "Sans arbitre",
+"شخص من خارج اللاعبين…": "Une personne hors joueurs…",
+"اسم الحكم": "Nom de l’arbitre",
+"إذا اخترته من اللاعبين تطلع صورته في صورة التشكيلة.": "Si vous le choisissez parmi les joueurs, sa photo apparaît sur l’image de la composition.",
+"اكتب اسم الحكم": "Saisissez le nom de l’arbitre",
+"تم حفظ الحكم": "Arbitre enregistré",
+"تم إلغاء الحكم": "Arbitre retiré"
 }
