@@ -652,7 +652,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261117190733';
+var BUILD='20261118090728';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -744,7 +744,7 @@ var firebaseConfig = {
 // اسم المجلد داخل قاعدة البيانات
 var ROOT = "training_elite";
 var FEAT_JOKER = true;
-var LATE_BASE = {from:15, ids:["pmwjnhmkz2fpn8","pmwgge5bxccfih","pmwggbwuk9bvs6","pmwggqzrquiejq","pmwggnfqvyjksj","pmwggs2yj8b3xl","pmwggt3uyxj1pb","pmwggkfuy2nnpm","pmwggld5c78l0s","pmwggsqrzpb3y0"]}; // قائمة المتأخرين العامة (لنخبة السبت): {from: أول تمرين يُحسب, ids: من كان متأخر مرة قبله}
+var LATE_BASE = {from:15, ids:["pmwjnhmkz2fpn8","pmwgge5bxccfih","pmwggbwuk9bvs6","pmwggqzrquiejq","pmwggnfqvyjksj","pmwggs2yj8b3xl","pmwggt3uyxj1pb","pmwggkfuy2nnpm","pmwggld5c78l0s","pmwggsqrzpb3y0"], ok:{"pmwjnhmkz2fpn8":1,"pmwgge5bxccfih":1,"pmwggbwuk9bvs6":1}}; // قائمة المتأخرين العامة (لنخبة السبت): {from: أول تمرين يُحسب, ids: من كان متأخر مرة قبله, ok: كم مرة حضر في الوقت بعد تأخيره}
 var FEAT_TRAITS = false; // «يلعب تحت الضغط» و«لياقة عالية»: في تمرين نخبة السبت فقط (نخبة السبت بدونها)
 var FEAT_SELFISH = false; // خاصية «أناني»: في تمرين نخبة السبت فقط // وسام الجوكر: يُفعَّل في تمرين نخبة السبت فقط
 
@@ -1212,7 +1212,7 @@ var LATE_BAN=3;
 function lateBoard(){
   var B=LATE_BASE||{from:1,ids:[]}, st={};
   playersArr().forEach(function(p){st[p.id]={late:0,ok:0,ban:0,at:null};});
-  (B.ids||[]).forEach(function(id){if(st[id])st[id].late=1;});
+  (B.ids||[]).forEach(function(id){if(st[id]){st[id].late=1;st[id].ok=+((B.ok||{})[id])||0;}});
   var done=doneSessions().filter(function(s){return (+s.num||0)>=B.from;}).sort(function(a,b){return startTs(a)-startTs(b);}), warn=[];
   done.forEach(function(s){
     var came=function(id){return !(s.absent||{})[id]&&(!!s.checkin[id]||(s.lateSet||{})[id]===true||(s.lateSet||{})[id]===false);};

@@ -678,7 +678,7 @@ select.field{background-position:calc(100% - 14px) 50%;padding-left:12px;padding
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261117190733';
+var BUILD='20261118090728';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -770,7 +770,7 @@ var firebaseConfig = {
 // اسم المجلد داخل قاعدة البيانات
 var ROOT = "training";
 var FEAT_JOKER = false;
-var LATE_BASE = null; // قائمة المتأخرين العامة (لنخبة السبت): {from: أول تمرين يُحسب, ids: من كان متأخر مرة قبله}
+var LATE_BASE = null; // قائمة المتأخرين العامة (لنخبة السبت): {from: أول تمرين يُحسب, ids: من كان متأخر مرة قبله, ok: كم مرة حضر في الوقت بعد تأخيره}
 var FEAT_TRAITS = true; // «يلعب تحت الضغط» و«لياقة عالية»: في تمرين ساف فقط (نخبة السبت بدونها)
 var FEAT_SELFISH = true; // خاصية «أناني»: في تمرين ساف فقط // وسام الجوكر: يُفعَّل في تمرين نخبة السبت فقط
 
@@ -1221,7 +1221,7 @@ var LATE_BAN=3;
 function lateBoard(){
   var B=LATE_BASE||{from:1,ids:[]}, st={};
   playersArr().forEach(function(p){st[p.id]={late:0,ok:0,ban:0,at:null};});
-  (B.ids||[]).forEach(function(id){if(st[id])st[id].late=1;});
+  (B.ids||[]).forEach(function(id){if(st[id]){st[id].late=1;st[id].ok=+((B.ok||{})[id])||0;}});
   var done=doneSessions().filter(function(s){return (+s.num||0)>=B.from;}).sort(function(a,b){return startTs(a)-startTs(b);}), warn=[];
   done.forEach(function(s){
     var came=function(id){return !(s.absent||{})[id]&&(!!s.checkin[id]||(s.lateSet||{})[id]===true||(s.lateSet||{})[id]===false);};
