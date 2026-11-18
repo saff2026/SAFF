@@ -1478,8 +1478,8 @@ function crowdPairs(me,num){
 var CW=null;
 function crowdCardH(){
   var me=myId(), c=crowdCfg(); if(!me||!c.on||crowdPool().length<3)return '';
-  if((+(((S.crowd||{})[me]||{})._r)||0)>=c.round)return '';
-  return '<div class="card" style="margin-top:10px"><div class="cell tap ind" id="crowdCard" onclick="openCrowd()">'+tile('#5856D6','people')+'<div class="body"><div class="t">Évaluez vos coéquipiers · 1 min</div><div class="s">'+CROWD_N+' comparaisons rapides : qui est meilleur ?</div></div>'+chev()+'</div></div>';
+  var done=(+(((S.crowd||{})[me]||{})._r)||0)>=c.round; // البطاقة دائماً موجودة، وكل ضغطة تفتح جولة جديدة
+  return '<div class="card" style="margin-top:10px"><div class="cell tap ind" id="crowdCard" onclick="openCrowd()">'+tile('#5856D6','people')+'<div class="body"><div class="t">Évaluez vos coéquipiers · 1 min</div><div class="s">'+(done?'Merci pour votre aide · touchez pour une nouvelle manche':CROWD_N+' comparaisons rapides : qui est meilleur ?')+'</div></div>'+chev()+'</div></div>';
 }
 function openCrowd(){
   var me=myId(); if(!me){askMe();return;}
