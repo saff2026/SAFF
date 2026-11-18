@@ -662,7 +662,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261118190018';
+var BUILD='20261118191431';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -3235,14 +3235,13 @@ function drawPoster(kind,s,logo,ph){
     y+=40;
     // تذكير التصويت
     if(s.status!=='done'&&Date.now()<voteEnd(s)){
-      var vb=250; rrect(c,P0,y,W-2*P0,vb,26); var vg=c.createLinearGradient(P0,y,W-P0,y+vb); vg.addColorStop(0,'rgba(230,204,120,.26)'); vg.addColorStop(1,'rgba(230,204,120,.06)'); c.fillStyle=vg; c.fill(); c.strokeStyle='rgba(230,204,120,.7)'; c.lineWidth=2.5; c.stroke();
+      var vb=225; rrect(c,P0,y,W-2*P0,vb,26); var vg=c.createLinearGradient(P0,y,W-P0,y+vb); vg.addColorStop(0,'rgba(230,204,120,.26)'); vg.addColorStop(1,'rgba(230,204,120,.06)'); c.fillStyle=vg; c.fill(); c.strokeStyle='rgba(230,204,120,.7)'; c.lineWidth=2.5; c.stroke();
       var scx=R-40-62, scy=y+vb/2; var sg=c.createRadialGradient(scx-20,scy-22,6,scx,scy,62); sg.addColorStop(0,'#F7E7B0'); sg.addColorStop(1,PST.goldDeep); c.beginPath(); c.arc(scx,scy,62,0,Math.PI*2); c.fillStyle=sg; c.fill();
       c.beginPath(); for(var q=0;q<10;q++){var an=-Math.PI/2+q*Math.PI/5, rq=q%2?14:32; c.lineTo(scx+rq*Math.cos(an),scy+2+rq*Math.sin(an));} c.closePath(); c.fillStyle='#0A2C20'; c.fill();
       var vx=R-40-124-30;
       txt('صوّت لأفضل لاعب في التمرين',vx,y+66,F(900,40),'#fff');
       txt('التصويت مفتوح حتى '+fmtWhen(voteEnd(s)),vx,y+120,F(800,27),PST.gold);
       txt('ادخل التطبيق باسمك وصوّت قبل لا يقفل',vx,y+166,F(700,23),PST.mute);
-      var link=(location.host+location.pathname).replace(/^www\./,''); c.save(); c.direction='ltr'; c.textAlign='right'; c.font=F(700,21); c.fillStyle=PST.faint; c.fillText(link,vx,y+206); c.restore();
       y+=vb+50;
     }
   }
