@@ -1343,13 +1343,15 @@ function lateCopy(){
 
 /* ---------- لاعب الشهر: تصويت اللاعبين بين أفضل 3 في الشهر ---------- */
 // التصويت من يوم 1 إلى يوم 5 من الشهر اللي بعده. إذا تعادلوا (أو ما صوّت أحد) يفوز الأفضل أداءً.
-var POTM_FROM='2026-11', POTM_DAYS=5;
+var POTM_FROM='2026-11', POTM_DAYS=5, POTM_SAT=false; // POTM_SAT: التصويت من بعد آخر سبت في الشهر إلى السبت اللي بعده (يوم الهدية)
 function ymOf(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2);}
 function ymAdd(ym,k){var y=+ym.slice(0,4),m=+ym.slice(5,7)-1+k; y+=Math.floor(m/12); m=((m%12)+12)%12; return y+'-'+('0'+(m+1)).slice(-2);}
 function ymName(ym){try{return new Date(+ym.slice(0,4),+ym.slice(5,7)-1,15).toLocaleDateString(AR_LOC,{month:'long'});}catch(e){return ym;}}
-function potmOpenTs(ym){var n=ymAdd(ym,1);return new Date(+n.slice(0,4),+n.slice(5,7)-1,1).getTime();}
-function potmCloseTs(ym){var n=ymAdd(ym,1);return new Date(+n.slice(0,4),+n.slice(5,7)-1,POTM_DAYS+1).getTime();}
-function potmEndDay(ym){var n=ymAdd(ym,1);return niceDate(n+'-0'+POTM_DAYS,false);}
+function lastSat(ym){var d=new Date(+ym.slice(0,4),+ym.slice(5,7),0); while(d.getDay()!==6)d.setDate(d.getDate()-1); return d;}
+function potmOpenTs(ym){if(POTM_SAT){var d=lastSat(ym);d.setDate(d.getDate()+1);return d.getTime();} var n=ymAdd(ym,1);return new Date(+n.slice(0,4),+n.slice(5,7)-1,1).getTime();}
+function potmCloseTs(ym){if(POTM_SAT){var d=lastSat(ym);d.setDate(d.getDate()+7);return d.getTime();} var n=ymAdd(ym,1);return new Date(+n.slice(0,4),+n.slice(5,7)-1,POTM_DAYS+1).getTime();}
+function potmEndDay(ym){var d=new Date(potmCloseTs(ym)-43200000); return niceDate(d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2),POTM_SAT);}
+function potmCurYm(){var cur=ymOf(new Date()); return Date.now()>=potmOpenTs(cur)?cur:ymAdd(cur,-1);}
 function monthStats(ym){
   var st={};
   doneSessions().filter(function(s){return String(s.date||'').slice(0,7)===ym;}).forEach(function(s){
@@ -1377,7 +1379,7 @@ function potmWins(id){var out=[], cur=ymOf(new Date()); for(var ym=POTM_FROM;ym<
 function potmBadge(id){var n=potmWins(id).length; return n?'<span class="potm-b" title="Joueur du mois">🏅'+(n>1?'<b class="num" dir="ltr">×'+n+'</b>':'')+'</span>':'';}
 function potmLine(x){var b=[]; if(x.goals)b.push(cnt(x.goals,'But')); if(x.assists)b.push(cnt(x.assists,'Passe décisive')); if(x.mvp)b.push('Meilleur joueur '+cnt(x.mvp,'Fois')); if(!b.length)b.push(cnt(x.apps,'Séance')); return b.join(' · ');}
 function potmHomeH(){
-  var cur=ymOf(new Date()), ym=ymAdd(cur,-1), now=Date.now(); if(ym<POTM_FROM)return '';
+  var ym=potmCurYm(), now=Date.now(); if(ym<POTM_FROM)return '';
   var c=potmCands(ym); if(c.length<2)return '';
   var st=monthStats(ym), me=myId(), mine=(potmRec(ym).v||{})[me];
   if(now>=potmOpenTs(ym)&&now<potmCloseTs(ym)){
@@ -1392,7 +1394,7 @@ function potmHomeH(){
   return '<div class="card potm-win" id="potmWin" onclick="openPlayer(\''+w+'\')"><div class="pw-k">🏅 Joueur du mois · '+ymName(ym)+'</div>'+photoHTML(P(w),'avatar pw-av')+'<div class="pw-n">'+esc(pname(w))+'</div><div class="pw-s">'+potmLine(x)+(tv?' · '+cnt(tv,'Vote'):'')+'</div></div>';
 }
 function potmFreeze(){ // نثبّت المرشحين أول ما يفتح التصويت عشان ما يتغيرون
-  var ym=ymAdd(ymOf(new Date()),-1), now=Date.now();
+  var ym=potmCurYm(), now=Date.now();
   if(ym<POTM_FROM||now<potmOpenTs(ym)||now>=potmCloseTs(ym)||Array.isArray(potmRec(ym).c))return;
   var c=potmCands(ym); if(c.length>=2) putVote('potm/'+ym+'/c',c);
 }
