@@ -82,10 +82,10 @@ def runs(src):
 
 # ---------- تعديلات برمجية قبل الترجمة ----------
 NOUN = {
- 'en': r"""var NOUN={goal:['goal','goals'],vote:['vote','votes'],assist:['assist','assists'],time:['time','times'],player:['player','players'],session:['session','sessions'],minute:['minute','minutes'],year:['year','years'],photo:['photo','photos'],substitution:['substitution','substitutions'],late:['late','late'],sar:['SAR','SAR']};
+ 'en': r"""var NOUN={goal:['goal','goals'],vote:['vote','votes'],assist:['assist','assists'],time:['time','times'],player:['player','players'],session:['session','sessions'],minute:['minute','minutes'],year:['year','years'],photo:['photo','photos'],substitution:['substitution','substitutions'],late:['late','late'],sar:['SAR','SAR'],voter:['voter','voters'],comparison:['comparison','comparisons']};
 function nounFor(n,w){var f=NOUN[String(w).toLowerCase()]; if(!f)return w; n=Math.abs(+n||0); return n===1?f[0]:f[1];}
 """,
- 'fr': r"""var NOUN={'but':['but','buts'],'vote':['vote','votes'],'passe décisive':['passe décisive','passes décisives'],'fois':['fois','fois'],'joueur':['joueur','joueurs'],'séance':['séance','séances'],'minute':['minute','minutes'],'an':['an','ans'],'photo':['photo','photos'],'remplacement':['remplacement','remplacements'],'retard':['en retard','en retard'],'sar':['SAR','SAR']};
+ 'fr': r"""var NOUN={'but':['but','buts'],'vote':['vote','votes'],'passe décisive':['passe décisive','passes décisives'],'fois':['fois','fois'],'joueur':['joueur','joueurs'],'séance':['séance','séances'],'minute':['minute','minutes'],'an':['an','ans'],'photo':['photo','photos'],'remplacement':['remplacement','remplacements'],'retard':['en retard','en retard'],'sar':['SAR','SAR'],'votant':['votant','votants'],'comparaison':['comparaison','comparaisons']};
 function nounFor(n,w){var f=NOUN[String(w).toLowerCase()]; if(!f)return w; n=Math.abs(+n||0); return n<2?f[0]:f[1];}
 """,
 }

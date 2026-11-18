@@ -287,6 +287,14 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .pc-name{margin-top:12px;font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sortrow{gap:10px}.sortrow.cur .t{color:var(--tint);font-weight:800}.sortseg{flex:none;width:190px}.sortseg button{font-size:13px}
 .pc-attrs .at.hl .r span,.pc-attrs .at.hl .r b{color:var(--tint);font-weight:900}
+.crowd-bar{height:6px;border-radius:3px;background:var(--fill);overflow:hidden;margin:4px 2px 0}.crowd-bar i{display:block;height:100%;background:var(--tint);border-radius:3px;transition:width .25s}
+.crowd-q{text-align:center;font-size:21px;font-weight:800;margin:18px 0 16px}
+.crowd-two{display:flex;align-items:stretch;gap:8px}.crowd-or{align-self:center;font-size:13px;color:var(--label2);font-weight:700}
+.crowd-p{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 8px 14px;border-radius:18px;border:2px solid var(--sep);background:var(--card);color:var(--label);font:inherit;cursor:pointer;transition:transform .12s,border-color .12s,background .12s}
+.crowd-p:active{transform:scale(.97)}.crowd-p.on{border-color:var(--tint);background:color-mix(in srgb,var(--tint) 12%,var(--card))}
+.crowd-p b{font-size:15px;line-height:1.3;text-align:center;overflow-wrap:anywhere}.crowd-p span{font-size:12px;color:var(--label2)}
+.avatar.crowd-av{width:84px;height:84px;font-size:30px}
+.crowd-det{flex-basis:100%;display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;padding:8px 0 2px;font-size:13px}.crowd-det div{display:flex;justify-content:space-between;color:var(--label2)}.crowd-det b{color:var(--label)}
 .valcol{flex:none;width:auto;display:flex;align-items:baseline;justify-content:flex-start;gap:7px;margin-inline-start:8px}.valcol b{font-size:17px;font-weight:800;color:var(--label);min-width:22px;text-align:right}.valcol span{font-size:13px;color:var(--label2)}.valcol .up{font-size:13px;color:var(--green);font-weight:700}
 .pc-meta{font-size:12.5px;color:var(--label2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .pc-attrs{display:grid;grid-template-columns:1fr 1fr;gap:7px 12px;margin-top:12px;}
@@ -852,6 +860,7 @@ function normalize(d){
     out.sessions[k]=s;
   });
   Object.keys(d.weeks||{}).forEach(function(k){ if(d.weeks[k]) out.weeks[k]=d.weeks[k]; });
+  out.crowd={}; Object.keys(d.crowd||{}).forEach(function(k){ if(d.crowd[k]&&typeof d.crowd[k]==='object') out.crowd[k]=d.crowd[k]; });
   out.pins={}; Object.keys(d.pins||{}).forEach(function(k){ if(typeof d.pins[k]==='string') out.pins[k]=d.pins[k]; });
   return out;
 }
@@ -1006,7 +1015,7 @@ function participants(s){ // كل من شارك: الحضور + المسجلين
 }
 /* ---------- تمييز العدد بالعربية الصحيحة ----------
    1: هدف واحد · 2: هدفان (هدفين بعد حرف جر) · 3–10: أهداف · 11–99: هدفًا (منصوب منوّن) · 100: هدف */
-var NOUN={'but':['but','buts'],'vote':['vote','votes'],'passe décisive':['passe décisive','passes décisives'],'fois':['fois','fois'],'joueur':['joueur','joueurs'],'séance':['séance','séances'],'minute':['minute','minutes'],'an':['an','ans'],'photo':['photo','photos'],'remplacement':['remplacement','remplacements'],'retard':['en retard','en retard'],'sar':['SAR','SAR']};
+var NOUN={'but':['but','buts'],'vote':['vote','votes'],'passe décisive':['passe décisive','passes décisives'],'fois':['fois','fois'],'joueur':['joueur','joueurs'],'séance':['séance','séances'],'minute':['minute','minutes'],'an':['an','ans'],'photo':['photo','photos'],'remplacement':['remplacement','remplacements'],'retard':['en retard','en retard'],'sar':['SAR','SAR'],'votant':['votant','votants'],'comparaison':['comparaison','comparaisons']};
 function nounFor(n,w){var f=NOUN[String(w).toLowerCase()]; if(!f)return w; n=Math.abs(+n||0); return n<2?f[0]:f[1];}
 function cnt(n,w,gen,tag){n=Math.round(+n||0); var num=tag?'<'+tag+'>'+n+'</'+tag.split(' ')[0]+'>':String(n); return num+' '+nounFor(n,w);}
 function scoreOf(s){var a=0,b=0;vals(s.goals).forEach(function(g){if(g.t==='A')a++;else if(g.t==='B')b++;});return {A:a,B:b};}
@@ -1325,6 +1334,140 @@ function lateCopy(){
   try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(done,fb); return; } }catch(e){} fb();
 }
 
+/* ---------- تقييم الزملاء: «مين أفضل؟» (مقارنة لاعبَين) ---------- */
+// كل مقارنة: لاعبان ومهارة واحدة، والمصوّت يختار الأفضل أو «ما أعرف».
+// النتيجة: نموذج «برادلي-تيري» (نفس فكرة إيلو) لكل مهارة، يُحوَّل لسُلّم طاقات المجلس،
+// ويدخل بوزن حتى 50٪ حسب عدد الأصوات، ولا يتغير شيء إلا بعد اعتماد مجلس الإدارة.
+var CROWD_ATTRS=['pac','sho','pas','dri','def','phy'], CROWD_N=15, CROWD_W=0.5, CROWD_FULL=10;
+var CROWD_Q={pac:'Qui est le plus rapide ?',sho:'Qui frappe le mieux ?',pas:'Qui passe le mieux ?',dri:'Qui dribble le mieux ?',def:'Qui défend le mieux ?',phy:'Qui est le plus costaud ?'};
+function crowdCfg(){var c=(S.settings||{}).crowd||{}; return {on:c.off!==true, round:+c.round||1};}
+function crowdPool(){return playersArr().filter(function(p){return p.pos!=='GK';});}
+function crowdKey(a,x,y){return x<y?a+'_'+x+'_'+y:a+'_'+y+'_'+x;}
+function crowdOwn(p,a){return (p.attrs[a]||0)-(+((p.crowdAdj||{})[a])||0);} // طاقة المجلس بدون أثر تقييم الزملاء
+function crowdVotes(){
+  var out=[]; Object.keys(S.crowd||{}).forEach(function(v){ var m=S.crowd[v]||{};
+    Object.keys(m).forEach(function(k){ var w=m[k], q=k.split('_'); if(q.length!==3||CROWD_ATTRS.indexOf(q[0])<0||w==='-')return;
+      var x=q[1], y=q[2]; if(x===v||y===v||(w!==x&&w!==y)||!P(x)||!P(y)||P(x).pos==='GK'||P(y).pos==='GK')return;
+      out.push({v:v,a:q[0],w:w,l:w===x?y:x});
+    });
+  });
+  return out;
+}
+function crowdFit(list,wt){ // قوة كل لاعب (لوغاريتمية) لكل مهارة
+  var s={}; CROWD_ATTRS.forEach(function(a){s[a]={};});
+  list.forEach(function(e){s[e.a][e.w]=s[e.a][e.w]||0; s[e.a][e.l]=s[e.a][e.l]||0;});
+  for(var it=0;it<150;it++){
+    var g={}; CROWD_ATTRS.forEach(function(a){g[a]={}; Object.keys(s[a]).forEach(function(i){g[a][i]=-0.15*s[a][i];});});
+    list.forEach(function(e){var w=wt?(wt[e.v]||1):1, d=s[e.a][e.w]-s[e.a][e.l], p=1/(1+Math.exp(-d)); g[e.a][e.w]+=w*(1-p); g[e.a][e.l]-=w*(1-p);});
+    CROWD_ATTRS.forEach(function(a){Object.keys(s[a]).forEach(function(i){s[a][i]+=0.25*g[a][i];});});
+  }
+  return s;
+}
+function crowdModel(){
+  var list=crowdVotes(), s=crowdFit(list), agree={}, wt={};
+  // من يختار عكس رأي الأغلبية دائماً يقل وزن صوته
+  list.forEach(function(e){var d=s[e.a][e.w]-s[e.a][e.l]; if(Math.abs(d)<0.15)return; var x=agree[e.v]=agree[e.v]||{n:0,ok:0}; x.n++; if(d>0)x.ok++;});
+  Object.keys(agree).forEach(function(v){var x=agree[v]; wt[v]=x.n>=8?clamp((x.ok/x.n-0.4)/0.3,0.25,1):1;});
+  s=crowdFit(list,wt);
+  var n={}, voters={}; list.forEach(function(e){voters[e.v]=1; [e.w,e.l].forEach(function(i){n[i]=n[i]||{}; n[i][e.a]=(n[i][e.a]||0)+1;});});
+  var res={}, rated=0;
+  CROWD_ATTRS.forEach(function(a){
+    var ids=Object.keys(s[a]).filter(function(i){return P(i);}); if(ids.length<3)return;
+    var own=ids.map(function(i){return crowdOwn(P(i),a);}), sv=ids.map(function(i){return s[a][i];});
+    var mean=function(x){return x.reduce(function(t,v){return t+v;},0)/x.length;}, sd=function(x,m){return Math.sqrt(x.reduce(function(t,v){return t+(v-m)*(v-m);},0)/x.length);};
+    var mO=mean(own), dO=Math.max(4,sd(own,mO)), mS=mean(sv), dS=sd(sv,mS); if(dS<0.05)return;
+    ids.forEach(function(i,k){
+      var c=clamp(mO+(sv[k]-mS)/dS*dO,20,99), w=CROWD_W*Math.min(1,((n[i]||{})[a]||0)/CROWD_FULL), o=own[k];
+      var r=res[i]=res[i]||{sug:{},cur:{},n:0}; r.sug[a]=clamp(Math.round(o+w*(c-o)),20,99); r.cur[a]=P(i).attrs[a]; r.n+=(n[i]||{})[a]||0;
+    });
+  });
+  Object.keys(res).forEach(function(i){var r=res[i], p=P(i), at=clone(p.attrs), adj={}, ch=false;
+    CROWD_ATTRS.forEach(function(a){ if(r.sug[a]==null)return; at[a]=r.sug[a]; var d=r.sug[a]-crowdOwn(p,a); if(d)adj[a]=d; if(Math.abs(at[a]-p.attrs[a])>=2)ch=true; });
+    CROWD_ATTRS.forEach(function(a){ if(r.sug[a]==null&&(p.crowdAdj||{})[a])adj[a]=p.crowdAdj[a]; });
+    r.attrs=at; r.adj=adj; r.ch=ch; r.o1=ovr(p); r.o2=ovr({pos:p.pos,pos2:p.pos2,pos3:p.pos3,pos4:p.pos4,never:p.never,attrs:at}); if(ch)rated++;
+  });
+  return {p:res, votes:list.length, voters:Object.keys(voters).length, changed:rated};
+}
+// اختيار المقارنات: لاعبان متقاربان ولم يقارنهما هذا الشخص، ويفضّل من أصواتهم قليلة
+function crowdPairs(me,num){
+  var pool=crowdPool().filter(function(p){return p.id!==me;}); if(pool.length<2)return [];
+  var mine=(S.crowd||{})[me]||{}, cnt={}, out=[], used={}, a0=Math.floor(Math.random()*6);
+  crowdVotes().forEach(function(e){cnt[e.w]=(cnt[e.w]||0)+1; cnt[e.l]=(cnt[e.l]||0)+1;});
+  for(var i=0;i<num;i++){
+    var a=CROWD_ATTRS[(a0+i)%6], best=null, bs=-1e9;
+    for(var t=0;t<40;t++){
+      var x=pool[Math.floor(Math.random()*pool.length)], y=pool[Math.floor(Math.random()*pool.length)]; if(x===y)continue;
+      var k=crowdKey(a,x.id,y.id); if(used[k])continue;
+      var sc=(mine[k]?-50:0)-Math.abs(x.attrs[a]-y.attrs[a])/4-((cnt[x.id]||0)+(cnt[y.id]||0))/6+Math.random()*4;
+      if(sc>bs){bs=sc;best={a:a,x:x.id,y:y.id,k:k};}
+    }
+    if(best){used[best.k]=1; out.push(Math.random()<.5?best:{a:best.a,x:best.y,y:best.x,k:best.k});}
+  }
+  return out;
+}
+var CW=null;
+function crowdCardH(){
+  var me=myId(), c=crowdCfg(); if(!me||!c.on||crowdPool().length<3)return '';
+  if((+(((S.crowd||{})[me]||{})._r)||0)>=c.round)return '';
+  return '<div class="card" style="margin-top:10px"><div class="cell tap ind" id="crowdCard" onclick="openCrowd()">'+tile('#5856D6','people')+'<div class="body"><div class="t">Évaluez vos coéquipiers · 1 min</div><div class="s">'+CROWD_N+' comparaisons rapides : qui est meilleur ?</div></div>'+chev()+'</div></div>';
+}
+function openCrowd(){
+  var me=myId(); if(!me){askMe();return;}
+  CW={me:me,pairs:crowdPairs(me,CROWD_N),i:0,who:{}};
+  if(!CW.pairs.length){toast('Pas assez de joueurs à comparer');return;}
+  openModal(''); crowdStep();
+}
+function crowdStep(){
+  if(!CW)return; var q=CW.pairs[CW.i], N=CW.pairs.length, h=mh('Qui est meilleur ?');
+  if(!q){ // النهاية
+    var n=Object.keys(CW.who).length;
+    h+='<div style="text-align:center;padding:18px 6px 6px" id="crowdDone"><div style="font-size:46px;line-height:1">👏</div><div style="font-size:20px;font-weight:800;margin:12px 0 6px">Merci !</div><div class="small muted">Vous avez aidé à évaluer '+cnt(n,'Joueur')+'. Votre avis est combiné à celui des autres, et personne ne voit qui a voté pour qui.</div></div>';
+    h+='<div class="m-foot"><button class="btn" onclick="closeModal()">OK</button><button class="btn tinted" id="crowdMore" onclick="openCrowd()">'+CROWD_N+' comparaisons de plus</button></div>';
+    setModal(h); return;
+  }
+  var card=function(id,side){var p=P(id); return '<button type="button" class="crowd-p" id="crowd'+side+'" onclick="crowdPick(\''+side+'\')">'+photoHTML(p,'avatar crowd-av')+'<b>'+esc(pname(id))+'</b><span>'+POS[p.pos].ar+'</span></button>';};
+  h+='<div class="crowd-bar"><i style="width:'+Math.round(CW.i/N*100)+'%"></i></div><div class="foot" style="text-align:center;margin:6px 0 0"><span class="num">'+(CW.i+1)+'</span> sur <span class="num">'+N+'</span></div>';
+  h+='<div class="crowd-q" id="crowdQ">'+CROWD_Q[q.a]+'</div><div class="crowd-two">'+card(q.x,'A')+'<span class="crowd-or">ou</span>'+card(q.y,'B')+'</div>';
+  h+='<div style="text-align:center;margin-top:14px"><button type="button" class="btn tinted sm" id="crowdSkip" onclick="crowdPick(\'-\')">Je ne sais pas</button></div>';
+  setModal(h);
+}
+function crowdPick(side){
+  if(!CW)return; var q=CW.pairs[CW.i]; if(!q)return;
+  var w=side==='A'?q.x:side==='B'?q.y:'-';
+  if(w!=='-'){CW.who[q.x]=1;CW.who[q.y]=1;}
+  putVote('crowd/'+CW.me+'/'+q.k,w); CW.i++;
+  if(CW.i>=CW.pairs.length) putVote('crowd/'+CW.me+'/_r',crowdCfg().round);
+  var el=document.getElementById('crowd'+side); if(el&&side!=='-'){el.classList.add('on'); setTimeout(crowdStep,180);} else crowdStep();
+}
+// مجلس الإدارة: الاقتراحات واعتمادها
+function crowdAdminCardH(){
+  if(!isCoach)return ''; var c=crowdCfg(), v=Object.keys(S.crowd||{}).length;
+  return '<div class="card" style="margin-top:14px"><div class="cell tap ind" id="crowdAdminCard" onclick="openCrowdAdmin()">'+tile('#5856D6','people')+'<div class="body"><div class="t">Évaluation des coéquipiers</div><div class="s">'+(c.on?'Ouverte':'Suspendue')+' · '+cnt(v,'votant')+'</div></div>'+chev()+'</div></div>';
+}
+var crowdOpen={};
+function openCrowdAdmin(){ if(!isCoach)return; openModal(''); crowdAdminInner(); modalRefresh=crowdAdminInner; }
+function crowdAdminInner(){
+  var M=crowdModel(), c=crowdCfg(), h=mh('Évaluation des coéquipiers');
+  h+='<div class="foot" style="margin:0 4px 10px">Chaque joueur inscrit compare ses coéquipiers (qui est meilleur dans une compétence). L’avis du groupe compte jusqu’à 50 % selon le nombre de votes, et aucune note ne change avant que vous touchiez « Valider ».</div>';
+  h+='<div class="card"><div class="cell tap ind" id="crowdToggle" onclick="put(\'settings/crowd/off\','+(c.on?'true':'null')+')">'+tile(c.on?'#34C759':'#8E8E93',c.on?'check':'lock')+'<div class="body"><div class="t">'+(c.on?'Évaluation ouverte aux joueurs':'Évaluation suspendue')+'</div><div class="s">'+(c.on?'Touchez pour le suspendre':'Touchez pour l’ouvrir')+'</div></div></div>'+
+     '<div class="cell tap ind" id="crowdRound" onclick="crowdNewRound()">'+tile('#0A84FF','undo')+'<div class="body"><div class="t">Nouvelle manche</div><div class="s">Réaffiche la carte « Évaluez vos coéquipiers » à tous · Manche actuelle '+c.round+'</div></div></div></div>';
+  h+='<div class="foot" style="margin:10px 4px 0">'+cnt(M.voters,'votant')+' · '+cnt(M.votes,'comparaison')+'</div>';
+  var ids=Object.keys(M.p).filter(function(i){return M.p[i].ch;}).sort(function(a,b){return Math.abs(M.p[b].o2-M.p[b].o1)-Math.abs(M.p[a].o2-M.p[a].o1)||pname(a).localeCompare(pname(b),'ar');});
+  h+=gh('Suggestions')+'<div class="card" id="crowdList">'+(ids.length?ids.map(function(i){var r=M.p[i], d=r.o2-r.o1;
+    var det=crowdOpen[i]?'<div class="crowd-det">'+CROWD_ATTRS.filter(function(a){return r.sug[a]!=null&&r.sug[a]!==r.cur[a];}).map(function(a){return '<div><span>'+ATTR[a]+'</span><b class="num ltr">'+r.cur[a]+' → '+r.sug[a]+'</b></div>';}).join('')+'</div>':'';
+    return '<div class="cell" style="flex-wrap:wrap">'+avatar(i)+'<div class="body tap" onclick="crowdOpen[\''+i+'\']=!crowdOpen[\''+i+'\'];crowdAdminInner()"><div class="t">'+esc(pname(i))+'</div><div class="s"><span class="num ltr">'+r.o1+' → '+r.o2+'</span> <b style="color:'+(d>0?'var(--green)':d<0?'var(--red)':'var(--label2)')+'" class="num ltr">('+(d>0?'+':'')+d+')</b> · '+cnt(r.n,'Vote')+' · '+(crowdOpen[i]?'Masquer les détails':'Détails')+'</div></div><button class="btn sm" id="crowdOk-'+i+'" onclick="crowdApply([\''+i+'\'])">Valider</button>'+det+'</div>';}).join(''):'<div class="cell"><div class="body"><div class="s">Pas encore de suggestions. Il faut plus de votes.</div></div></div>')+'</div>';
+  if(ids.length>1) h+='<div class="m-foot"><button class="btn" id="crowdAll" onclick="crowdApply('+esc(JSON.stringify(ids))+')">Tout valider ('+ids.length+')</button></div>';
+  setModal(h);
+}
+function crowdApply(ids){
+  var M=crowdModel(), m={}, k=0;
+  ids.forEach(function(i){var r=M.p[i]; if(!r||!r.ch)return; m['players/'+i+'/attrs']=r.attrs; m['players/'+i+'/crowdAdj']=Object.keys(r.adj).length?r.adj:null; k++;});
+  if(!k)return; putMany(m); toast('Validé : '+cnt(k,'Joueur'));
+}
+function crowdNewRound(){
+  askConfirm('<b>Lancer une nouvelle manche ?</b><br><span class="small">La carte « Évaluez vos coéquipiers » réapparaît pour tous les joueurs. Les votes précédents restent comptés.</span>',function(){put('settings/crowd/round',crowdCfg().round+1); toast('Nouvelle manche lancée');},'Lancer');
+}
+
 function lateBadge(s,pid,tap){
   var m=s.checkin[pid]?lateMin(s,s.checkin[pid]):0, late=isLate(s,pid);
   var b=late?'<span class="rb r-mid num">Retard'+(m>0&&(s.lateSet||{})[pid]!==true?' '+m+' min':(m>0?' '+m+' min':''))+'</span>':'<span class="rb r-hi">À l’heure</span>';
@@ -1615,7 +1758,7 @@ function renderHome(el){
     h+='<div class="card"><div class="empty"><div class="ei">'+ic('ball')+'</div><b>Aucune séance à venir</b>'+(isCoach?'<button class="btn sm" style="margin-top:12px" onclick="go(\'session\')">'+ic('plus','xs')+'Créer une séance</button>':'Elle s’affichera ici quand le bureau créera une séance')+'</div></div>';
   }
 
-  h+=kittyMeH();
+  h+=kittyMeH(); h+=crowdCardH();
   if(ds.length){
     var last=ds[0], m=mvpOf(last);
     h+=gh('Séance précédente',lnk('Détails','openSessionDetail(\''+last.id+'\')'));
@@ -1645,7 +1788,7 @@ function renderHome(el){
   }
   if(ps.length) h+='<div class="foot" style="text-align:center;margin-top:22px"><a href="#" id="tourLink" style="color:var(--tint);font-weight:600" onclick="event.preventDefault();openTour()">🧭 Visite rapide de l’application</a></div>';
   if(isCoach&&!SBX) h+='<div class="card" style="margin-top:14px"><div class="cell tap ind" id="sbxEnter" onclick="enterSandbox()">'+tile('#AF52DE','star',true)+'<div class="body"><div class="t">🧪 Séance d’essai</div><div class="s">Testez tout (pointage, vote, score…) sans que les joueurs le voient</div></div>'+chev()+'</div></div>';
-  h+=lateCardH();
+  h+=lateCardH(); h+=crowdAdminCardH();
   if(isCoach) h+='<div class="card" style="margin-top:26px"><div class="cell tap ind" onclick="openSettings()">'+tile('#8E8E93','gear')+'<div class="body"><div class="t">Réglages et sauvegarde</div></div>'+chev()+'</div></div>';
   el.innerHTML=h; fitValcols(el);
 }
