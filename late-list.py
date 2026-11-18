@@ -4,7 +4,7 @@
 #   - المحروم يوقف عن 3 تمارين متتالية (التمارين اللي بعد التأخير الثاني)
 #   - حضور تمرينين في الوقت يمحو تأخيرًا واحدًا
 # نقطة البداية: القائمة المنشورة بعد التمرين 14 — كل من فيها (ما عدا متعب العتيبي
-# اللي انمحى تأخيره) يُعتبر متأخر مرة وما حضر في الوقت بعدها.
+# اللي انمحى تأخيره) يُعتبر متأخر مرة، والهجلة والنهدي والمشحن حضروا في الوقت مرة بعدها.
 # الاستخدام: python3 late-list.py   (أو python3 late-list.py db.json لملف محفوظ)
 import json, sys, datetime, urllib.request
 
@@ -12,6 +12,7 @@ API_KEY = 'AIzaSyBlRu52dh7N58H9j1HebKwI1OSttWyX5ZA'
 DB = 'https://wc-2026-predictions---saff-default-rtdb.firebaseio.com/training_elite.json'
 START_NUM = 15          # أول تمرين يُحسب (القائمة المنشورة تشمل تأخير التمرين 14)
 BAN_LEN = 3
+BASE_OK = {'عبدالرحمن الهجلة': 1, 'محمد النهدي': 1, 'عبدالعزيز المشحن': 1}  # حضروا في الوقت مرة بعد تأخيرهم
 BASELINE = ['عبدالرحمن الهجلة', 'محمد النهدي', 'عبدالعزيز المشحن', 'محمود خطيري', 'أيمن الحازمي',
             'مشعل الشهري', 'أبوبكر بخش', 'نوّاف الفاضل', 'عمّار المطيري', 'عبدالله باجبع']
 
@@ -33,7 +34,9 @@ def main():
     by_name = {p.get('name'): i for i, p in P.items()}
     st = {i: {'late': 0, 'ok': 0, 'ban': 0, 'banned_at': None, 'lates': [], 'oks': 0, 'apps': 0} for i in P}
     for n in BASELINE:
-        if n in by_name: st[by_name[n]]['late'] = 1
+        if n in by_name:
+            st[by_name[n]]['late'] = 1
+            st[by_name[n]]['ok'] = BASE_OK.get(n, 0)
         else: print('تنبيه: ما لقيت اللاعب', n)
     done = sorted([s for s in S.values() if s.get('status') == 'done' and (s.get('num') or 0) >= START_NUM],
                   key=lambda s: (s['date'], s.get('time') or ''))
