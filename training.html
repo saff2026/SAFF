@@ -287,6 +287,7 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .potm-prof{display:flex;align-items:center;gap:10px;justify-content:center;margin:8px auto 4px;padding:8px 14px;border-radius:14px;background:color-mix(in srgb,#D4A93C 14%,var(--card));border:1px solid color-mix(in srgb,#D4A93C 40%,transparent);width:max-content;max-width:100%}
 .potm-prof .pp-m{font-size:24px}.potm-prof b{display:block;font-size:14px}.potm-prof div span{font-size:12px;color:var(--label2)}
 .og-tag{font-size:11px;font-weight:700;color:var(--red);background:color-mix(in srgb,var(--red) 12%,transparent);padding:1px 6px;border-radius:6px;margin-inline-start:4px}
+.ci-min{flex-basis:100%;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 0 2px;font-size:13px;color:var(--label2)}.ci-min .field{width:76px;height:36px;padding:0 10px;text-align:center;font-size:16px}.ci-min .lnk{background:none;border:none;color:var(--tint);font:inherit;font-weight:700;cursor:pointer;padding:0}
 .crowd-bar{height:6px;border-radius:3px;background:var(--fill);overflow:hidden;margin:4px 2px 0}.crowd-bar i{display:block;height:100%;background:var(--tint);border-radius:3px;transition:width .25s}
 .crowd-q{text-align:center;font-size:21px;font-weight:800;margin:18px 0 16px}
 .crowd-two{display:flex;align-items:stretch;gap:8px}.crowd-or{align-self:center;font-size:13px;color:var(--label2);font-weight:700}
@@ -1217,6 +1218,8 @@ function lateMin(s,ts){return Math.max(0,Math.floor((ts-startTs(s))/60000));}
 function fmtClock(ts){try{return new Date(ts).toLocaleTimeString(AR_LOC,{hour:'numeric',minute:'2-digit'});}catch(e){return '';}}
 function fmtStart(s){return fmtClock(startTs(s));}
 // التأخير: بالوقت تلقائياً، ويقدر مجلس الإدارة يحدده يدوياً
+// دقائق التأخير: يدوية إذا حدّدها مجلس الإدارة، وإلا من وقت التحضير
+function lateM(s,pid){var v=(s.lateMins||{})[pid]; if(typeof v==='number')return Math.max(0,Math.round(v)); return s.checkin&&s.checkin[pid]?lateMin(s,s.checkin[pid]):0;}
 function isLate(s,pid){var o=(s.lateSet||{})[pid]; if(o===true)return true; if(o===false)return false; return !!s.checkin[pid]&&lateMin(s,s.checkin[pid])>0;}
 /* ---------- قائمة المتأخرين العامة (لمجلس الإدارة) ----------
    تأخيران = قائمة الحرمان، والمحروم يوقف عن 3 تمارين متتالية، وحضور تمرينين في الوقت يمحو تأخيرًا واحدًا */ // i18n-skip (نخبة السبت فقط)
@@ -1526,7 +1529,7 @@ function crowdNewRound(){
 }
 
 function lateBadge(s,pid,tap){
-  var m=s.checkin[pid]?lateMin(s,s.checkin[pid]):0, late=isLate(s,pid);
+  var m=lateM(s,pid), late=isLate(s,pid);
   var b=late?'<span class="rb r-mid num">متأخر'+(m>0&&(s.lateSet||{})[pid]!==true?' '+m+' د':(m>0?' '+m+' د':''))+'</span>':'<span class="rb r-hi">في الوقت</span>';
   return tap?'<button class="late-tg" style="background:none;border:none;padding:0" onclick="toggleLate(\''+pid+'\')" aria-label="تغيير حالة التأخير">'+b+'</button>':b;
 }
@@ -1544,7 +1547,7 @@ function computeStats(){
     });
     vals(s.goals).forEach(function(g){ if(g.og){if(g.s&&st[g.s])st[g.s].og=(st[g.s].og||0)+1;return;} if(g.s&&st[g.s])st[g.s].goals++; if(g.a&&st[g.a])st[g.a].assists++; });
     if(m&&st[m])st[m].mvp++;
-    Object.keys(s.checkin||{}).forEach(function(id){var x=st[id]; if(x&&isLate(s,id)){x.late++;x.lateMin+=lateMin(s,s.checkin[id]);}});
+    Object.keys(s.checkin||{}).forEach(function(id){var x=st[id]; if(x&&isLate(s,id)){x.late++;x.lateMin+=lateM(s,id);}});
   });
   Object.keys(st).forEach(function(k){var x=st[k];x.avg=x.rN?Math.round(x.rSum/x.rN*10)/10:null;});
   return st;
@@ -1708,7 +1711,7 @@ function lateSummaryHTML(s){
   var exp=attendees(s).filter(function(id){return P(id);}); if(!exp.length)return '';
   var none=exp.filter(function(id){return !ciStatus(s,id);});
   if(none.length)return '';
-  var late=exp.filter(function(id){return ciStatus(s,id)==='late';}).map(function(id){return {id:id,m:s.checkin[id]?lateMin(s,s.checkin[id]):0};}).sort(function(a,b){return b.m-a.m;});
+  var late=exp.filter(function(id){return ciStatus(s,id)==='late';}).map(function(id){return {id:id,m:lateM(s,id)};}).sort(function(a,b){return b.m-a.m;});
   var abs=exp.filter(function(id){return ciStatus(s,id)==='abs';});
   var h='<div class="card latesum" id="lateSum"><div class="cell"><div class="body"><div class="t">✅ اكتمل التحضير</div><div class="s">في الوقت <b class="num">'+(exp.length-late.length-abs.length)+'</b> · متأخر <b class="num">'+late.length+'</b> · غاب <b class="num">'+abs.length+'</b></div></div></div>';
   h+='<div class="cell"><div class="body"><div class="t" style="color:var(--orange)">المتأخرون ('+late.length+')</div>'+(late.length?late.map(function(x){return '<div class="lrow"><span>'+esc(pname(x.id))+'</span><b class="num">'+(x.m>0?x.m+' د':'متأخر')+'</b></div>';}).join(''):'<div class="s">ما فيه أحد تأخر 👏</div>')+'</div></div>';
@@ -2323,10 +2326,17 @@ function ciStatus(s,pid){return (s.absent||{})[pid]?'abs':s.checkin[pid]?(isLate
 function setCi(pid,k){
   var s=openSession(); if(!s)return; var cur=ciStatus(s,pid), m={}, b='sessions/'+s.id+'/';
   if(!s.att[pid]){ if(!canAdd(s))return; m[b+'att/'+pid]=true; }
+  if(cur===k||k!=='late') m[b+'lateMins/'+pid]=null;
   if(cur===k){ m[b+'checkin/'+pid]=null; m[b+'lateSet/'+pid]=null; m[b+'absent/'+pid]=null; }
   else if(k==='abs'){ m[b+'checkin/'+pid]=null; m[b+'lateSet/'+pid]=null; m[b+'absent/'+pid]=true; }
   else { if(!s.checkin[pid]) m[b+'checkin/'+pid]=Date.now(); m[b+'lateSet/'+pid]=(k==='late'); m[b+'absent/'+pid]=null; }
   putMany(m);
+}
+function setLateMins(pid,v){
+  var s=openSession(); if(!s)return; var b='sessions/'+s.id+'/', m={};
+  if(String(v).trim()===''){ m[b+'lateMins/'+pid]=null; putMany(m); toast('رجعت الدقائق تلقائية'); return; }
+  var n=clamp(Math.round(+v||0),0,300); m[b+'lateMins/'+pid]=n; m[b+'lateSet/'+pid]=n>0; if(!s.checkin[pid])m[b+'checkin/'+pid]=Date.now(); m[b+'absent/'+pid]=null;
+  putMany(m); toast(n>0?pname(pid)+' — متأخر '+cnt(n,'دقيقة'):pname(pid)+' — في الوقت');
 }
 /* ---------- اللاعب يعدّل عمره بنفسه ---------- */
 function editMyAge(){ var me=myId(); if(!me){askMe();return;} var p=P(me); if(!p)return;
@@ -2498,7 +2508,7 @@ function selfCiH(s){
   if(!me) return card('check','#FF9500','سجّل حضورك','سجّل دخولك أولاً عشان تحضّر نفسك','askMe()','selfCi');
   if(!s.att[me]) return '';
   if((s.absent||{})[me]) return '';
-  if(s.checkin[me]){var lm=lateMin(s,s.checkin[me]), late=isLate(s,me);
+  if(s.checkin[me]){var lm=lateM(s,me), late=isLate(s,me);
     return card('check','#34C759','✓ تم تحضيرك','وصلت '+fmtClock(s.checkin[me])+(late?' · <span style="color:var(--orange)">متأخر'+(lm>0?' '+cnt(lm,'دقيقة'):'')+'</span>':' · في الوقت'),'','selfCiDone');}
   if(!fieldLoc()) return card('check','#8E8E93','سجّل حضورك','مجلس الإدارة لم يحدّد موقع الملعب بعد','','selfCiOff');
   return card('check','#FF9500','سجّل حضورك','اضغط وأنت في الملعب · البداية '+fmtStart(s),'selfCheckin(\''+s.id+'\')','selfCi');
@@ -2566,10 +2576,11 @@ function checkinInner(){
   var ps=playersArr(), exp=ps.filter(function(p){return s.att[p.id];});
   var order=function(a,b){var ca=ciStatus(s,a.id)?1:0,cb=ciStatus(s,b.id)?1:0; return ca-cb||a.name.localeCompare(b.name,'ar');};
   exp.sort(order);
-  var row=function(p){var st=ciStatus(s,p.id), ts=s.checkin[p.id], lm=ts?lateMin(s,ts):0;
-    var g=(s.ciGeo||{})[p.id], sub=st==='abs'?'غاب':ts?'وصل '+fmtClock(ts)+(lm>0?' · بعد البداية بـ '+lm+' د':'')+(g?' · 📍 حضّر نفسه (على بُعد '+fmtDist(g.d||0)+')':''):POS[p.pos].ar;
+  var row=function(p){var st=ciStatus(s,p.id), ts=s.checkin[p.id], lm=lateM(s,p.id), man=typeof (s.lateMins||{})[p.id]==='number';
+    var g=(s.ciGeo||{})[p.id], sub=st==='abs'?'غاب':ts?'وصل '+fmtClock(ts)+(lm>0?(man?' · متأخر '+lm+' د (يدوي)':' · بعد البداية بـ '+lm+' د'):'')+(g?' · 📍 حضّر نفسه (على بُعد '+fmtDist(g.d||0)+')':''):POS[p.pos].ar;
     return '<div class="cell ind cirow" data-id="'+p.id+'" style="flex-wrap:wrap">'+avatar(p.id)+'<div class="body"><div class="t">'+esc(p.name)+'</div><div class="s">'+sub+'</div></div>'+
-      '<div class="seg ci-seg">'+[['ok','في الوقت'],['late','متأخر'],['abs','غاب']].map(function(o){return '<button type="button" class="ci-'+o[0]+(st===o[0]?' on':'')+'" onclick="setCi(\''+p.id+'\',\''+o[0]+'\')">'+o[1]+'</button>';}).join('')+'</div></div>';};
+      '<div class="seg ci-seg">'+[['ok','في الوقت'],['late','متأخر'],['abs','غاب']].map(function(o){return '<button type="button" class="ci-'+o[0]+(st===o[0]?' on':'')+'" onclick="setCi(\''+p.id+'\',\''+o[0]+'\')">'+o[1]+'</button>';}).join('')+'</div>'+
+      (st==='late'?'<div class="ci-min">دقائق التأخير <input type="number" inputmode="numeric" min="0" max="300" class="field num" id="cim-'+p.id+'" value="'+lm+'" onchange="setLateMins(\''+p.id+'\',this.value)" onclick="this.select()"> د'+(man?' · <button type="button" class="lnk" id="cimAuto-'+p.id+'" onclick="setLateMins(\''+p.id+'\',\'\')">تلقائي من وقت الوصول</button>':' <span class="muted">(تلقائي)</span>')+'</div>':'')+'</div>';};
   var cnt={ok:0,late:0,abs:0,none:0}; exp.forEach(function(p){var st=ciStatus(s,p.id); cnt[st||'none']++;});
   var h=mh('التحضير');
   h+='<div class="card"><div class="cell"><div class="body"><div class="t">بداية التمرين '+fmtStart(s)+'</div><div class="s">في الوقت <b class="num">'+cnt.ok+'</b> · متأخر <b class="num">'+cnt.late+'</b> · غاب <b class="num">'+cnt.abs+'</b> · بدون <b class="num">'+cnt.none+'</b></div><div class="s" style="margin-top:4px">اختر لكل لاعب حالته، واضغطها مرة ثانية لإلغائها.</div></div></div></div>';
@@ -3213,7 +3224,7 @@ function drawPoster(kind,s,logo,ph){
       y+=chh+56;
     }
     // المتأخرون
-    var lates=attendees(s).filter(function(id){return P(id)&&ciStatus(s,id)==='late';}).map(function(id){return {id:id,m:s.checkin&&s.checkin[id]?lateMin(s,s.checkin[id]):0};}).sort(function(a,b){return b.m-a.m;});
+    var lates=attendees(s).filter(function(id){return P(id)&&ciStatus(s,id)==='late';}).map(function(id){return {id:id,m:lateM(s,id)};}).sort(function(a,b){return b.m-a.m;});
     var abs=attendees(s).filter(function(id){return P(id)&&ciStatus(s,id)==='abs';});
     y=shead(y,'المتأخرون');
     if(!lates.length){ rowBox(y,84); txt('الكل حضر في الوقت',W/2,y+44,F(800,30),'#2FD28A','center'); y+=84+12; }
