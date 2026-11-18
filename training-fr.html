@@ -2299,7 +2299,6 @@ function confInner(sid){
     return '<div class="cell ind confrow" data-id="'+id+'" style="flex-wrap:wrap">'+avatar(id)+'<div class="body"><div class="t">'+esc((P(id)||{}).name||pname(id))+'</div>'+(s.att[id]?'<div class="s" style="color:var(--green)">✓ inscrit</div>':'')+'</div>'+
       '<div class="seg confseg">'+CONF.slice(1).map(function(x){return '<button type="button" class="c-'+x[0]+(v===x[0]?' on':'')+'" onclick="setConf(\''+sid+'\',\''+id+'\',\''+x[0]+'\')">'+x[1]+'</button>';}).join('')+'</div></div>';}).join('')+'</div>';
   h+='<div class="foot">Appuyez à nouveau sur le statut pour l’effacer (retour à « Pas appelé »).</div>';
-  if(c.called||ids.some(function(id){return !confOf(s,id)&&s.att[id];})) h+='<div class="m-foot"><button class="btn tinted block" id="confCopy" onclick="confCopy(\''+sid+'\')">'+ic('upl','s')+'Copier les noms de ceux qui n’ont pas confirmé</button></div>';
   setModal(h);
 }
 function setConf(sid,id,v){ var s=S.sessions[sid]; if(!s)return; applyConf(sid,id,confOf(s,id)===v?null:v); }
@@ -2554,8 +2553,6 @@ function attDropdown(s,ps){
       });
     });
     if(!shown) h+='<div class="cell"><div class="body"><div class="s" style="text-align:center">Aucun joueur pour ce filtre</div></div></div>';
-    var needCopy=cs.called||playersArr().some(function(p){return s.att[p.id]&&!confOf(s,p.id);});
-    if(needCopy) h+='<div class="cell" style="display:block"><button class="btn tinted block" id="confCopy" onclick="confCopy(\''+s.id+'\')">'+ic('upl','s')+'Copier les noms de ceux qui n’ont pas confirmé</button></div>';
   }
   return h+'</div>';
 }
