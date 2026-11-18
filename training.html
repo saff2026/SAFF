@@ -1226,7 +1226,7 @@ function lateBoard(){
   var last=done.length?(+done[done.length-1].num||0):B.from-1, ord=function(a,b){return pname(a).localeCompare(pname(b),'ar');};
   var banned=Object.keys(st).filter(function(id){return st[id].ban>0;}).sort(ord).map(function(id){var n=st[id].ban,a=[];for(var k=1;k<=n;k++)a.push(last+k);return {id:id,left:n,nums:a,at:st[id].at};});
   var once=Object.keys(st).filter(function(id){return !st[id].ban&&st[id].late>0;}).sort(ord).map(function(id){return {id:id,ok:st[id].ok};});
-  var cleared=done.length?Object.keys(st).filter(function(id){return !st[id].ban&&!st[id].late&&st[id].cleared===last;}).sort(ord):[];
+  var cleared=(done.length?Object.keys(st).filter(function(id){return !st[id].ban&&!st[id].late&&st[id].cleared===last;}):(B.cleared||[]).filter(function(id){return st[id]&&!st[id].late;})).sort(ord);
   return {banned:banned,once:once,cleared:cleared,warn:warn,counted:done.map(function(s){return s.num;})};
 }
 function lateCardH(){
@@ -1241,6 +1241,7 @@ function openLateBoard(){
     return '<div class="cell ind">'+avatar(x.id)+'<div class="body"><div class="t">'+esc(pname(x.id))+'</div><div class="s">موقوف عن '+(x.nums.length>1?'التمارين ':'التمرين ')+x.nums.join(' و')+(inL?' · <b style="color:var(--red)">موجود في قائمة التمرين '+(os.num||'')+'</b>':'')+'</div></div><span class="rb r-lo">باقي <b class="num">'+x.left+'</b></span></div>';}).join(''):'<div class="cell"><div class="body"><div class="s">لا يوجد أحد في قائمة الحرمان</div></div></div>')+'</div>'; // i18n-skip (نخبة السبت فقط)
   h+=gh('<span style="font-size:17px">🟠 متأخر مرة</span>')+'<div class="card" id="lateOnce">'+(L.once.length?L.once.map(function(x){ // i18n-skip (نخبة السبت فقط)
     return '<div class="cell ind">'+avatar(x.id)+'<div class="body"><div class="t">'+esc(pname(x.id))+'</div><div class="s">حضر في الوقت '+x.ok+' من 2 · باقي '+(2-x.ok===1?'تمرين واحد':'تمرينين')+' ويُمحى</div></div><span class="rb r-mid num">1/2</span></div>';}).join(''):'<div class="cell"><div class="body"><div class="s">لا يوجد</div></div></div>')+'</div>'; // i18n-skip (نخبة السبت فقط)
+  if(L.cleared.length) h+=gh('<span style="font-size:17px">🟢 مبروك، مُحي التأخير</span>')+'<div class="card" id="lateCleared">'+L.cleared.map(function(id){return '<div class="cell ind">'+avatar(id)+'<div class="body"><div class="t">'+esc(pname(id))+'</div><div class="s">حضر تمرينين في الوقت وانمحى تأخيره</div></div><span class="rb r-hi">مبروك</span></div>';}).join('')+'</div>'; // i18n-skip (نخبة السبت فقط)
   if(L.warn.length) h+='<div class="notice" style="margin-top:12px">'+L.warn.map(esc).join('<br>')+'</div>';
   h+='<div class="m-foot"><button class="btn" id="lateImg" onclick="lateImage()">'+ic('down','s')+'صورة القائمة</button><button class="btn tinted" id="lateCopy" onclick="lateCopy()">'+ic('upl','s')+'نسخ القائمة للقروب</button></div>'; // i18n-skip (نخبة السبت فقط)
   openModal(h);
@@ -1309,6 +1310,7 @@ function lateCopy(){
   var L=lateBoard(), t='⏰ قائمة المتأخرين — '+document.title+'\n'; // i18n-skip (نخبة السبت فقط)
   t+='\n⛔ قائمة الحرمان:\n'+(L.banned.length?L.banned.map(function(x){return '• '+pname(x.id)+' — موقوف عن '+(x.nums.length>1?'التمارين ':'التمرين ')+x.nums.join(' و');}).join('\n'):'لا يوجد')+'\n'; // i18n-skip (نخبة السبت فقط)
   t+='\n🟠 متأخر مرة:\n'+(L.once.length?L.once.map(function(x){return '• '+pname(x.id)+' — حضر في الوقت '+x.ok+' من 2';}).join('\n'):'لا يوجد')+'\n'; // i18n-skip (نخبة السبت فقط)
+  if(L.cleared.length) t+='\n🟢 مبروك، مُحي التأخير:\n'+L.cleared.map(function(id){return '• '+pname(id);}).join('\n')+'\n'; // i18n-skip (نخبة السبت فقط)
   t+='\nتأخيران = حرمان 3 تمارين · حضور تمرينين في الوقت يمحو تأخيرًا'; // i18n-skip (نخبة السبت فقط)
   var done=function(){toast('تم نسخ القائمة');}, fb=function(){openModal(mh('قائمة المتأخرين')+'<textarea class="field" id="lateText" rows="12" style="height:auto;padding:12px;line-height:1.7">'+esc(t)+'</textarea><div class="foot">انسخ النص والصقه في القروب.</div>');}; // i18n-skip (نخبة السبت فقط)
   try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(done,fb); return; } }catch(e){} fb();

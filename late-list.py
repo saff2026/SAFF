@@ -72,6 +72,8 @@ def main():
     for i, x in sorted(st.items(), key=lambda kv: name(kv[0])):
         if x['ban'] == 0 and x['late'] > 0:
             print('  %s — %d/2 حضور في الوقت (باقي %d ويُمحى)' % (name(i), x['ok'], 2 - x['ok']))
+    if not done:
+        print('\n🟢 مبروك، مُحي التأخير:\n  متعب العتيبي')
     for l in log: print(l)
     print('\n📋 الحضور في التمارين المحسوبة:')
     for s in done:
