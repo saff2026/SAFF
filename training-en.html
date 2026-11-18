@@ -287,7 +287,7 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .pc-name{margin-top:12px;font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sortrow{gap:10px}.sortrow.cur .t{color:var(--tint);font-weight:800}.sortseg{flex:none;width:190px}.sortseg button{font-size:13px}
 .pc-attrs .at.hl .r span,.pc-attrs .at.hl .r b{color:var(--tint);font-weight:900}
-.valcol{flex:none;width:96px;display:flex;align-items:baseline;justify-content:flex-start;gap:7px;margin-inline-start:8px}.valcol b{font-size:17px;font-weight:800;color:var(--label);min-width:22px;text-align:right}.valcol span{font-size:13px;color:var(--label2)}.valcol .up{font-size:13px;color:var(--green);font-weight:700}
+.valcol{flex:none;width:auto;display:flex;align-items:baseline;justify-content:flex-start;gap:7px;margin-inline-start:8px}.valcol b{font-size:17px;font-weight:800;color:var(--label);min-width:22px;text-align:right}.valcol span{font-size:13px;color:var(--label2)}.valcol .up{font-size:13px;color:var(--green);font-weight:700}
 .pc-meta{font-size:12.5px;color:var(--label2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .pc-attrs{display:grid;grid-template-columns:1fr 1fr;gap:7px 12px;margin-top:12px;}
 .at{font-size:11.5px;color:var(--label2);}
@@ -672,7 +672,7 @@ select.field{background-position:calc(100% - 14px) 50%;padding-left:12px;padding
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261118101420';
+var BUILD='20261118154355';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -1229,7 +1229,7 @@ function lateBoard(){
   var last=done.length?(+done[done.length-1].num||0):B.from-1, ord=function(a,b){return pname(a).localeCompare(pname(b),'ar');};
   var banned=Object.keys(st).filter(function(id){return st[id].ban>0;}).sort(ord).map(function(id){var n=st[id].ban,a=[];for(var k=1;k<=n;k++)a.push(last+k);return {id:id,left:n,nums:a,at:st[id].at};});
   var once=Object.keys(st).filter(function(id){return !st[id].ban&&st[id].late>0;}).sort(ord).map(function(id){return {id:id,ok:st[id].ok};});
-  var cleared=done.length?Object.keys(st).filter(function(id){return !st[id].ban&&!st[id].late&&st[id].cleared===last;}).sort(ord):[];
+  var cleared=(done.length?Object.keys(st).filter(function(id){return !st[id].ban&&!st[id].late&&st[id].cleared===last;}):(B.cleared||[]).filter(function(id){return st[id]&&!st[id].late;})).sort(ord);
   return {banned:banned,once:once,cleared:cleared,warn:warn,counted:done.map(function(s){return s.num;})};
 }
 function lateCardH(){
@@ -1244,6 +1244,7 @@ function openLateBoard(){
     return '<div class="cell ind">'+avatar(x.id)+'<div class="body"><div class="t">'+esc(pname(x.id))+'</div><div class="s">موقوف عن '+(x.nums.length>1?'التمارين ':'التمرين ')+x.nums.join(' و')+(inL?' · <b style="color:var(--red)">موجود في قائمة التمرين '+(os.num||'')+'</b>':'')+'</div></div><span class="rb r-lo">باقي <b class="num">'+x.left+'</b></span></div>';}).join(''):'<div class="cell"><div class="body"><div class="s">لا يوجد أحد في قائمة الحرمان</div></div></div>')+'</div>'; // i18n-skip (نخبة السبت فقط)
   h+=gh('<span style="font-size:17px">🟠 متأخر مرة</span>')+'<div class="card" id="lateOnce">'+(L.once.length?L.once.map(function(x){ // i18n-skip (نخبة السبت فقط)
     return '<div class="cell ind">'+avatar(x.id)+'<div class="body"><div class="t">'+esc(pname(x.id))+'</div><div class="s">حضر في الوقت '+x.ok+' من 2 · باقي '+(2-x.ok===1?'تمرين واحد':'تمرينين')+' ويُمحى</div></div><span class="rb r-mid num">1/2</span></div>';}).join(''):'<div class="cell"><div class="body"><div class="s">لا يوجد</div></div></div>')+'</div>'; // i18n-skip (نخبة السبت فقط)
+  if(L.cleared.length) h+=gh('<span style="font-size:17px">🟢 مبروك، مُحي التأخير</span>')+'<div class="card" id="lateCleared">'+L.cleared.map(function(id){return '<div class="cell ind">'+avatar(id)+'<div class="body"><div class="t">'+esc(pname(id))+'</div><div class="s">حضر تمرينين في الوقت وانمحى تأخيره</div></div><span class="rb r-hi">مبروك</span></div>';}).join('')+'</div>'; // i18n-skip (نخبة السبت فقط)
   if(L.warn.length) h+='<div class="notice" style="margin-top:12px">'+L.warn.map(esc).join('<br>')+'</div>';
   h+='<div class="m-foot"><button class="btn" id="lateImg" onclick="lateImage()">'+ic('down','s')+'صورة القائمة</button><button class="btn tinted" id="lateCopy" onclick="lateCopy()">'+ic('upl','s')+'نسخ القائمة للقروب</button></div>'; // i18n-skip (نخبة السبت فقط)
   openModal(h);
@@ -1312,6 +1313,7 @@ function lateCopy(){
   var L=lateBoard(), t='⏰ قائمة المتأخرين — '+document.title+'\n'; // i18n-skip (نخبة السبت فقط)
   t+='\n⛔ قائمة الحرمان:\n'+(L.banned.length?L.banned.map(function(x){return '• '+pname(x.id)+' — موقوف عن '+(x.nums.length>1?'التمارين ':'التمرين ')+x.nums.join(' و');}).join('\n'):'لا يوجد')+'\n'; // i18n-skip (نخبة السبت فقط)
   t+='\n🟠 متأخر مرة:\n'+(L.once.length?L.once.map(function(x){return '• '+pname(x.id)+' — حضر في الوقت '+x.ok+' من 2';}).join('\n'):'لا يوجد')+'\n'; // i18n-skip (نخبة السبت فقط)
+  if(L.cleared.length) t+='\n🟢 مبروك، مُحي التأخير:\n'+L.cleared.map(function(id){return '• '+pname(id);}).join('\n')+'\n'; // i18n-skip (نخبة السبت فقط)
   t+='\nتأخيران = حرمان 3 تمارين · حضور تمرينين في الوقت يمحو تأخيرًا'; // i18n-skip (نخبة السبت فقط)
   var done=function(){toast('تم نسخ القائمة');}, fb=function(){openModal(mh('قائمة المتأخرين')+'<textarea class="field" id="lateText" rows="12" style="height:auto;padding:12px;line-height:1.7">'+esc(t)+'</textarea><div class="foot">انسخ النص والصقه في القروب.</div>');}; // i18n-skip (نخبة السبت فقط)
   try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(done,fb); return; } }catch(e){} fb();
@@ -1639,7 +1641,16 @@ function renderHome(el){
   if(isCoach&&!SBX) h+='<div class="card" style="margin-top:14px"><div class="cell tap ind" id="sbxEnter" onclick="enterSandbox()">'+tile('#AF52DE','star',true)+'<div class="body"><div class="t">🧪 Practice session</div><div class="s">Try everything (check-in, voting, score…) without players seeing it</div></div>'+chev()+'</div></div>';
   h+=lateCardH();
   if(isCoach) h+='<div class="card" style="margin-top:26px"><div class="cell tap ind" onclick="openSettings()">'+tile('#8E8E93','gear')+'<div class="body"><div class="t">Settings and backup</div></div>'+chev()+'</div></div>';
-  el.innerHTML=h;
+  el.innerHTML=h; fitValcols(el);
+}
+// عمود الأرقام: بعرض أطول قيمة في نفس البطاقة (بدون فراغ، والأرقام على نفس المحاذاة)
+function fitValcols(el){
+  var go=function(){ el.querySelectorAll('.card').forEach(function(c){
+    var v=c.querySelectorAll('.valcol'); if(!v.length)return; var m=0;
+    v.forEach(function(x){x.style.width='auto'; m=Math.max(m,Math.ceil(x.getBoundingClientRect().width));});
+    if(m>0) v.forEach(function(x){x.style.width=m+'px';});
+  });};
+  go(); try{ if(document.fonts&&document.fonts.ready) document.fonts.ready.then(go); }catch(e){}
 }
 
 /* ---------- اللاعبون ---------- */
@@ -1716,11 +1727,11 @@ function openPlayerForm(id){
   h+='<div class="photo-edit"><div id="f_pv">'+pfPhotoBox()+'</div><div class="hstack"><label class="btn sm tinted" style="cursor:pointer">'+ic('cam','xs')+'Choose photo<input type="file" accept="image/*" id="f_file" style="display:none" onchange="pickPhoto(this)"></label><button type="button" class="btn sm gray" id="f_adjphoto" onclick="adjustPhoto()">Adjust</button><button type="button" class="btn sm gray" id="f_rmphoto" onclick="pf.p.photo=\'\';document.getElementById(\'f_pv\').innerHTML=pfPhotoBox()">Remove</button></div></div>';
   h+='<span class="lbl">Name</span><input class="field" id="f_name" maxlength="30" value="'+esc(p.name)+'" placeholder="e.g. Salem Al-Dawsari">';
   h+='<span class="lbl">Age</span><input class="field num" id="f_age" type="number" inputmode="numeric" min="5" max="60" value="'+esc(p.age)+'">';
-  h+='<div class="hstack" style="align-items:flex-start"><div class="grow"><span class="lbl">Skill stars</span>'+starPick('f_sm','sm',p.sm||3)+'</div></div>';
   h+='<span class="lbl">Preferred foot</span><div class="seg" id="f_foot">'+['R','L','B'].map(function(k){return '<button type="button" class="'+(p.foot===k?'on':'')+'" onclick="pf.p.foot=\''+k+'\';this.parentNode.querySelectorAll(\'button\').forEach(function(b){b.classList.remove(\'on\')});this.classList.add(\'on\')">'+FOOT[k]+'</button>';}).join('')+'</div>';
+  h+='<span class="lbl">Weak-foot stars</span>'+starPick('f_wf','wf',p.wf||3);
+  h+='<div class="hstack" style="align-items:flex-start"><div class="grow"><span class="lbl">Skill stars</span>'+starPick('f_sm','sm',p.sm||3)+'</div></div>';
   if(FEAT_JOKER) h+='<div class="card" style="margin-top:14px"><div class="cell tap" id="f_joker" onclick="pf.p.joker=!pf.p.joker;this.querySelector(\'.tgl\').classList.toggle(\'on\',!!pf.p.joker)"><div class="body"><div class="t">Joker badge 🃏</div><div class="s">Plays in many positions — Shown to everyone on their card</div></div><span class="tgl'+(p.joker?' on':'')+'"><i></i></span></div></div>';
   if(TRAITS.length) h+='<span class="lbl">Technical traits <span style="opacity:.7">(help with the lineup and don’t affect the rating)</span></span><div class="chips" id="f_traits">'+TRAITS.map(function(x){var on=!!(p.traits||{})[x[0]];return '<span class="chip trait'+(on?' on':'')+'" data-k="'+x[0]+'" onclick="pf.p.traits=pf.p.traits||{};pf.p.traits[\''+x[0]+'\']=!pf.p.traits[\''+x[0]+'\'];this.classList.toggle(\'on\')">'+x[1]+'</span>';}).join('')+'</div>';
-  h+='<span class="lbl">Weak-foot stars</span>'+starPick('f_wf','wf',p.wf||3);
   h+='<span class="lbl">Positions in order <span style="opacity:.7">(the first is the main one)</span></span><div class="card prefs" id="f_prefs">'+
      [['f_pos','pos','1st'],['f_pos2','pos2','2nd'],['f_pos3','pos3','3rd'],['f_pos4','pos4','4th']].map(function(x,i){
        return '<div class="cell prow"><span class="prank num">'+(i+1)+'</span><div class="body"><div class="s">'+x[2]+'</div></div><select class="field" id="'+x[0]+'" onchange="pfPrefs()">'+posOptions(p[x[1]]||'',i>0)+'</select></div>';}).join('')+'</div>';
@@ -3654,8 +3665,8 @@ function rulesHTML(){
   var h='<div id="rulesSec">'+gh('Rating system');
   h+='<div class="card" style="overflow:hidden"><div style="padding:20px 18px;background:linear-gradient(135deg,#0E4A35,#06231B);color:#fff">'+
      '<div style="font-size:12px;letter-spacing:.5px;color:#E6CC78;font-weight:700">A professional rating model</div>'+
-     '<div style="font-size:21px;font-weight:800;margin:6px 0 8px">Attributes update automatically after every session</div>'+
-     '<div style="font-size:14px;line-height:1.75;color:rgba(255,255,255,.82)">Based on the “Elo” method (Elo), the same mathematical basis FIFA has used to rank national teams since 2018, comparing each player’s performance with what was expected of them.</div></div>'+
+     '<div style="font-size:clamp(17px,5vw,21px);font-weight:800;margin:6px 0 8px;line-height:1.35;text-wrap:balance">Attributes update automatically after every session</div>'+
+     '<div style="font-size:14px;line-height:1.75;color:rgba(255,255,255,.82);text-wrap:pretty">Based on the “Elo” method (Elo), the same mathematical basis FIFA has used to rank national teams since 2018, comparing each player’s performance with what was expected of them.</div></div>'+
      f('star','#D4A93C','Technical committee rating')+f('ball','var(--tint)','Goals and assists by position')+f('scale','#0A84FF','Result and opponent’s strength')+f('trend','#5856D6','Player’s level and experience')+f('check','var(--orange)','Attendance commitment')+'</div>';
   return h+'</div>';
 }
