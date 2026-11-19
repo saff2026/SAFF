@@ -296,6 +296,10 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .og-tag{font-size:11px;font-weight:700;color:var(--red);background:color-mix(in srgb,var(--red) 12%,transparent);padding:1px 6px;border-radius:6px;margin-inline-start:4px}
 .ci-min{flex-basis:100%;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 0 2px;font-size:13px;color:var(--label2)}.ci-min .field{width:76px;height:36px;padding:0 10px;text-align:center;font-size:16px}.ci-min .lnk{background:none;border:none;color:var(--tint);font:inherit;font-weight:700;cursor:pointer;padding:0}
 .crowd-bar{height:6px;border-radius:3px;background:var(--fill);overflow:hidden;margin:4px 2px 0}.crowd-bar i{display:block;height:100%;background:var(--tint);border-radius:3px;transition:width .25s}
+.ci-row{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;margin-top:8px;border-radius:14px;background:var(--fill)}
+.ci-row .ci-ic{font-size:22px;line-height:1.2;flex:0 0 auto}
+.ci-row b{display:block;font-size:15px}
+.ci-row span{display:block;font-size:13px;opacity:.72;margin-top:2px}
 .crowd-q{text-align:center;font-size:21px;font-weight:800;margin:18px 0 16px}
 .crowd-two{display:flex;align-items:stretch;gap:8px}.crowd-or{align-self:center;font-size:13px;color:var(--label2);font-weight:700}
 .crowd-p{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 8px 14px;border-radius:18px;border:2px solid var(--sep);background:var(--card);color:var(--label);font:inherit;cursor:pointer;transition:transform .12s,border-color .12s,background .12s}
@@ -669,7 +673,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261119094014';
+var BUILD='20261119103456';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -1037,9 +1041,24 @@ var askedMe=false;
 function maybeAskMe(){
   if(askedMe)return; askedMe=true;
   if(!isCoach&&playersArr().length&&!lsGet('saff_tr_tour')){ setTimeout(function(){openTour(true);},300); return; } // أول زيارة: جولة سريعة ثم اختيار الاسم
+  if(needCrowdIntro()){ setTimeout(openCrowdIntro,300); return; } // تعريف بتقييم الزملاء: مرة وحدة لكل جوال
   if(isCoach||!playersArr().length||myId()||meSkipped())return;
   setTimeout(function(){askMe();},300);
 }
+function needCrowdIntro(){return !lsGet('saff_tr_crowdintro')&&crowdCfg().on&&crowdPool().length>=3;}
+function openCrowdIntro(){
+  lsSet('saff_tr_crowdintro','1');
+  var row=function(e,t,s){return '<div class="ci-row"><div class="ci-ic">'+e+'</div><div><b>'+t+'</b><span>'+s+'</span></div></div>';};
+  var h=mh('جديد: قيّم زملاءك')+'<div id="crowdIntro"><div style="text-align:center;margin:2px 0 14px"><div style="font-size:44px;line-height:1">🤝</div><div style="font-size:19px;font-weight:800;margin:10px 0 4px">لطاقات أكثر عدالة</div><div class="small muted">طاقات اللاعبين (السرعة، التسديد، التمرير...) كانت من تقييم الإدارة بس. الحين رأيكم أنتم يدخل فيها بنص الوزن.</div></div>'+
+    row('👥','لاعبين اثنين وسؤال واحد','مثل «مين أسرع؟» أو «مين أقوى في الدفاع؟»')+
+    row('👆','اضغط على الأفضل','تضغط على صورة اللاعب اللي تشوفه أفضل في هذا الشي')+
+    row('🤷','ما تعرف؟','اضغط «ما أعرف» وينقلك للي بعده، عشان يبقى التقييم دقيق')+
+    row('⏱️',CROWD_N+' مقارنة · دقيقة وحدة','وتقدر تلعب جولات زيادة متى ما بغيت من بطاقة «قيّم زملاءك» في الرئيسية')+
+    row('🔒','تصويتك سرّي','ما أحد يشوف مين صوّت لمين، وآراء الكل تنجمع مع بعض')+
+    '</div><div class="m-foot"><button class="btn gray" id="crowdIntroLater" onclick="closeModal();crowdIntroAfter()">لاحقاً</button><button class="btn" id="crowdIntroGo" onclick="closeModal();openCrowd()">يلا نبدأ</button></div>';
+  openModal(h);
+}
+function crowdIntroAfter(){ if(!isCoach&&playersArr().length&&!myId()&&!meSkipped()) setTimeout(function(){askMe();},300); }
 /* ---------- جولة سريعة للزوار الجدد ---------- */
 /* ---------- جولة سريعة: تأشّر على مكان كل ميزة في الصفحة ---------- */
 function tourSteps(){
@@ -1090,6 +1109,7 @@ function tourPlace(){
 function tourDone(){
   lsSet('saff_tr_tour','1'); var o=document.getElementById('tourOv'); if(o){o.className='';o.innerHTML='';}
   window.removeEventListener('resize',tourPlace); window.removeEventListener('scroll',tourPlace,true);
+  if(tourFirst&&needCrowdIntro()){ setTimeout(openCrowdIntro,350); return; }
   if(tourFirst&&!isCoach&&playersArr().length&&!myId()&&!meSkipped()) setTimeout(function(){askMe();},350);
 }
 /* ---------- دخول اللاعب: الاسم من القائمة + كلمة سر من 4 أرقام ---------- */
