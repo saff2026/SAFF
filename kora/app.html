@@ -1,0 +1,947 @@
+<title>تحدّي الكورة</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="ألعاب ألغاز كرة القدم بالعربي: الناقص 11، من اللاعب؟، شبكة الكورة، مسيرة لاعب، والقائمة.">
+<meta name="theme-color" content="#F3F5F4">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Alexandria:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: iOS-style single column (max 680px) — large title, grouped cards, bottom sheets; pitch green and gold borrowed from مركز التمرين */
+:root{
+  --bg:#F2F4F3; --surface:#FFFFFF; --surface2:#F6F8F7; --fill:rgba(16,40,30,.06); --fill2:rgba(16,40,30,.10);
+  --fg:#0E1A15; --fg2:rgba(14,26,21,.62); --fg3:rgba(14,26,21,.38); --sep:rgba(14,26,21,.10);
+  --accent:#10654F; --accent-fg:#FFFFFF; --accent-soft:rgba(16,101,79,.10);
+  --gold:#B48A2C; --gold-soft:rgba(201,162,74,.16);
+  --ok:#1F9D55; --ok-fg:#FFFFFF; --near:#D9A514; --near-fg:#1A1405; --miss:#8E9692; --miss-fg:#FFFFFF; --bad:#D93A3A;
+  --pitch1:#17775A; --pitch2:#136B51; --line:rgba(255,255,255,.55);
+  --shadow:0 1px 2px rgba(10,30,20,.06),0 8px 24px rgba(10,30,20,.06);
+  --blur:rgba(242,244,243,.82);
+  --f-display:'Alexandria','Tajawal',system-ui,sans-serif; --f-body:'Tajawal',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --r:20px; --r-sm:13px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#000000; --surface:#111614; --surface2:#1A201D; --fill:rgba(220,240,230,.07); --fill2:rgba(220,240,230,.12);
+  --fg:#F3F7F5; --fg2:rgba(243,247,245,.64); --fg3:rgba(243,247,245,.38); --sep:rgba(243,247,245,.10);
+  --accent:#2EA96A; --accent-fg:#04140D; --accent-soft:rgba(46,169,106,.16);
+  --gold:#E6CC78; --gold-soft:rgba(230,204,120,.14);
+  --ok:#2EB866; --ok-fg:#04140D; --near:#E3B523; --near-fg:#1A1405; --miss:#3B423F; --miss-fg:#F3F7F5; --bad:#F26B6B;
+  --pitch1:#0F5A43; --pitch2:#0C503B; --line:rgba(255,255,255,.42);
+  --shadow:none; --blur:rgba(0,0,0,.72); color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#000000; --surface:#111614; --surface2:#1A201D; --fill:rgba(220,240,230,.07); --fill2:rgba(220,240,230,.12);
+  --fg:#F3F7F5; --fg2:rgba(243,247,245,.64); --fg3:rgba(243,247,245,.38); --sep:rgba(243,247,245,.10);
+  --accent:#2EA96A; --accent-fg:#04140D; --accent-soft:rgba(46,169,106,.16);
+  --gold:#E6CC78; --gold-soft:rgba(230,204,120,.14);
+  --ok:#2EB866; --ok-fg:#04140D; --near:#E3B523; --near-fg:#1A1405; --miss:#3B423F; --miss-fg:#F3F7F5; --bad:#F26B6B;
+  --pitch1:#0F5A43; --pitch2:#0C503B; --line:rgba(255,255,255,.42);
+  --shadow:none; --blur:rgba(0,0,0,.72); color-scheme:dark;}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{direction:rtl}
+body{direction:rtl;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;min-height:100vh;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--blur)}
+button,input{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+.wrap{max-width:680px;margin:0 auto}
+h1,h2,h3,.disp{font-family:var(--f-display);text-wrap:balance;margin:0}
+.num{font-variant-numeric:tabular-nums}
+
+/* nav bar */
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;margin:0 calc(-1*max(16px,env(safe-area-inset-left,0px)));
+  padding:10px max(16px,env(safe-area-inset-left,0px));background:var(--blur);
+  -webkit-backdrop-filter:saturate(180%) blur(18px);backdrop-filter:saturate(180%) blur(18px);border-bottom:.5px solid var(--sep)}
+.nav .in{max-width:680px;margin:0 auto;display:flex;align-items:center;gap:8px;min-height:36px}
+.nav .t{flex:1;text-align:center;font-family:var(--f-display);font-weight:700;font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nbtn{background:none;border:0;color:var(--accent);font-weight:700;font-size:1rem;display:inline-flex;align-items:center;gap:2px;padding:6px 4px;min-width:64px}
+.nbtn.end{justify-content:flex-end}
+.nbtn svg{width:20px;height:20px}
+.ibtn{width:34px;height:34px;border-radius:50%;background:var(--fill);border:0;color:var(--accent);display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-family:var(--f-display)}
+
+/* home */
+.hero{padding:28px 0 6px}
+.hero .date{font-size:.82rem;font-weight:700;color:var(--fg2);letter-spacing:.2px}
+.hero h1{font-size:2.15rem;font-weight:800;line-height:1.25;margin-top:2px}
+.hero p{margin:6px 0 0;color:var(--fg2);font-size:.98rem}
+.grp-t{font-size:.8rem;font-weight:800;color:var(--fg2);margin:26px 4px 8px}
+.feature{display:block;width:100%;text-align:right;border:0;border-radius:24px;overflow:hidden;position:relative;padding:20px 20px 20px 116px;color:#fff;
+  background:radial-gradient(420px 220px at 15% 0%,rgba(255,255,255,.16),transparent 60%),linear-gradient(160deg,#17775A,#0A3528 70%);box-shadow:var(--shadow)}
+.feature .k{font-size:.78rem;font-weight:800;color:#E6CC78}
+.feature h2{font-size:1.6rem;font-weight:800;margin:4px 0 4px;color:#fff}
+.feature p{margin:0;color:rgba(255,255,255,.78);font-size:.92rem;max-width:34ch}
+.feature .go{margin-top:14px;display:inline-flex;align-items:center;gap:6px;background:#fff;color:#0A3528;border-radius:999px;padding:8px 16px;font-weight:800;font-size:.9rem}
+.feature .mini{position:absolute;left:18px;top:50%;transform:translateY(-50%);width:80px;aspect-ratio:68/100;border:1.5px solid rgba(255,255,255,.45);border-radius:10px;max-width:30%}
+.feature .mini i{position:absolute;width:9px;height:9px;border-radius:50%;background:#E6CC78;transform:translate(-50%,-50%)}
+.list{background:var(--surface);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.row{display:flex;align-items:center;gap:14px;width:100%;padding:13px 16px;background:none;border:0;text-align:right;position:relative}
+.row+.row::before{content:"";position:absolute;top:0;left:0;right:70px;border-top:.5px solid var(--sep)}
+.app-ic{width:46px;height:46px;border-radius:12px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--f-display);font-weight:800;font-size:1.05rem}
+.row .tx{flex:1;min-width:0}
+.row .tx b{display:block;font-weight:800;font-size:1.02rem;font-family:var(--f-display)}
+.row .tx span{display:block;color:var(--fg2);font-size:.86rem;line-height:1.45}
+.row .st{font-size:.76rem;font-weight:800;border-radius:999px;padding:3px 10px;white-space:nowrap;background:var(--fill);color:var(--fg2)}
+.row .st.done{background:var(--accent-soft);color:var(--accent)}
+.row .chev{color:var(--fg3);flex:none}
+.foot{color:var(--fg3);font-size:.78rem;text-align:center;margin-top:28px;line-height:1.8}
+
+/* generic */
+.card{background:var(--surface);border-radius:var(--r);padding:16px;box-shadow:var(--shadow)}
+.stack{display:flex;flex-direction:column;gap:12px}
+.seg{display:flex;background:var(--fill);border-radius:10px;padding:2px;gap:2px;margin:14px 0 4px}
+.seg button{flex:1;border:0;background:none;border-radius:8px;padding:7px 6px;font-weight:700;font-size:.88rem;color:var(--fg)}
+.seg button.on{background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.btn{border:0;border-radius:14px;padding:13px 18px;font-weight:800;font-size:1rem;background:var(--accent);color:var(--accent-fg);display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn:active{transform:scale(.98)}
+.btn.sec{background:var(--fill);color:var(--accent)}
+.btn.ghost{background:none;color:var(--accent);padding:10px 12px}
+.btn.danger{background:none;color:var(--bad);padding:10px 12px}
+.btn.block{width:100%}
+.btn:disabled{opacity:.4}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btns .btn{flex:1;min-width:120px}
+.muted{color:var(--fg2)}
+.small{font-size:.84rem}
+.field{width:100%;border:0;background:var(--fill);border-radius:12px;padding:12px 14px;font-size:1rem;outline:none;color:var(--fg)}
+.field:focus{box-shadow:0 0 0 2.5px var(--accent-soft) inset,0 0 0 1.5px var(--accent) inset}
+.field::placeholder{color:var(--fg3)}
+.lives{display:flex;gap:5px;align-items:center}
+.lives i{width:10px;height:10px;border-radius:50%;background:var(--accent)}
+.lives i.off{background:var(--fill2)}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:.78rem;font-weight:800;border-radius:999px;padding:3px 10px;background:var(--fill);color:var(--fg2)}
+.pill.g{background:var(--gold-soft);color:var(--gold)}
+.pill.a{background:var(--accent-soft);color:var(--accent)}
+
+/* autocomplete */
+.ac{position:relative}
+.ac-list{margin-top:6px;background:var(--surface);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.14);overflow:hidden;max-height:260px;overflow-y:auto}
+.ac-list:empty{display:none}
+.ac-it{display:flex;align-items:center;gap:10px;width:100%;padding:11px 14px;border:0;background:none;text-align:right;font-weight:700}
+.ac-it+.ac-it{border-top:.5px solid var(--sep)}
+.ac-it small{color:var(--fg2);font-weight:500;margin-inline-start:auto}
+.ac-it:hover,.ac-it.hl{background:var(--fill)}
+.ac-it.used{opacity:.4}
+
+/* match header */
+.match{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.match .tm{flex:1;text-align:center;font-weight:800;font-family:var(--f-display);font-size:.98rem;min-width:0}
+.match .tm .fl{font-size:1.7rem;display:block;line-height:1.2}
+.match .tm.me{color:var(--accent)}
+.match .sc{font-family:var(--f-display);font-weight:800;font-size:1.7rem;direction:ltr;white-space:nowrap}
+.match-sub{text-align:center;color:var(--fg2);font-size:.84rem;margin-top:6px}
+
+/* pitch */
+.pitch{position:relative;width:100%;max-width:100%;aspect-ratio:68/92;border-radius:18px;overflow:hidden;
+  background:repeating-linear-gradient(180deg,var(--pitch1) 0 9.09%,var(--pitch2) 9.09% 18.18%)}
+.pitch .ln{position:absolute;border:2px solid var(--line);pointer-events:none}
+.pitch .mid{left:-2px;right:-2px;top:0;border-width:0 0 2px 0}
+.pitch .circ{width:28%;aspect-ratio:1;border-radius:50%;left:36%;top:0;transform:translateY(-50%)}
+.pitch .box{left:20%;right:20%;bottom:-2px;height:16%}
+.pitch .six{left:36%;right:36%;bottom:-2px;height:6%}
+.pitch .arc{width:16%;aspect-ratio:1;border-radius:50%;left:42%;bottom:12%;clip-path:inset(0 0 60% 0)}
+.tok{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;width:22%;max-width:96px;border:0;background:none;padding:0;color:#fff}
+.tok .sh{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--f-display);font-weight:800;font-size:.95rem;
+  background:rgba(0,0,0,.28);border:2px dashed rgba(255,255,255,.7);transition:transform .15s}
+.tok.sel .sh{background:#fff;color:#0A3528;border:2px solid #E6CC78;transform:scale(1.12);box-shadow:0 0 0 4px rgba(230,204,120,.45)}
+.tok.ok .sh{background:#fff;color:var(--ok);border:2px solid #fff}
+.tok.rev .sh{background:rgba(255,255,255,.75);color:#5b625f;border:2px solid transparent}
+.tok .nm{font-size:.7rem;font-weight:800;background:rgba(0,0,0,.5);padding:1px 7px;border-radius:7px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:1px}
+.tok.ok .nm,.tok.rev .nm{letter-spacing:0}
+.tok .ps{font-size:.6rem;opacity:.85;font-weight:700}
+
+/* tiles */
+.tiles{display:flex;gap:4px;flex-wrap:wrap;justify-content:center;direction:rtl}
+.tile{width:34px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:var(--f-display);font-weight:800;font-size:1.08rem;background:var(--fill);color:var(--fg)}
+.tile.empty{background:none;border:2px solid var(--fill2)}
+.tile.k{background:var(--accent-soft);color:var(--accent);border:2px solid var(--accent)}
+.tile.ok{background:var(--ok);color:var(--ok-fg)}
+.tile.near{background:var(--near);color:var(--near-fg)}
+.tile.miss{background:var(--miss);color:var(--miss-fg)}
+.tiles.sm .tile{width:26px;height:30px;font-size:.88rem;border-radius:7px}
+.hist{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.shake{animation:shake .25s 2}
+@keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+.pop{animation:pop .25s ease-out}
+
+/* who table */
+.mystery{display:flex;align-items:center;gap:14px}
+.mystery .av{width:64px;height:64px;border-radius:50%;background:linear-gradient(160deg,var(--pitch1),#0A3528);color:#E6CC78;display:flex;align-items:center;justify-content:center;font-family:var(--f-display);font-weight:800;font-size:1.8rem;flex:none}
+.gtab{overflow-x:auto;margin:0 -4px;padding:0 4px}
+.grow{display:grid;grid-template-columns:minmax(58px,1.15fr) repeat(5,minmax(0,1fr));gap:4px;margin-top:4px}
+.grow.h div{font-size:.7rem;color:var(--fg2);font-weight:800;text-align:center;padding:2px}
+.grow .nmc{font-weight:800;font-size:.78rem;min-width:0;overflow-wrap:anywhere;display:flex;align-items:center;padding:0 4px;line-height:1.3}
+.cell{border-radius:10px;min-height:52px;min-width:0;overflow-wrap:anywhere;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-size:.66rem;font-weight:800;line-height:1.25;padding:4px 3px;background:var(--miss);color:var(--miss-fg)}
+.cell .big{font-size:1.2rem;line-height:1.1}
+.cell.ok{background:var(--ok);color:var(--ok-fg)}
+.cell.near{background:var(--near);color:var(--near-fg)}
+
+/* grid game */
+.bx{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.bx .hd{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-weight:800;font-size:.74rem;line-height:1.3;padding:4px 2px;min-height:64px}
+.bx .hd .em{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.25rem;color:#fff;font-family:var(--f-display);margin-bottom:3px}
+.bx .cl{aspect-ratio:1;max-width:100%;border-radius:14px;border:0;background:var(--surface);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;text-align:center;font-weight:800;font-size:.76rem;line-height:1.3;padding:4px;color:var(--fg)}
+.bx .cl.empty{color:var(--fg3);font-size:1.4rem;font-weight:500}
+.bx .cl.ok{background:var(--ok);color:var(--ok-fg)}
+.bx .cl.rev{background:var(--fill2);color:var(--fg2)}
+.bx .cl.sel{box-shadow:0 0 0 2.5px var(--accent)}
+
+/* career */
+.path{display:flex;flex-direction:column;gap:0;position:relative;padding-inline-start:26px}
+.path::before{content:"";position:absolute;right:9px;top:10px;bottom:10px;width:2px;background:var(--fill2)}
+.stop{position:relative;padding:8px 0;font-weight:800;font-family:var(--f-display)}
+.stop::before{content:"";position:absolute;right:-22px;top:50%;width:12px;height:12px;border-radius:50%;transform:translateY(-50%);background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.stop.hid{color:var(--fg3);font-weight:600}
+.stop.hid::before{background:var(--fill2);box-shadow:none}
+.stop .i{font-size:.72rem;color:var(--fg3);font-weight:700;margin-inline-start:6px;font-family:var(--f-body)}
+.hints{display:flex;flex-wrap:wrap;gap:6px}
+.wrong{display:flex;flex-wrap:wrap;gap:6px}
+.wrong span{font-size:.82rem;font-weight:700;color:var(--bad);background:rgba(217,58,58,.1);border-radius:999px;padding:3px 10px;text-decoration:line-through}
+
+/* top list */
+.ans{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ans div{display:flex;align-items:center;gap:8px;background:var(--surface2);border-radius:12px;padding:9px 10px;font-weight:800;font-size:.9rem;min-height:42px}
+.ans div b{width:22px;height:22px;border-radius:50%;background:var(--fill2);color:var(--fg2);display:flex;align-items:center;justify-content:center;font-size:.72rem;flex:none;font-family:var(--f-display)}
+.ans div.f{background:var(--accent-soft);color:var(--accent)}
+.ans div.f b{background:var(--accent);color:var(--accent-fg)}
+.ans div.m{color:var(--fg2)}
+.ans div.m b{background:var(--miss);color:var(--miss-fg)}
+@media(max-width:380px){.ans{grid-template-columns:1fr}}
+
+/* result */
+.result{text-align:center}
+.result .em{font-size:2.6rem;line-height:1}
+.result h3{font-size:1.35rem;font-weight:800;margin-top:6px}
+.result p{margin:4px 0 12px;color:var(--fg2)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0 14px}
+.stats div{background:var(--fill);border-radius:12px;padding:8px 4px}
+.stats b{display:block;font-family:var(--f-display);font-size:1.3rem;font-weight:800}
+.stats span{font-size:.7rem;color:var(--fg2);font-weight:700}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:80;display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .2s}
+.scrim.show{opacity:1}
+.sheet{width:100%;max-width:680px;max-height:88vh;overflow-y:auto;background:var(--surface);border-radius:22px 22px 0 0;
+  padding:8px max(18px,env(safe-area-inset-left,0px)) calc(22px + env(safe-area-inset-bottom,0px));transform:translateY(30px);transition:transform .25s}
+.scrim.show .sheet{transform:none}
+.sheet .grab{width:38px;height:5px;border-radius:3px;background:var(--fill2);margin:0 auto 10px}
+.sheet h3{font-size:1.2rem;font-weight:800;margin-bottom:8px}
+.sheet ol,.sheet ul{padding-inline-start:20px;margin:6px 0;color:var(--fg2)}
+.sheet li{margin:4px 0}
+@media(min-width:720px){.scrim{align-items:center}.sheet{border-radius:22px}}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:800;font-size:.9rem;opacity:0;transition:.25s;z-index:99;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap" id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+/* =================== أدوات =================== */
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const AR=n=>String(n).replace(/\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[d]);
+/* توحيد الكتابة العربية: الهمزات، التاء المربوطة، الألف المقصورة، التشكيل والمسافات */
+function norm(s){
+  return String(s||'').toLowerCase()
+    .replace(/[ً-ٰٟـ]/g,'')
+    .replace(/[أإآٱ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/ؤ/g,'و').replace(/ئ/g,'ي').replace(/ء/g,'')
+    .replace(/گ/g,'ك').replace(/[پ]/g,'ب').replace(/[ڤ]/g,'ف').replace(/[چ]/g,'تش')
+    .replace(/[\s\-_.'’"،,]/g,'');
+}
+const noAl=s=>s.startsWith('ال')&&s.length>4?s.slice(2):s;
+function same(a,b){const x=norm(a),y=norm(b);return !!x&&(x===y||noAl(x)===noAl(y));}
+function letters(s){return [...String(s).replace(/[ً-ٰٟـ]/g,'').replace(/[\s\-_.'’"]/g,'')];}
+
+const store={
+  get(k,d){try{const v=localStorage.getItem('kora:'+k);return v?JSON.parse(v):d;}catch(e){return d;}},
+  set(k,v){try{localStorage.setItem('kora:'+k,JSON.stringify(v));}catch(e){}}
+};
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),1900);}
+function shake(el){if(!el)return;el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');}
+
+/* اليوم ورقم اللغز */
+const START=Date.UTC(2026,0,1);
+function todayKey(){const d=new Date();return Date.UTC(d.getFullYear(),d.getMonth(),d.getDate());}
+const DAY=Math.floor((todayKey()-START)/864e5);
+const DAYNO=DAY+1;
+function rng(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function shuffled(arr,seed){const a=arr.slice(),r=rng(seed);for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+/* اختيار اليوم: كل دورة كاملة تمر على كل الألغاز قبل التكرار */
+function dailyPick(list,salt){const n=list.length,cyc=Math.floor(DAY/n),pos=((DAY%n)+n)%n;return shuffled(list,salt*7919+cyc)[pos];}
+function randPick(list,avoid){let x;do{x=list[Math.floor(Math.random()*list.length)];}while(list.length>1&&x===avoid);return x;}
+
+async function share(text){
+  try{await navigator.clipboard.writeText(text);toast('تم نسخ النتيجة، الصقها لأصدقائك');}
+  catch(e){openSheet('<h3>انسخ نتيجتك</h3><textarea class="field" id="shareTxt" rows="6" readonly style="resize:none">'+esc(text)+'</textarea><p class="muted small">اضغط على النص مطوّلًا ثم اختر «نسخ».</p>');const ta=$('#shareTxt');if(ta){ta.focus();ta.select();}}
+}
+
+/* إحصاءات كل لعبة (التحدي اليومي فقط) */
+function recordResult(game,win){
+  const s=store.get('stats:'+game,{p:0,w:0,cur:0,best:0,last:-1});
+  if(s.last===DAY)return s;
+  s.p++; if(win){s.w++;s.cur=(s.last===DAY-1?s.cur:0)+1;s.best=Math.max(s.best,s.cur);}else s.cur=0;
+  s.last=DAY; store.set('stats:'+game,s); return s;
+}
+function statsHTML(game){
+  const s=store.get('stats:'+game,{p:0,w:0,cur:0,best:0});
+  return '<div class="stats num"><div><b>'+AR(s.p)+'</b><span>لعبت</span></div><div><b>'+AR(s.p?Math.round(s.w*100/s.p):0)+'٪</b><span>فوز</span></div><div><b>'+AR(s.cur)+'</b><span>سلسلة</span></div><div><b>'+AR(s.best)+'</b><span>أفضل سلسلة</span></div></div>';
+}
+
+/* النافذة السفلية */
+function openSheet(html,onOpen){
+  closeSheet();
+  const s=document.createElement('div');s.className='scrim';s.id='scrim';
+  s.innerHTML='<div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>'+html+'<button class="btn sec block" style="margin-top:14px" data-close>إغلاق</button></div>';
+  s.addEventListener('click',e=>{if(e.target===s||e.target.closest('[data-close]'))closeSheet();});
+  document.body.appendChild(s);requestAnimationFrame(()=>s.classList.add('show'));
+  if(onOpen)onOpen(s);
+}
+function closeSheet(){const s=$('#scrim');if(s)s.remove();}
+
+/* =================== البيانات =================== */
+/* الدول: العلم والقارة */
+const NAT={
+ 'الأرجنتين':['🇦🇷','أمريكا الجنوبية'],'البرازيل':['🇧🇷','أمريكا الجنوبية'],'الأوروغواي':['🇺🇾','أمريكا الجنوبية'],
+ 'البرتغال':['🇵🇹','أوروبا'],'فرنسا':['🇫🇷','أوروبا'],'إسبانيا':['🇪🇸','أوروبا'],'ألمانيا':['🇩🇪','أوروبا'],'إيطاليا':['🇮🇹','أوروبا'],
+ 'إنجلترا':['🏴󠁧󠁢󠁥󠁮󠁧󠁿','أوروبا'],'ويلز':['🏴󠁧󠁢󠁷󠁬󠁳󠁿','أوروبا'],'هولندا':['🇳🇱','أوروبا'],'بلجيكا':['🇧🇪','أوروبا'],'كرواتيا':['🇭🇷','أوروبا'],
+ 'النرويج':['🇳🇴','أوروبا'],'السويد':['🇸🇪','أوروبا'],'بولندا':['🇵🇱','أوروبا'],'أوكرانيا':['🇺🇦','أوروبا'],'جورجيا':['🇬🇪','أوروبا'],
+ 'مصر':['🇪🇬','أفريقيا'],'المغرب':['🇲🇦','أفريقيا'],'الجزائر':['🇩🇿','أفريقيا'],'السنغال':['🇸🇳','أفريقيا'],'ساحل العاج':['🇨🇮','أفريقيا'],'الكاميرون':['🇨🇲','أفريقيا'],
+ 'السعودية':['🇸🇦','آسيا'],'الإمارات':['🇦🇪','آسيا'],'قطر':['🇶🇦','آسيا'],'كوريا الجنوبية':['🇰🇷','آسيا']
+};
+/* الأندية المشهورة ودوريها (للعبة «من اللاعب؟») */
+const LEAGUE={
+ 'برشلونة':'الإسباني','ريال مدريد':'الإسباني','أتلتيكو مدريد':'الإسباني','إشبيلية':'الإسباني',
+ 'مانشستر يونايتد':'الإنجليزي','مانشستر سيتي':'الإنجليزي','ليفربول':'الإنجليزي','تشيلسي':'الإنجليزي','أرسنال':'الإنجليزي','توتنهام':'الإنجليزي',
+ 'يوفنتوس':'الإيطالي','ميلان':'الإيطالي','إنتر':'الإيطالي','روما':'الإيطالي','نابولي':'الإيطالي',
+ 'بايرن ميونخ':'الألماني','باريس سان جيرمان':'الفرنسي','أياكس':'الهولندي',
+ 'الهلال':'السعودي','الأهلي المصري':'المصري','العين':'الإماراتي','الجزيرة':'الإماراتي','السد':'القطري','سانتوس':'البرازيلي'
+};
+/* اللاعبون: الاسم، أسماء بديلة، الجنسية، المركز، سنة الميلاد، النادي الأبرز، أبرز محطات المسيرة بالترتيب */
+const PL=[
+ ['ليونيل ميسي',['ميسي','ليو ميسي'],'الأرجنتين','هجوم',1987,'برشلونة',['برشلونة','باريس سان جيرمان','إنتر ميامي']],
+ ['كريستيانو رونالدو',['رونالدو','كريستيانو','كرستيانو'],'البرتغال','هجوم',1985,'ريال مدريد',['سبورتنغ لشبونة','مانشستر يونايتد','ريال مدريد','يوفنتوس','النصر']],
+ ['نيمار',['نيمار جونيور'],'البرازيل','هجوم',1992,'برشلونة',['سانتوس','برشلونة','باريس سان جيرمان','الهلال','سانتوس']],
+ ['كريم بنزيما',['بنزيما'],'فرنسا','هجوم',1987,'ريال مدريد',['ليون','ريال مدريد','الاتحاد']],
+ ['كيليان مبابي',['مبابي','امبابي'],'فرنسا','هجوم',1998,'باريس سان جيرمان',['موناكو','باريس سان جيرمان','ريال مدريد']],
+ ['إرلينغ هالاند',['هالاند','ارلينج هالاند'],'النرويج','هجوم',2000,'مانشستر سيتي',['برين','مولده','سالزبورغ','بوروسيا دورتموند','مانشستر سيتي']],
+ ['محمد صلاح',['صلاح','مو صلاح'],'مصر','هجوم',1992,'ليفربول',['المقاولون العرب','بازل','تشيلسي','فيورنتينا','روما','ليفربول']],
+ ['ساديو ماني',['ماني'],'السنغال','هجوم',1992,'ليفربول',['ميتز','سالزبورغ','ساوثهامبتون','ليفربول','بايرن ميونخ','النصر']],
+ ['زلاتان إبراهيموفيتش',['زلاتان','ابراهيموفيتش','إبرا'],'السويد','هجوم',1981,'ميلان',['مالمو','أياكس','يوفنتوس','إنتر','برشلونة','ميلان','باريس سان جيرمان','مانشستر يونايتد','لوس أنجلوس غالاكسي','ميلان']],
+ ['لويس سواريز',['سواريز'],'الأوروغواي','هجوم',1987,'برشلونة',['ناسيونال','غرونينغن','أياكس','ليفربول','برشلونة','أتلتيكو مدريد','ناسيونال','غريميو','إنتر ميامي']],
+ ['رونالدينيو',['رونالدينهو','رونالدينيو غاوتشو'],'البرازيل','هجوم',1980,'برشلونة',['غريميو','باريس سان جيرمان','برشلونة','ميلان','فلامنغو','أتلتيكو مينيرو','كيريتارو','فلومينينسي']],
+ ['كاكا',['ريكاردو كاكا'],'البرازيل','وسط',1982,'ميلان',['ساو باولو','ميلان','ريال مدريد','ميلان','ساو باولو','أورلاندو سيتي']],
+ ['رونالدو نازاريو',['رونالدو البرازيلي','الظاهرة','نازاريو'],'البرازيل','هجوم',1976,'ريال مدريد',['كروزيرو','آيندهوفن','برشلونة','إنتر','ريال مدريد','ميلان','كورينثيانز']],
+ ['تييري هنري',['هنري','تيري هنري'],'فرنسا','هجوم',1977,'أرسنال',['موناكو','يوفنتوس','أرسنال','برشلونة','نيويورك ريد بولز','أرسنال','نيويورك ريد بولز']],
+ ['زين الدين زيدان',['زيدان','زيزو'],'فرنسا','وسط',1972,'ريال مدريد',['كان','بوردو','يوفنتوس','ريال مدريد']],
+ ['لويس فيغو',['فيغو','فيجو'],'البرتغال','وسط',1972,'برشلونة',['سبورتنغ لشبونة','برشلونة','ريال مدريد','إنتر']],
+ ['ديفيد بيكهام',['بيكهام'],'إنجلترا','وسط',1975,'مانشستر يونايتد',['مانشستر يونايتد','ريال مدريد','لوس أنجلوس غالاكسي','ميلان','باريس سان جيرمان']],
+ ['ستيفن جيرارد',['جيرارد'],'إنجلترا','وسط',1980,'ليفربول',['ليفربول','لوس أنجلوس غالاكسي']],
+ ['فرانك لامبارد',['لامبارد'],'إنجلترا','وسط',1978,'تشيلسي',['وست هام','تشيلسي','مانشستر سيتي','نيويورك سيتي']],
+ ['لوكا مودريتش',['مودريتش','مودريش'],'كرواتيا','وسط',1985,'ريال مدريد',['دينامو زغرب','توتنهام','ريال مدريد','ميلان']],
+ ['توني كروس',['كروس'],'ألمانيا','وسط',1990,'ريال مدريد',['بايرن ميونخ','باير ليفركوزن','بايرن ميونخ','ريال مدريد']],
+ ['تشافي هيرنانديز',['تشافي','شافي','تشابي'],'إسبانيا','وسط',1980,'برشلونة',['برشلونة','السد']],
+ ['أندريس إنييستا',['انييستا','انيستا','إنيستا'],'إسبانيا','وسط',1984,'برشلونة',['برشلونة','فيسل كوبي','الإمارات']],
+ ['أندريا بيرلو',['بيرلو'],'إيطاليا','وسط',1979,'ميلان',['بريشيا','إنتر','ريجينا','بريشيا','ميلان','يوفنتوس','نيويورك سيتي']],
+ ['جانلويجي بوفون',['بوفون'],'إيطاليا','حارس',1978,'يوفنتوس',['بارما','يوفنتوس','باريس سان جيرمان','يوفنتوس','بارما']],
+ ['إيكر كاسياس',['كاسياس','كاسيلاس'],'إسبانيا','حارس',1981,'ريال مدريد',['ريال مدريد','بورتو']],
+ ['سيرخيو راموس',['راموس'],'إسبانيا','دفاع',1986,'ريال مدريد',['إشبيلية','ريال مدريد','باريس سان جيرمان','إشبيلية','مونتيري']],
+ ['جيرارد بيكيه',['بيكيه','بيكي'],'إسبانيا','دفاع',1987,'برشلونة',['مانشستر يونايتد','سرقسطة','مانشستر يونايتد','برشلونة']],
+ ['روبرت ليفاندوفسكي',['ليفاندوفسكي','ليفا'],'بولندا','هجوم',1988,'بايرن ميونخ',['زنيتش بروشكوف','ليخ بوزنان','بوروسيا دورتموند','بايرن ميونخ','برشلونة']],
+ ['أنطوان غريزمان',['غريزمان','جريزمان'],'فرنسا','هجوم',1991,'أتلتيكو مدريد',['ريال سوسيداد','أتلتيكو مدريد','برشلونة','أتلتيكو مدريد']],
+ ['أنخيل دي ماريا',['دي ماريا','ديماريا'],'الأرجنتين','هجوم',1988,'ريال مدريد',['روزاريو سنترال','بنفيكا','ريال مدريد','مانشستر يونايتد','باريس سان جيرمان','يوفنتوس','بنفيكا','روزاريو سنترال']],
+ ['سيرخيو أغويرو',['أغويرو','اجويرو','كون أغويرو'],'الأرجنتين','هجوم',1988,'مانشستر سيتي',['إندبندينتي','أتلتيكو مدريد','مانشستر سيتي','برشلونة']],
+ ['غونزالو هيغواين',['هيغواين','هيغوين'],'الأرجنتين','هجوم',1987,'يوفنتوس',['ريفر بليت','ريال مدريد','نابولي','يوفنتوس','ميلان','تشيلسي','يوفنتوس','إنتر ميامي']],
+ ['ديدييه دروغبا',['دروغبا','دروجبا'],'ساحل العاج','هجوم',1978,'تشيلسي',['لومان','غانغان','مرسيليا','تشيلسي','شنغهاي شينهوا','غلطة سراي','تشيلسي','مونتريال إمباكت','فينيكس رايزينغ']],
+ ['صامويل إيتو',['إيتو','ايتو'],'الكاميرون','هجوم',1981,'برشلونة',['ريال مدريد','مايوركا','برشلونة','إنتر','أنجي','تشيلسي','إيفرتون','سامبدوريا','أنطاليا سبور','كونيا سبور','قطر']],
+ ['واين روني',['روني'],'إنجلترا','هجوم',1985,'مانشستر يونايتد',['إيفرتون','مانشستر يونايتد','إيفرتون','دي سي يونايتد','ديربي كاونتي']],
+ ['رياض محرز',['محرز'],'الجزائر','هجوم',1991,'مانشستر سيتي',['لوهافر','ليستر سيتي','مانشستر سيتي','الأهلي']],
+ ['أشرف حكيمي',['حكيمي'],'المغرب','دفاع',1998,'باريس سان جيرمان',['ريال مدريد','بوروسيا دورتموند','إنتر','باريس سان جيرمان']],
+ ['محمد أبو تريكة',['أبوتريكة','ابو تريكه','تريكة'],'مصر','وسط',1978,'الأهلي المصري',['الترسانة','الأهلي المصري','بني ياس']],
+ ['سالم الدوسري',['الدوسري','سالم'],'السعودية','هجوم',1991,'الهلال',['الهلال','فياريال','الهلال']],
+ ['ياسر القحطاني',['القحطاني'],'السعودية','هجوم',1982,'الهلال',null],
+ ['سامي الجابر',['الجابر'],'السعودية','هجوم',1972,'الهلال',null],
+ ['عمر عبدالرحمن',['عموري','عمر عبد الرحمن'],'الإمارات','وسط',1991,'العين',null],
+ ['علي مبخوت',['مبخوت'],'الإمارات','هجوم',1990,'الجزيرة',null],
+ ['أكرم عفيف',['عفيف'],'قطر','هجوم',1996,'السد',null],
+ ['حكيم زياش',['زياش'],'المغرب','وسط',1993,'أياكس',null],
+ ['نغولو كانتي',['كانتي','كانتيه'],'فرنسا','وسط',1991,'تشيلسي',null],
+ ['كيفن دي بروين',['دي بروين','دي بروين','ديبروين'],'بلجيكا','وسط',1991,'مانشستر سيتي',['غينك','تشيلسي','فيردر بريمن','تشيلسي','فولفسبورغ','مانشستر سيتي','نابولي']],
+ ['إيدين هازارد',['هازارد'],'بلجيكا','هجوم',1991,'تشيلسي',['ليل','تشيلسي','ريال مدريد']],
+ ['آريين روبن',['روبن','آرين روبن'],'هولندا','هجوم',1984,'بايرن ميونخ',['غرونينغن','آيندهوفن','تشيلسي','ريال مدريد','بايرن ميونخ','غرونينغن']],
+ ['ويسلي شنايدر',['شنايدر'],'هولندا','وسط',1984,'إنتر',['أياكس','ريال مدريد','إنتر','غلطة سراي','نيس','الغرافة']],
+ ['روبن فان بيرسي',['فان بيرسي','فان بيرسى'],'هولندا','هجوم',1983,'أرسنال',['فينورد','أرسنال','مانشستر يونايتد','فنربخشة','فينورد']],
+ ['فيرجيل فان دايك',['فان دايك','فان دايك'],'هولندا','دفاع',1991,'ليفربول',['غرونينغن','سلتيك','ساوثهامبتون','ليفربول']],
+ ['سيسك فابريغاس',['فابريغاس','فابريجاس'],'إسبانيا','وسط',1987,'أرسنال',['أرسنال','برشلونة','تشيلسي','موناكو','كومو']],
+ ['دافيد فيا',['فيا','دافيد فيلا'],'إسبانيا','هجوم',1981,'برشلونة',['سبورتنغ خيخون','سرقسطة','فالنسيا','برشلونة','أتلتيكو مدريد','نيويورك سيتي','فيسل كوبي']],
+ ['فرناندو توريس',['توريس'],'إسبانيا','هجوم',1984,'ليفربول',['أتلتيكو مدريد','ليفربول','تشيلسي','ميلان','أتلتيكو مدريد','ساغان توسو']],
+ ['تشابي ألونسو',['ألونسو','شابي ألونسو','تشافي ألونسو'],'إسبانيا','وسط',1981,'ليفربول',['ريال سوسيداد','ليفربول','ريال مدريد','بايرن ميونخ']],
+ ['أندريه شيفتشينكو',['شيفتشينكو','شيفشينكو'],'أوكرانيا','هجوم',1976,'ميلان',['دينامو كييف','ميلان','تشيلسي','ميلان','دينامو كييف']],
+ ['روبرتو كارلوس',['كارلوس'],'البرازيل','دفاع',1973,'ريال مدريد',['بالميراس','إنتر','ريال مدريد','فنربخشة','كورينثيانز','أنجي']],
+ ['إدينسون كافاني',['كافاني'],'الأوروغواي','هجوم',1987,'باريس سان جيرمان',['دانوبيو','باليرمو','نابولي','باريس سان جيرمان','مانشستر يونايتد','فالنسيا','بوكا جونيورز']],
+ ['هاري كين',['كين'],'إنجلترا','هجوم',1993,'توتنهام',['توتنهام','بايرن ميونخ']],
+ ['سون هيونغ مين',['سون','هيونغ مين سون'],'كوريا الجنوبية','هجوم',1992,'توتنهام',['هامبورغ','باير ليفركوزن','توتنهام','لوس أنجلوس إف سي']],
+ ['غاريث بيل',['بيل','جاريث بيل'],'ويلز','هجوم',1989,'ريال مدريد',['ساوثهامبتون','توتنهام','ريال مدريد','توتنهام','ريال مدريد','لوس أنجلوس إف سي']],
+ ['فيليب كوتينيو',['كوتينيو','كوتينهو'],'البرازيل','وسط',1992,'ليفربول',['فاسكو دا غاما','إنتر','إسبانيول','ليفربول','برشلونة','بايرن ميونخ','أستون فيلا','الدحيل','فاسكو دا غاما']],
+ ['بول بوغبا',['بوغبا','بوجبا'],'فرنسا','وسط',1993,'يوفنتوس',['مانشستر يونايتد','يوفنتوس','مانشستر يونايتد','يوفنتوس','موناكو']],
+ ['مسعود أوزيل',['أوزيل','اوزيل'],'ألمانيا','وسط',1988,'أرسنال',['شالكه','فيردر بريمن','ريال مدريد','أرسنال','فنربخشة','باشاك شهير']],
+ ['توماس مولر',['مولر','موللر'],'ألمانيا','هجوم',1989,'بايرن ميونخ',['بايرن ميونخ','فانكوفر وايتكابس']],
+ ['مانويل نوير',['نوير'],'ألمانيا','حارس',1986,'بايرن ميونخ',['شالكه','بايرن ميونخ']],
+ ['ميروسلاف كلوزه',['كلوزه','كلوزة','كلوسه'],'ألمانيا','هجوم',1978,'بايرن ميونخ',['كايزرسلاوترن','فيردر بريمن','بايرن ميونخ','لاتسيو']],
+ ['فابيو كانافارو',['كانافارو'],'إيطاليا','دفاع',1973,'يوفنتوس',['نابولي','بارما','إنتر','يوفنتوس','ريال مدريد','يوفنتوس','الأهلي دبي']],
+ ['باولو مالديني',['مالديني'],'إيطاليا','دفاع',1968,'ميلان',['ميلان']],
+ ['فرانشيسكو توتي',['توتي'],'إيطاليا','هجوم',1976,'روما',['روما']],
+ ['أليساندرو ديل بييرو',['ديل بييرو','دل بييرو'],'إيطاليا','هجوم',1974,'يوفنتوس',['بادوفا','يوفنتوس','سيدني','دلهي ديناموز']],
+ ['دييغو مارادونا',['مارادونا','دييجو مارادونا'],'الأرجنتين','هجوم',1960,'نابولي',['أرخنتينوس جونيورز','بوكا جونيورز','برشلونة','نابولي','إشبيلية','نيولز أولد بويز','بوكا جونيورز']],
+ ['بيليه',['بيلية','بيلي'],'البرازيل','هجوم',1940,'سانتوس',['سانتوس','نيويورك كوزموس']],
+ ['فينيسيوس جونيور',['فينيسيوس','فيني'],'البرازيل','هجوم',2000,'ريال مدريد',['فلامنغو','ريال مدريد']],
+ ['جود بيلينغهام',['بيلينغهام','بيلينجهام'],'إنجلترا','وسط',2003,'ريال مدريد',['برمنغهام سيتي','بوروسيا دورتموند','ريال مدريد']],
+ ['رودري',['رودريغو هيرنانديز'],'إسبانيا','وسط',1996,'مانشستر سيتي',['فياريال','أتلتيكو مدريد','مانشستر سيتي']],
+ ['لامين يامال',['يامال'],'إسبانيا','هجوم',2007,'برشلونة',['برشلونة']],
+ ['بيدري',['بيدرى'],'إسبانيا','وسط',2002,'برشلونة',['لاس بالماس','برشلونة']],
+ ['بوكايو ساكا',['ساكا'],'إنجلترا','هجوم',2001,'أرسنال',['أرسنال']],
+ ['خفيتشا كفاراتسخيليا',['كفاراتسخيليا','كفارا','كفاراتسخليا'],'جورجيا','هجوم',2001,'نابولي',['دينامو تبليسي','لوكوموتيف موسكو','روبن قازان','دينامو باتومي','نابولي','باريس سان جيرمان']],
+ ['ياسين بونو',['بونو','بونو المغربي'],'المغرب','حارس',1991,'الهلال',['الوداد','أتلتيكو مدريد','سرقسطة','جيرونا','إشبيلية','الهلال']],
+ ['كاسيميرو',['كازيميرو'],'البرازيل','وسط',1992,'ريال مدريد',['ساو باولو','ريال مدريد','بورتو','ريال مدريد','مانشستر يونايتد']],
+ ['فرانك ريبيري',['ريبيري'],'فرنسا','هجوم',1983,'بايرن ميونخ',['بولون','أليس','بريست','ميتز','غلطة سراي','مرسيليا','بايرن ميونخ','فيورنتينا','ساليرنيتانا']]
+].map((p,i)=>({id:i,n:p[0],al:p[1],nat:p[2],pos:p[3],by:p[4],club:p[5],car:p[6]}));
+const byId=id=>PL[id];
+function findPlayers(q,limit=8){
+  const x=norm(q); if(!x)return [];
+  const out=[];
+  for(const p of PL){
+    const keys=[p.n,...p.al].map(norm);
+    let score=-1;
+    for(const k of keys){ if(k===x)score=Math.max(score,3); else if(k.startsWith(x))score=Math.max(score,2); else if(k.includes(x))score=Math.max(score,1); }
+    if(score>=0)out.push([score,p]);
+  }
+  return out.sort((a,b)=>b[0]-a[0]).slice(0,limit).map(a=>a[1]);
+}
+
+/* ====== مباريات «الناقص 11» — التشكيلة الأساسية، الصفوف من الحارس للهجوم، وكل صف من اليمين لليسار ====== */
+const MATCHES=[
+ {id:'wc22f',comp:'نهائي كأس العالم 2022',date:'18 ديسمبر 2022 — استاد لوسيل',me:['الأرجنتين','🇦🇷'],op:['فرنسا','🇫🇷'],sc:'3 – 3',note:'فازت الأرجنتين بركلات الترجيح 4–2',
+  rows:[[['مارتينيز',['ايميليانو مارتينيز','ديبو','مارتينز']]],
+   [['مولينا',[]],['روميرو',['كريستيان روميرو']],['أوتاميندي',['اوتامندي']],['تاليافيكو',['تاغليافيكو','تالياڤيكو','تاجليافيكو']]],
+   [['دي بول',['ديبول','رودريغو دي بول']],['إنزو فرنانديز',['انزو','فرنانديز','فيرنانديز']],['ماك أليستر',['ماكاليستر','ماك اليستر','اليستر']]],
+   [['ميسي',['ليونيل ميسي']],['ألفاريز',['جوليان ألفاريز','خوليان الفاريز','ألباريز']],['دي ماريا',['ديماريا']]]],
+  pos:[['حارس'],['ظهير أيمن','قلب دفاع','قلب دفاع','ظهير أيسر'],['وسط','وسط','وسط'],['جناح أيمن','مهاجم','جناح أيسر']]},
+ {id:'ksaarg',comp:'كأس العالم 2022 — دور المجموعات',date:'22 نوفمبر 2022 — استاد لوسيل',me:['السعودية','🇸🇦'],op:['الأرجنتين','🇦🇷'],sc:'2 – 1',note:'سجّل الشهري والدوسري',
+  rows:[[['العويس',['محمد العويس']]],
+   [['عبدالحميد',['سعود عبدالحميد','عبد الحميد']],['العمري',['عبدالإله العمري']],['البليهي',['علي البليهي']],['الشهراني',['ياسر الشهراني']]],
+   [['المالكي',['عبدالإله المالكي']]],
+   [['البريكان',['فراس البريكان']],['كنو',['محمد كنو']],['الفرج',['سلمان الفرج']],['الدوسري',['سالم الدوسري']]],
+   [['الشهري',['صالح الشهري']]]],
+  pos:[['حارس'],['ظهير أيمن','قلب دفاع','قلب دفاع','ظهير أيسر'],['وسط دفاعي'],['جناح أيمن','وسط','وسط','جناح أيسر'],['مهاجم']]},
+ {id:'mar-por',comp:'كأس العالم 2022 — ربع النهائي',date:'10 ديسمبر 2022 — استاد الثمامة',me:['المغرب','🇲🇦'],op:['البرتغال','🇵🇹'],sc:'1 – 0',note:'هدف يوسف النصيري',
+  rows:[[['بونو',['ياسين بونو','بونو']]],
+   [['حكيمي',['أشرف حكيمي']],['سايس',['رومان سايس','غانم سايس']],['اليميق',['جواد الياميق','الياميق']],['عطية الله',['يحيى عطية الله','عطيه الله']]],
+   [['أوناحي',['عز الدين أوناحي','اوناحي']],['أمرابط',['سفيان أمرابط','امرابط']],['أملاح',['سليم أملاح','املاح']]],
+   [['زياش',['حكيم زياش']],['النصيري',['يوسف النصيري','النصيرى']],['بوفال',['سفيان بوفال']]]],
+  pos:[['حارس'],['ظهير أيمن','قلب دفاع','قلب دفاع','ظهير أيسر'],['وسط','وسط دفاعي','وسط'],['جناح أيمن','مهاجم','جناح أيسر']]},
+ {id:'wc14f',comp:'نهائي كأس العالم 2014',date:'13 يوليو 2014 — ماراكانا',me:['ألمانيا','🇩🇪'],op:['الأرجنتين','🇦🇷'],sc:'1 – 0',note:'هدف ماريو غوتزه في الوقت الإضافي',
+  rows:[[['نوير',['مانويل نوير']]],
+   [['لام',['فيليب لام']],['بواتينغ',['بواتينج','جيروم بواتينغ']],['هوملز',['هوميلز','ماتس هوملز']],['هوفيديس',['هوويديس','هوفيدس']]],
+   [['كرامر',['كريستوف كرامر']],['شفاينشتايغر',['شفاينشتايجر','شفانشتايغر','شفاينستايغر']],['كروس',['توني كروس']]],
+   [['مولر',['موللر','توماس مولر']],['كلوزه',['كلوزة','كلوسه']],['أوزيل',['اوزيل','مسعود أوزيل']]]],
+  pos:[['حارس'],['ظهير أيمن','قلب دفاع','قلب دفاع','ظهير أيسر'],['وسط','وسط','وسط'],['جناح أيمن','مهاجم','جناح أيسر']]},
+ {id:'wc10f',comp:'نهائي كأس العالم 2010',date:'11 يوليو 2010 — جوهانسبرغ',me:['إسبانيا','🇪🇸'],op:['هولندا','🇳🇱'],sc:'1 – 0',note:'هدف إنييستا في الدقيقة 116',
+  rows:[[['كاسياس',['كاسيلاس']]],
+   [['راموس',['سيرخيو راموس']],['بيكيه',['بيكي']],['بويول',['بويل']],['كابديفيلا',['كابديبيا','كابدفيلا']]],
+   [['ألونسو',['تشابي ألونسو','شابي ألونسو']],['بوسكيتس',['بوسكيت']]],
+   [['بيدرو',['بيدرو رودريغيز']],['تشافي',['شافي','تشابي']],['إنييستا',['انيستا','إنيستا']]],
+   [['فيا',['دافيد فيا','فيلا']]]],
+  pos:[['حارس'],['ظهير أيمن','قلب دفاع','قلب دفاع','ظهير أيسر'],['وسط دفاعي','وسط دفاعي'],['جناح أيمن','وسط هجومي','جناح أيسر'],['مهاجم']]},
+ {id:'wc18f',comp:'نهائي كأس العالم 2018',date:'15 يوليو 2018 — موسكو',me:['فرنسا','🇫🇷'],op:['كرواتيا','🇭🇷'],sc:'4 – 2',note:'سجّل مبابي وبوغبا وغريزمان وهدف عكسي',
+  rows:[[['لوريس',['يوريس','هوغو لوريس']]],
+   [['بافار',['بنجامين بافار']],['فاران',['رافائيل فاران']],['أومتيتي',['اومتيتي','امتيتي']],['هيرنانديز',['ارنانديز','لوكاس هيرنانديز']]],
+   [['كانتي',['كانتيه']],['بوغبا',['بوجبا']]],
+   [['مبابي',['امبابي']],['غريزمان',['جريزمان']],['ماتويدي',['ماتودي']]],
+   [['جيرو',['جيرود','أوليفييه جيرو']]]],
+  pos:[['حارس'],['ظهير أيمن','قلب دفاع','قلب دفاع','ظهير أيسر'],['وسط دفاعي','وسط'],['جناح أيمن','وسط هجومي','جناح أيسر'],['مهاجم']]},
+ {id:'ucl05',comp:'نهائي دوري أبطال أوروبا 2005',date:'25 مايو 2005 — إسطنبول',me:['ليفربول','🔴'],op:['ميلان','⚫'],sc:'3 – 3',note:'فاز ليفربول بركلات الترجيح 3–2 بعد التأخر 3–0',
+  rows:[[['دوديك',['دوديتش']]],
+   [['فينان',['فينين']],['كاراغر',['كاراجر','كاراغير']],['هيبيا',['هيوبيا']],['تراوري',['جيمي تراوري']]],
+   [['غارسيا',['جارسيا','لويس غارسيا']],['جيرارد',['ستيفن جيرارد']],['ألونسو',['تشابي ألونسو']],['ريسه',['ريزه','رييسه','ريس']]],
+   [['كيويل',['هاري كيويل']]],
+   [['باروش',['باروس','ميلان باروش']]]],
+  pos:[['حارس'],['ظهير أيمن','قلب دفاع','قلب دفاع','ظهير أيسر'],['جناح أيمن','وسط','وسط','جناح أيسر'],['وسط هجومي'],['مهاجم']]},
+ {id:'ucl11',comp:'نهائي دوري أبطال أوروبا 2011',date:'28 مايو 2011 — ويمبلي',me:['برشلونة','🔵'],op:['مانشستر يونايتد','🔴'],sc:'3 – 1',note:'سجّل بيدرو وميسي وفيا',
+  rows:[[['فالديس',['بالديس','فيكتور فالديس']]],
+   [['ألفيش',['ألفيس','داني ألفيش']],['بيكيه',['بيكي']],['ماسكيرانو',['ماسكرانو']],['أبيدال',['ابيدال']]],
+   [['تشافي',['شافي','تشابي']],['بوسكيتس',['بوسكيت']],['إنييستا',['انيستا','إنيستا']]],
+   [['بيدرو',[]],['ميسي',['ليونيل ميسي']],['فيا',['دافيد فيا']]]],
+  pos:[['حارس'],['ظهير أيمن','قلب دفاع','قلب دفاع','ظهير أيسر'],['وسط','وسط دفاعي','وسط'],['جناح أيمن','مهاجم وهمي','جناح أيسر']]},
+ {id:'ucl22',comp:'نهائي دوري أبطال أوروبا 2022',date:'28 مايو 2022 — باريس',me:['ريال مدريد','⚪'],op:['ليفربول','🔴'],sc:'1 – 0',note:'هدف فينيسيوس جونيور',
+  rows:[[['كورتوا',['تيبو كورتوا']]],
+   [['كارفاخال',['كارباخال','كارفخال']],['ميليتاو',['ميليتاو']],['ألابا',['ديفيد ألابا']],['ميندي',['فيرلان ميندي']]],
+   [['مودريتش',['مودريش']],['كاسيميرو',['كازيميرو']],['كروس',['توني كروس']]],
+   [['فالفيردي',['فالبيردي','فيدي فالفيردي']],['بنزيما',['كريم بنزيما']],['فينيسيوس',['فيني','فينيسيوس جونيور']]]],
+  pos:[['حارس'],['ظهير أيمن','قلب دفاع','قلب دفاع','ظهير أيسر'],['وسط','وسط دفاعي','وسط'],['جناح أيمن','مهاجم','جناح أيسر']]},
+ {id:'ucl99',comp:'نهائي دوري أبطال أوروبا 1999',date:'26 مايو 1999 — برشلونة',me:['مانشستر يونايتد','🔴'],op:['بايرن ميونخ','🔴'],sc:'2 – 1',note:'هدفان في الوقت بدل الضائع لشيرينغهام وسولشاير',
+  rows:[[['شمايكل',['شمايكيل']]],
+   [['نيفيل',['غاري نيفيل']],['ستام',['ياب ستام']],['يونسن',['جونسن','روني يونسن']],['إروين',['ايروين','دينيس إروين']]],
+   [['غيغز',['جيجز','رايان غيغز']],['بيكهام',['ديفيد بيكهام']],['بات',['نيكي بات']],['بلومكفيست',['بلومكفست','بلومقفيست']]],
+   [['يورك',['دوايت يورك']],['كول',['آندي كول']]]],
+  pos:[['حارس'],['ظهير أيمن','قلب دفاع','قلب دفاع','ظهير أيسر'],['جناح أيمن','وسط','وسط','جناح أيسر'],['مهاجم','مهاجم']]},
+ {id:'ucl23',comp:'نهائي دوري أبطال أوروبا 2023',date:'10 يونيو 2023 — إسطنبول',me:['مانشستر سيتي','🔵'],op:['إنتر','⚫'],sc:'1 – 0',note:'هدف رودري',
+  rows:[[['إيدرسون',['ايدرسون','اديرسون']]],
+   [['أكانجي',['اكانجي']],['دياز',['دياش','روبن دياز']],['آكي',['اكي','ناثان آكي']]],
+   [['ستونز',['جون ستونز']],['رودري',[]]],
+   [['برناردو',['برناردو سيلفا','سيلفا']],['دي بروين',['ديبروين']],['غوندوغان',['جوندوجان','غندوغان']],['غريليش',['جريليش','غريلش']]],
+   [['هالاند',['ارلينغ هالاند']]]],
+  pos:[['حارس'],['قلب دفاع','قلب دفاع','قلب دفاع'],['وسط','وسط دفاعي'],['جناح أيمن','وسط هجومي','وسط هجومي','جناح أيسر'],['مهاجم']]}
+];
+/* تحويل الصفوف إلى لاعبين بإحداثيات على الملعب (الحارس أسفل) */
+function lineupPlayers(m){
+  const out=[];const R=m.rows.length;
+  m.rows.forEach((row,ri)=>{
+    const y=ri===0?88:88-ri*(76/(R-1))+ (ri===R-1?2:0);
+    row.forEach((pl,ci)=>{
+      const n=row.length; const x=n===1?50:(88-ci*(76/(n-1)));
+      out.push({s:pl[0],al:pl[1],x,y,pos:m.pos[ri][ci]});
+    });
+  });
+  return out;
+}
+
+/* ====== قوائم «القائمة» ====== */
+const LISTS=[
+ {id:'wcwin',t:'المنتخبات الفائزة بكأس العالم',sub:'من 1930 حتى نسخة 2022',a:[['البرازيل'],['ألمانيا',['المانيا الغربية']],['إيطاليا',['ايطاليا']],['الأرجنتين'],['فرنسا'],['الأوروغواي',['الاوروجواي','أوروغواي']],['إنجلترا',['انكلترا']],['إسبانيا',['اسبانيا']]]},
+ {id:'euro',t:'المنتخبات الفائزة ببطولة أمم أوروبا',sub:'من 1960 حتى نسخة 2024',a:[['ألمانيا'],['إسبانيا'],['فرنسا'],['إيطاليا'],['الاتحاد السوفيتي',['السوفييت','روسيا','الاتحاد السوفياتي']],['تشيكوسلوفاكيا',['التشيك','تشيكيا']],['هولندا'],['الدنمارك',['الدنمارك']],['اليونان'],['البرتغال']]},
+ {id:'ballon',t:'الفائزون بالكرة الذهبية',sub:'بين عامي 2000 و2019',a:[['لويس فيغو',['فيغو','فيجو']],['مايكل أوين',['أوين','اوين']],['رونالدو',['رونالدو نازاريو','الظاهرة']],['بافل نيدفيد',['نيدفيد','نيدفد']],['أندريه شيفتشينكو',['شيفتشينكو','شيفشينكو']],['رونالدينيو',['رونالدينهو']],['فابيو كانافارو',['كانافارو']],['كاكا'],['كريستيانو رونالدو',['كريستيانو']],['ليونيل ميسي',['ميسي']],['لوكا مودريتش',['مودريتش','مودريش']]]},
+ {id:'ucl',t:'الأندية الفائزة بدوري أبطال أوروبا',sub:'بين موسمي 2000 و2020',a:[['ريال مدريد',['الريال']],['بايرن ميونخ',['بايرن']],['برشلونة',['برشا']],['ميلان',['ايه سي ميلان']],['بورتو'],['ليفربول'],['مانشستر يونايتد',['اليونايتد']],['إنتر',['انتر ميلان','الانتر']],['تشيلسي',['تشلسي']]]},
+ {id:'gulf',t:'المنتخبات الفائزة بكأس الخليج',sub:'حتى خليجي 26',a:[['الكويت'],['العراق'],['السعودية',['المملكة']],['قطر'],['الإمارات'],['عُمان',['عمان','سلطنة عمان']],['البحرين']]},
+ {id:'spl',t:'الأندية الفائزة بالدوري السعودي',sub:'الدوري الممتاز ودوري المحترفين حتى موسم 2024–2025',a:[['الهلال'],['النصر'],['الاتحاد'],['الأهلي',['الاهلي']],['الشباب'],['الاتفاق'],['الفتح']]},
+ {id:'epl',t:'الأندية الفائزة بالدوري الإنجليزي الممتاز',sub:'منذ 1992 حتى موسم 2024–2025',a:[['مانشستر يونايتد',['اليونايتد']],['بلاكبيرن روفرز',['بلاكبيرن']],['أرسنال',['ارسنال','الارسنال']],['تشيلسي',['تشلسي']],['مانشستر سيتي',['السيتي']],['ليستر سيتي',['ليستر']],['ليفربول']]},
+ {id:'afcon',t:'المنتخبات العربية الفائزة بكأس أمم أفريقيا',sub:'حتى نسخة 2023',a:[['مصر'],['الجزائر'],['تونس'],['المغرب'],['السودان']]},
+ {id:'cr7',t:'الأندية التي لعب لها كريستيانو رونالدو',sub:'في مسيرته الاحترافية',a:[['سبورتنغ لشبونة',['سبورتينغ','سبورتنغ','سبورتينج']],['مانشستر يونايتد',['اليونايتد']],['ريال مدريد',['الريال']],['يوفنتوس',['اليوفي']],['النصر']]},
+ {id:'zlatan',t:'الأندية التي لعب لها زلاتان إبراهيموفيتش',sub:'في مسيرته الاحترافية',a:[['مالمو'],['أياكس',['اياكس']],['يوفنتوس'],['إنتر',['انتر ميلان']],['برشلونة'],['ميلان'],['باريس سان جيرمان',['باريس','بي اس جي']],['مانشستر يونايتد'],['لوس أنجلوس غالاكسي',['غالاكسي','جالاكسي','لا غالاكسي']]]},
+ {id:'hosts',t:'الدول التي استضافت كأس العالم',sub:'من 1930 حتى 2022',a:[['الأوروغواي'],['إيطاليا'],['فرنسا'],['البرازيل'],['سويسرا'],['السويد'],['تشيلي'],['إنجلترا'],['المكسيك'],['ألمانيا',['المانيا الغربية']],['الأرجنتين'],['إسبانيا'],['الولايات المتحدة',['امريكا','أمريكا']],['اليابان'],['كوريا الجنوبية',['كوريا']],['جنوب أفريقيا',['جنوب افريقيا']],['روسيا'],['قطر']]}
+];
+
+/* ====== فئات «شبكة الكورة» ====== */
+const CLUB_COLORS={'برشلونة':'#A50044','ريال مدريد':'#B8932F','مانشستر يونايتد':'#DA291C','ليفربول':'#C8102E','تشيلسي':'#034694','باريس سان جيرمان':'#004170','يوفنتوس':'#222','ميلان':'#B3001B','إنتر':'#0068A8','بايرن ميونخ':'#DC052D','أرسنال':'#EF0107','أتلتيكو مدريد':'#CB3524','مانشستر سيتي':'#6CABDD','توتنهام':'#132257','موناكو':'#E7212C','أياكس':'#C8102E','إشبيلية':'#D71920','بوروسيا دورتموند':'#E1B200','نابولي':'#12A0D7','فنربخشة':'#1B2F6E','غلطة سراي':'#A90432'};
+function playedFor(p,club){return !!(p.car&&p.car.includes(club));}
+function catTest(c){return c.k==='club'?(p=>playedFor(p,c.v)):(p=>p.nat===c.v);}
+function catHead(c){
+  if(c.k==='nat')return '<span class="em" style="background:transparent;font-size:1.6rem">'+NAT[c.v][0]+'</span>'+esc(c.v);
+  const col=CLUB_COLORS[c.v]||'#10654F';
+  return '<span class="em" style="background:'+col+'">'+esc(c.v.replace(/^ال/,'').charAt(0))+'</span>'+esc(c.v);
+}
+function buildGrid(seed){for(let k=0;k<50;k++){const g=buildGrid0(seed+k*977);if(g)return g;}return buildGrid0(1);}
+function buildGrid0(seed){
+  const clubs={},nats={};
+  PL.forEach(p=>{if(!p.car)return;new Set(p.car).forEach(c=>clubs[c]=(clubs[c]||0)+1);nats[p.nat]=(nats[p.nat]||0)+1;});
+  const cc=Object.keys(clubs).filter(c=>clubs[c]>=3).map(v=>({k:'club',v}));
+  const nn=Object.keys(nats).filter(n=>nats[n]>=5).map(v=>({k:'nat',v}));
+  const r=rng(seed);
+  for(let tries=0;tries<3000;tries++){
+    const pick=(arr,n)=>{const a=arr.slice(),o=[];while(o.length<n&&a.length)o.push(a.splice(Math.floor(r()*a.length),1)[0]);return o;};
+    const rows=pick(cc,3);
+    const nNat=Math.floor(r()*2); // 0 أو 1 جنسية في الأعمدة
+    const cols=pick(cc.filter(c=>!rows.some(x=>x.v===c.v)),3-nNat).concat(pick(nn,nNat));
+    if(cols.length<3)continue;
+    const sets=[];let ok=true;
+    for(let i=0;i<3&&ok;i++)for(let j=0;j<3;j++){
+      const s=PL.filter(p=>p.car&&catTest(rows[i])(p)&&catTest(cols[j])(p)).map(p=>p.id);
+      if(s.length<1){ok=false;break;} sets.push(s);
+    }
+    if(!ok)continue;
+    const match=matchCells(sets); if(!match)continue;
+    return {rows,cols:shuffled(cols,seed+3),sets:null};
+  }
+  return null;
+}
+/* مطابقة لاعب مختلف لكل خانة (للتأكد أن الشبكة قابلة للحل وللكشف عن إجابات) */
+function matchCells(sets,taken){
+  const own={};const res=new Array(sets.length).fill(null);
+  const tk=new Set(taken||[]);
+  function tryCell(i,seen){
+    for(const pid of sets[i]){ if(tk.has(pid)||seen.has(pid))continue; seen.add(pid);
+      if(own[pid]===undefined||tryCell(own[pid],seen)){own[pid]=i;res[i]=pid;return true;} }
+    return false;
+  }
+  for(let i=0;i<sets.length;i++){ if(sets[i]===null)continue; if(!tryCell(i,new Set()))return null; }
+  return res;
+}
+function gridSets(g){const s=[];for(let i=0;i<3;i++)for(let j=0;j<3;j++)s.push(PL.filter(p=>p.car&&catTest(g.rows[i])(p)&&catTest(g.cols[j])(p)).map(p=>p.id));return s;}
+
+/* =================== الألعاب =================== */
+const GAMES=[
+ {id:'m11',name:'الناقص 11',desc:'أكمل التشكيلة الأساسية لمباراة تاريخية',color:'linear-gradient(160deg,#17775A,#0A3528)',ic:'11'},
+ {id:'who',name:'من اللاعب؟',desc:'٨ محاولات لتعرف اللاعب من الأدلة',color:'linear-gradient(160deg,#3A7BD5,#1F4E99)',ic:'؟'},
+ {id:'grid',name:'شبكة الكورة',desc:'لاعب يجمع بين الناديين في كل خانة',color:'linear-gradient(160deg,#C9A24A,#8E6C1E)',ic:'#'},
+ {id:'career',name:'مسيرة لاعب',desc:'اعرف اللاعب من الأندية التي لعب لها',color:'linear-gradient(160deg,#D2524B,#9A2B26)',ic:'↗'},
+ {id:'list',name:'القائمة',desc:'سمِّ كل الإجابات قبل أن تخسر ٣ أرواح',color:'linear-gradient(160deg,#7A5AF8,#4B2FC2)',ic:'≡'}
+];
+const HELP={
+ m11:'<h3>طريقة لعب «الناقص 11»</h3><ol><li>تظهر لك مباراة تاريخية وتشكيلة الفريق الأساسية على الملعب بدون أسماء.</li><li>اضغط على أي لاعب في الملعب، ثم اكتب <b>اسم شهرته</b> (غالبًا اسم العائلة) واضغط «تحقّق».</li><li>بعد كل محاولة تتلوّن الحروف: <b style="color:var(--ok)">الأخضر</b> حرف صحيح في مكانه، <b style="color:var(--near)">الأصفر</b> حرف موجود في الاسم بمكان آخر، <b>الرمادي</b> حرف غير موجود.</li><li>الحروف الخضراء تبقى ظاهرة تحت اللاعب لتساعدك.</li><li>عدد الدوائر على اللاعب = عدد حروف اسمه.</li><li>تستطيع كشف حرف كتلميح، أو الاستسلام لرؤية التشكيلة كاملة.</li></ol><p class="muted small">لا يهم الفرق بين أ وإ وا، ولا بين ة وه، ولا المسافات.</p>',
+ who:'<h3>طريقة لعب «من اللاعب؟»</h3><ol><li>عندك <b>٨ محاولات</b> لتعرف اللاعب الغامض.</li><li>اكتب اسم أي لاعب واختره من القائمة.</li><li>تظهر مقارنة بينه وبين اللاعب الغامض: الجنسية، الدوري، النادي الأبرز، المركز، سنة الميلاد.</li><li><b style="color:var(--ok)">الأخضر</b> = مطابق. <b style="color:var(--near)">الأصفر</b> = قريب (نفس القارة، أو فرق سنتين أو أقل في الميلاد).</li><li>السهم في سنة الميلاد يدلّك: ↑ اللاعب الغامض أكبر سنًّا (وُلد قبل)، ↓ أصغر سنًّا (وُلد بعد).</li></ol>',
+ grid:'<h3>طريقة لعب «شبكة الكورة»</h3><ol><li>الشبكة فيها ٣ صفوف و٣ أعمدة، كل منها نادٍ أو منتخب.</li><li>اضغط على خانة واختر لاعبًا لعب للناديين معًا (أو لعب للنادي ويحمل جنسية المنتخب).</li><li>لا يمكن استخدام اللاعب نفسه مرتين.</li><li>مسموح لك <b>٣ أخطاء</b> فقط.</li></ol><p class="muted small">الإجابات محسوبة من قاعدة بيانات اللعبة (أكثر من ٨٠ لاعبًا مشهورًا)، لذلك تظهر في البحث فقط الأسماء الموجودة فيها.</p>',
+ career:'<h3>طريقة لعب «مسيرة لاعب»</h3><ol><li>تظهر أول محطتين من مسيرة لاعب مشهور بالترتيب.</li><li>كل تخمين خاطئ يكشف النادي التالي، وبعد انتهاء الأندية تظهر تلميحات (الجنسية ثم المركز).</li><li>عندك <b>٦ محاولات</b>.</li></ol><p class="muted small">المسيرة تشمل أبرز المحطات، وقد لا تذكر كل فترات الإعارة القصيرة.</p>',
+ list:'<h3>طريقة لعب «القائمة»</h3><ol><li>يظهر لك سؤال له عدد محدد من الإجابات.</li><li>اكتب الإجابات واحدة واحدة بأي ترتيب.</li><li>كل إجابة خاطئة تخسرك روحًا، وعندك <b>٣ أرواح</b>.</li><li>تفوز إذا ذكرت كل الإجابات.</li></ol>'
+};
+
+/* =================== التوجيه =================== */
+let VIEW=null;
+function go(h){ if(location.hash.slice(1)!==h)location.hash=h; else render(); }
+window.addEventListener('hashchange',render);
+function render(){
+  closeSheet();
+  const h=location.hash.slice(1);
+  const g=GAMES.find(x=>x.id===h);
+  window.scrollTo(0,0);
+  if(!g){VIEW=null;return renderHome();}
+  VIEW=g.id; ({m11:M11,who:WHO,grid:GRID,career:CAREER,list:LIST})[g.id].start();
+}
+function navHTML(title,id){
+  return '<div class="nav"><div class="in"><button class="nbtn" onclick="go(\'home\')" aria-label="رجوع"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>الألعاب</button><div class="t">'+esc(title)+'</div><div class="nbtn end"><button class="ibtn" aria-label="طريقة اللعب" onclick="openSheet(HELP.'+id+')">؟</button></div></div></div>';
+}
+function modeSeg(id,mode){
+  return '<div class="seg" role="tablist"><button class="'+(mode==='daily'?'on':'')+'" onclick="'+id+'.start(\'daily\')">تحدّي اليوم #'+AR(DAYNO)+'</button><button class="'+(mode==='free'?'on':'')+'" onclick="'+id+'.start(\'free\')">لعب حر</button></div>';
+}
+function dailyDone(id){const s=store.get('day:'+id,null);return s&&s.day===DAY&&s.done;}
+
+/* =================== الرئيسية =================== */
+function renderHome(){
+  const d=new Date();
+  const dateTxt=d.toLocaleDateString('ar-SA-u-ca-gregory-nu-arab',{weekday:'long',day:'numeric',month:'long'});
+  const m=dailyPick(MATCHES,11);
+  const dots=lineupPlayers(m).map(p=>'<i style="left:'+p.x+'%;top:'+p.y+'%"></i>').join('');
+  const rows=GAMES.slice(1).map(g=>{
+    const done=dailyDone(g.id);
+    return '<button class="row" onclick="go(\''+g.id+'\')"><span class="app-ic" style="background:'+g.color+'">'+g.ic+'</span><span class="tx"><b>'+g.name+'</b><span>'+g.desc+'</span></span><span class="st '+(done?'done':'')+'">'+(done?'✓ لُعبت':'اليوم')+'</span><svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></button>';
+  }).join('');
+  $('#app').innerHTML=
+   '<header class="hero"><div class="date">'+esc(dateTxt)+' · التحدي رقم '+AR(DAYNO)+'</div><h1>تحدّي الكورة</h1><p>ألغاز يومية لعشّاق كرة القدم. تتجدد كل يوم عند منتصف الليل.</p></header>'+
+   '<div class="grp-t">لعبة اليوم المميزة</div>'+
+   '<button class="feature" onclick="go(\'m11\')"><div class="mini">'+dots+'</div><div class="k">الناقص 11 · '+(dailyDone('m11')?'✓ لُعبت اليوم':'جديد اليوم')+'</div><h2>'+esc(m.me[0])+'</h2><p>'+esc(m.comp)+'. هل تتذكر التشكيلة الأساسية كاملة؟</p><span class="go">ابدأ ←</span></button>'+
+   '<div class="grp-t">كل الألعاب</div><div class="list">'+rows+'</div>'+
+   '<div class="foot">البيانات مجمّعة يدويًا حتى صيف 2025 لأشهر اللاعبين والمباريات.<br>نتائجك محفوظة على جهازك فقط.</div>';
+}
+
+/* =================== الناقص 11 =================== */
+const M11={
+  start(mode){
+    mode=mode||this.mode||'daily'; this.mode=mode;
+    let st=null;
+    if(mode==='daily'){const m=dailyPick(MATCHES,11);st=store.get('day:m11',null);if(!st||st.day!==DAY||st.mid!==m.id)st={day:DAY,mid:m.id,solved:{},rev:{},hist:{},wrong:0,hints:0,done:false,gave:false};}
+    else st={mid:randPick(MATCHES,this.st&&this.st.mid).id,solved:{},rev:{},hist:{},wrong:0,hints:0,done:false,gave:false};
+    this.st=st; this.m=MATCHES.find(x=>x.id===st.mid); this.pl=lineupPlayers(this.m);
+    this.sel=this.pl.findIndex((p,i)=>!st.solved[i]); if(this.sel<0)this.sel=0;
+    this.draw();
+  },
+  save(){if(this.mode==='daily')store.set('day:m11',this.st);},
+  key(i){return norm(this.pl[i].s);},
+  known(i){ // أحرف معروفة (خضراء) لكل خانة
+    const k=[...this.key(i)],kn=new Array(k.length).fill(false);
+    (this.st.hist[i]||[]).forEach(g=>{const gg=[...norm(g)];gg.forEach((c,j)=>{if(c===k[j])kn[j]=true;});});
+    (this.st.rev[i]||[]).forEach(j=>kn[j]=true);
+    return kn;
+  },
+  pattern(i){
+    const L=letters(this.pl[i].s),kn=this.known(i);
+    return L.map((c,j)=>kn[j]?c:'•').join('');
+  },
+  draw(){
+    const m=this.m,st=this.st;
+    const nSolved=Object.keys(st.solved).length;
+    const toks=this.pl.map((p,i)=>{
+      const ok=st.solved[i],rv=st.gave&&!ok;
+      const cls='tok'+(ok?' ok':'')+(rv?' rev':'')+(i===this.sel&&!st.done?' sel':'');
+      const label=(ok||rv)?esc(p.s):esc(this.pattern(i));
+      return '<button class="'+cls+'" style="left:'+p.x+'%;top:'+p.y+'%" onclick="M11.pick('+i+')" aria-label="'+esc(p.pos)+'"><span class="sh num">'+(ok?'✓':AR(letters(p.s).length))+'</span><span class="nm">'+label+'</span><span class="ps">'+esc(p.pos)+'</span></button>';
+    }).join('');
+    $('#app').innerHTML=navHTML('الناقص 11','m11')+modeSeg('M11',this.mode)+
+     '<div class="stack" style="margin-top:12px"><div class="card"><div class="match"><div class="tm me"><span class="fl">'+m.me[1]+'</span>'+esc(m.me[0])+'</div><div class="sc num">'+esc(m.sc)+'</div><div class="tm"><span class="fl">'+m.op[1]+'</span>'+esc(m.op[0])+'</div></div><div class="match-sub"><b>'+esc(m.comp)+'</b><br>'+esc(m.date)+(m.note?' · '+esc(m.note):'')+'</div></div>'+
+     '<div style="display:flex;justify-content:space-between;align-items:center;padding:0 4px"><span class="pill a num">'+AR(nSolved)+' / ١١</span><span class="muted small">خطأ: '+AR(st.wrong)+' · تلميحات: '+AR(st.hints)+'</span></div>'+
+     '<div class="pitch" id="pitch"><div class="ln mid"></div><div class="ln circ"></div><div class="ln box"></div><div class="ln six"></div>'+toks+'</div>'+
+     '<div id="m11panel"></div></div>';
+    this.panel();
+  },
+  pick(i){if(this.st.done)return; this.sel=i; this.draw(); const f=$('#m11in'); if(f&&!this.st.solved[i])f.focus({preventScroll:true});},
+  panel(){
+    const st=this.st,i=this.sel,p=this.pl[i];
+    if(st.done){
+      const win=!st.gave;
+      $('#m11panel').innerHTML='<div class="card result pop"><div class="em">'+(win?'🏆':'📋')+'</div><h3>'+(win?'أكملت التشكيلة!':'هذه هي التشكيلة')+'</h3><p>'+(win?'بـ '+AR(st.wrong)+' محاولة خاطئة و'+AR(st.hints)+' تلميح.':'عرفت '+AR(Object.keys(st.solved).length)+' من ١١ لاعبًا.')+'</p>'+(this.mode==='daily'?statsHTML('m11'):'')+
+       '<div class="btns">'+(this.mode==='daily'?'<button class="btn" onclick="M11.share()">مشاركة النتيجة</button>':'')+'<button class="btn sec" onclick="M11.start(\'free\')">مباراة أخرى</button></div></div>';
+      return;
+    }
+    if(st.solved[i]){ $('#m11panel').innerHTML='<div class="card muted" style="text-align:center">✓ عرفت هذا اللاعب: <b style="color:var(--fg)">'+esc(p.s)+'</b><br><span class="small">اختر لاعبًا آخر من الملعب.</span></div>'; return; }
+    const L=letters(p.s),kn=this.known(i);
+    const slots='<div class="tiles">'+L.map((c,j)=>'<div class="tile '+(kn[j]?'k':'empty')+'">'+(kn[j]?esc(c):'')+'</div>').join('')+'</div>';
+    const hist=(st.hist[i]||[]).slice().reverse().map(g=>this.tilesFor(g,i)).join('');
+    $('#m11panel').innerHTML='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b class="disp">'+esc(p.pos)+'</b><span class="pill num">'+AR(L.length)+' حروف</span></div>'+slots+
+     '<form id="m11f" style="display:flex;gap:8px;margin-top:12px" autocomplete="off"><input class="field" id="m11in" placeholder="اكتب اسم اللاعب" enterkeyhint="done" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="btn" type="submit">تحقّق</button></form>'+
+     '<div class="hist">'+hist+'</div>'+
+     '<div class="btns" style="margin-top:10px"><button class="btn ghost" onclick="M11.hint()">💡 اكشف حرفًا</button><button class="btn danger" onclick="M11.giveUpAsk()">استسلام</button></div></div>';
+    $('#m11f').addEventListener('submit',e=>{e.preventDefault();this.guess($('#m11in').value);});
+  },
+  tilesFor(g,i){
+    const k=[...this.key(i)],gg=[...norm(g)],disp=letters(g);
+    const res=new Array(gg.length).fill('miss'),cnt={};
+    k.forEach((c,j)=>{if(gg[j]!==c)cnt[c]=(cnt[c]||0)+1;});
+    gg.forEach((c,j)=>{if(c===k[j])res[j]='ok';});
+    gg.forEach((c,j)=>{if(res[j]!=='ok'&&cnt[c]>0){res[j]='near';cnt[c]--;}});
+    const show=disp.length===gg.length?disp:gg;
+    return '<div class="tiles sm">'+gg.map((c,j)=>'<div class="tile '+res[j]+'">'+esc(show[j])+'</div>').join('')+'</div>';
+  },
+  guess(v){
+    v=v.trim(); if(!v)return;
+    const st=this.st,i=this.sel,p=this.pl[i];
+    if(same(v,p.s)||p.al.some(a=>same(v,a))){
+      st.solved[i]=true; this.save();
+      toast('أحسنت! '+p.s);
+      if(Object.keys(st.solved).length===11){st.done=true;if(this.mode==='daily')recordResult('m11',true);this.save();this.draw();return;}
+      const nx=this.pl.findIndex((q,j)=>j>i&&!st.solved[j]); this.sel=nx>=0?nx:this.pl.findIndex((q,j)=>!st.solved[j]);
+      this.draw(); const f=$('#m11in'); if(f)f.focus({preventScroll:true}); return;
+    }
+    // هل الاسم يخص لاعبًا آخر في التشكيلة؟
+    const other=this.pl.findIndex((q,j)=>j!==i&&!st.solved[j]&&(same(v,q.s)||q.al.some(a=>same(v,a))));
+    st.wrong++; (st.hist[i]=st.hist[i]||[]).push(v); this.save();
+    this.draw(); const f=$('#m11in'); if(f)f.focus({preventScroll:true});
+    if(other>=0)toast('هذا اللاعب في التشكيلة، لكن في مركز آخر'); else shake($('#m11f'));
+  },
+  hint(){
+    const st=this.st,i=this.sel,kn=this.known(i);
+    const hidden=kn.map((k,j)=>k?-1:j).filter(j=>j>=0);
+    if(hidden.length<=1){toast('بقي حرف واحد فقط، جرّب تخمينه');return;}
+    const j=hidden[0]; (st.rev[i]=st.rev[i]||[]).push(j); st.hints++; this.save(); this.draw();
+  },
+  giveUpAsk(){openSheet('<h3>تستسلم؟</h3><p class="muted">ستظهر التشكيلة كاملة وتُحسب الجولة خسارة.</p><button class="btn block" style="background:var(--bad);color:#fff" onclick="M11.giveUp()">نعم، اعرض التشكيلة</button>');},
+  giveUp(){closeSheet();const st=this.st;st.gave=true;st.done=true;if(this.mode==='daily')recordResult('m11',false);this.save();this.draw();},
+  share(){
+    const st=this.st,m=this.m;
+    const grid=this.pl.map((p,i)=>st.solved[i]?'🟩':'⬜');
+    const txt='تحدّي الكورة · الناقص 11 #'+DAYNO+'\n'+m.me[0]+' — '+m.comp+'\n'+(st.gave?'عرفت '+Object.keys(st.solved).length+'/11':'✅ 11/11')+' · ❌ '+st.wrong+' · 💡 '+st.hints+'\n'+grid.join('');
+    share(txt);
+  }
+};
+
+/* =================== من اللاعب؟ =================== */
+const WHO={
+  MAX:8,
+  start(mode){
+    mode=mode||this.mode||'daily';this.mode=mode;
+    const pool=PL.filter(p=>LEAGUE[p.club]);
+    if(mode==='daily'){const t=dailyPick(pool,23);let st=store.get('day:who',null);if(!st||st.day!==DAY||st.t!==t.id)st={day:DAY,t:t.id,g:[],done:false,win:false};this.st=st;}
+    else this.st={t:randPick(pool,this.st&&byId(this.st.t)).id,g:[],done:false,win:false};
+    this.draw();
+  },
+  save(){if(this.mode==='daily')store.set('day:who',this.st);},
+  cmp(g,t){
+    const out=[];
+    const gn=NAT[g.nat],tn=NAT[t.nat];
+    out.push({c:g.nat===t.nat?'ok':(gn[1]===tn[1]?'near':''),v:'<span class="big">'+gn[0]+'</span>'+esc(g.nat)});
+    const gl=LEAGUE[g.club],tl=LEAGUE[t.club];
+    out.push({c:gl===tl?'ok':'',v:'الدوري<br>'+esc(gl)});
+    out.push({c:g.club===t.club?'ok':'',v:esc(g.club)});
+    out.push({c:g.pos===t.pos?'ok':'',v:esc(g.pos)});
+    const d=t.by-g.by; const arrow=d===0?'':(d<0?' ↑':' ↓');
+    out.push({c:d===0?'ok':(Math.abs(d)<=2?'near':''),v:'<span class="num">'+AR(g.by)+arrow+'</span>'});
+    return out;
+  },
+  draw(){
+    const st=this.st,t=byId(st.t);
+    const rows=st.g.map(id=>{const g=byId(id);return '<div class="grow pop"><div class="nmc">'+esc(g.n)+'</div>'+this.cmp(g,t).map(c=>'<div class="cell '+c.c+'">'+c.v+'</div>').join('')+'</div>';}).join('');
+    const left=this.MAX-st.g.length;
+    const lives='<div class="lives" aria-label="المحاولات">'+Array.from({length:this.MAX},(_,i)=>'<i class="'+(i<left?'':'off')+'"></i>').join('')+'</div>';
+    let top;
+    if(st.done){
+      top='<div class="card result pop"><div class="em">'+(st.win?'🎉':'😔')+'</div><h3>'+esc(t.n)+'</h3><p>'+NAT[t.nat][0]+' '+esc(t.nat)+' · '+esc(t.pos)+' · '+esc(t.club)+'<br>'+(st.win?'عرفته في '+AR(st.g.length)+' محاولة':'انتهت المحاولات')+'</p>'+(this.mode==='daily'?statsHTML('who'):'')+
+       '<div class="btns">'+(this.mode==='daily'?'<button class="btn" onclick="WHO.share()">مشاركة النتيجة</button>':'')+'<button class="btn sec" onclick="WHO.start(\'free\')">لاعب آخر</button></div></div>';
+    } else {
+      top='<div class="card"><div class="mystery"><div class="av">؟</div><div style="flex:1;min-width:0"><b class="disp">اللاعب الغامض</b><div class="muted small">باقي '+AR(left)+' من '+AR(this.MAX)+' محاولات</div><div style="margin-top:6px">'+lives+'</div></div></div>'+
+        '<div class="ac" style="margin-top:12px"><input class="field" id="whoin" placeholder="اكتب اسم لاعب…" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"><div class="ac-list" id="whoac"></div></div></div>';
+    }
+    $('#app').innerHTML=navHTML('من اللاعب؟','who')+modeSeg('WHO',this.mode)+'<div class="stack" style="margin-top:12px">'+top+
+      (st.g.length?'<div class="card gtab"><div class="grow h"><div style="text-align:right">اللاعب</div><div>الجنسية</div><div>الدوري</div><div>النادي الأبرز</div><div>المركز</div><div>الميلاد</div></div>'+rows+'</div>':'<div class="card muted small" style="text-align:center">ابدأ بأي لاعب تعرفه، وستظهر لك المقارنة هنا.</div>')+'</div>';
+    if(!st.done)bindAC($('#whoin'),$('#whoac'),p=>this.guess(p.id),id=>st.g.includes(id));
+  },
+  guess(id){
+    const st=this.st; if(st.done||st.g.includes(id))return;
+    st.g.push(id);
+    if(id===st.t){st.done=true;st.win=true;}
+    else if(st.g.length>=this.MAX){st.done=true;st.win=false;}
+    if(st.done&&this.mode==='daily')recordResult('who',st.win);
+    this.save();this.draw();
+    if(!st.done){const f=$('#whoin');if(f)f.focus({preventScroll:true});}
+  },
+  share(){
+    const st=this.st,t=byId(st.t);
+    const em=c=>c==='ok'?'🟩':c==='near'?'🟨':'⬛';
+    const lines=st.g.map(id=>this.cmp(byId(id),t).map(c=>em(c.c)).join('')).join('\n');
+    share('تحدّي الكورة · من اللاعب؟ #'+DAYNO+'\n'+(st.win?st.g.length:'X')+'/'+this.MAX+'\n'+lines);
+  }
+};
+/* بحث تلقائي مشترك */
+function bindAC(input,list,onPick,isUsed){
+  let items=[],hl=0;
+  const paint=()=>{
+    list.innerHTML=items.map((p,i)=>'<button type="button" class="ac-it'+(i===hl?' hl':'')+(isUsed&&isUsed(p.id)?' used':'')+'" data-i="'+i+'"><span>'+NAT[p.nat][0]+'</span>'+esc(p.n)+'<small>'+esc(p.pos)+'</small></button>').join('');
+  };
+  input.addEventListener('input',()=>{items=findPlayers(input.value);hl=0;paint();});
+  input.addEventListener('keydown',e=>{
+    if(e.key==='ArrowDown'){hl=Math.min(hl+1,items.length-1);paint();e.preventDefault();}
+    else if(e.key==='ArrowUp'){hl=Math.max(hl-1,0);paint();e.preventDefault();}
+    else if(e.key==='Enter'){e.preventDefault();if(items[hl])choose(items[hl]);}
+  });
+  list.addEventListener('mousedown',e=>e.preventDefault());
+  list.addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(b)choose(items[+b.dataset.i]);});
+  function choose(p){if(isUsed&&isUsed(p.id)){toast('استخدمت هذا اللاعب من قبل');return;}input.value='';items=[];paint();onPick(p);}
+}
+
+/* =================== شبكة الكورة =================== */
+const GRID={
+  MAXW:3,
+  start(mode){
+    mode=mode||this.mode||'daily';this.mode=mode;
+    if(mode==='daily'){
+      let st=store.get('day:grid',null);
+      if(!st||st.day!==DAY){const g=buildGrid(DAY*131+17);st={day:DAY,rows:g.rows,cols:g.cols,cells:{},wrong:0,done:false,gave:false};}
+      this.st=st;
+    } else {const g=buildGrid(Math.floor(Math.random()*1e9));this.st={rows:g.rows,cols:g.cols,cells:{},wrong:0,done:false,gave:false};}
+    this.sets=gridSets(this.st);
+    this.draw();
+  },
+  save(){if(this.mode==='daily')store.set('day:grid',this.st);},
+  draw(){
+    const st=this.st;
+    let rev=null;
+    if(st.gave){const taken=Object.values(st.cells);const s=this.sets.map((x,i)=>st.cells[i]!==undefined?null:x);rev=matchCells(s,taken)||[];}
+    let h='<div class="bx"><div></div>'+st.cols.map(c=>'<div class="hd">'+catHead(c)+'</div>').join('');
+    for(let i=0;i<3;i++){
+      h+='<div class="hd">'+catHead(st.rows[i])+'</div>';
+      for(let j=0;j<3;j++){
+        const k=i*3+j,pid=st.cells[k];
+        if(pid!==undefined)h+='<button class="cl ok pop" disabled>'+esc(byId(pid).n)+'</button>';
+        else if(rev&&rev[k]!=null)h+='<button class="cl rev" disabled>'+esc(byId(rev[k]).n)+'</button>';
+        else h+='<button class="cl empty" '+(st.done?'disabled':'')+' onclick="GRID.open('+k+')" aria-label="خانة">+</button>';
+      }
+    }
+    h+='</div>';
+    const n=Object.keys(st.cells).length,left=this.MAXW-st.wrong;
+    const lives='<div class="lives">'+Array.from({length:this.MAXW},(_,i)=>'<i class="'+(i<left?'':'off')+'"></i>').join('')+'</div>';
+    let foot;
+    if(st.done){
+      const win=n===9;
+      foot='<div class="card result pop"><div class="em">'+(win?'🏆':'🧩')+'</div><h3>'+(win?'شبكة كاملة!':'انتهت الجولة')+'</h3><p>ملأت '+AR(n)+' من ٩ خانات'+(st.gave||!win?'، والخانات الرمادية أمثلة لإجابات صحيحة.':'.')+'</p>'+(this.mode==='daily'?statsHTML('grid'):'')+
+       '<div class="btns">'+(this.mode==='daily'?'<button class="btn" onclick="GRID.share()">مشاركة النتيجة</button>':'')+'<button class="btn sec" onclick="GRID.start(\'free\')">شبكة جديدة</button></div></div>';
+    } else foot='<div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:10px"><div><b class="disp num">'+AR(n)+' / ٩</b><div class="muted small">الأخطاء المتبقية</div>'+lives+'</div><button class="btn danger" onclick="GRID.giveUpAsk()">إنهاء</button></div>';
+    $('#app').innerHTML=navHTML('شبكة الكورة','grid')+modeSeg('GRID',this.mode)+'<div class="stack" style="margin-top:12px"><div class="card" style="padding:12px">'+h+'</div>'+foot+'</div>';
+  },
+  open(k){
+    const st=this.st,r=st.rows[Math.floor(k/3)],c=st.cols[k%3];
+    const lab=x=>x.k==='nat'?'منتخب '+x.v:x.v;
+    openSheet('<h3>'+esc(lab(r))+' × '+esc(lab(c))+'</h3><p class="muted small" style="margin:0 0 10px">اختر لاعبًا '+(r.k==='nat'||c.k==='nat'?'يجمع الشرطين.':'لعب للناديين.')+'</p><div class="ac"><input class="field" id="gin" placeholder="اكتب اسم لاعب…" autocomplete="off" autocapitalize="off" spellcheck="false"><div class="ac-list" id="gac"></div></div>',s=>{
+      const inp=$('#gin',s); bindAC(inp,$('#gac',s),p=>this.guess(k,p.id),id=>Object.values(st.cells).includes(id)); setTimeout(()=>inp.focus(),60);
+    });
+  },
+  guess(k,id){
+    const st=this.st;closeSheet();
+    if(this.sets[k].includes(id)){st.cells[k]=id;toast('صح! '+byId(id).n);}
+    else {st.wrong++;toast('خطأ: '+byId(id).n+' لا يحقق الشرطين');}
+    if(Object.keys(st.cells).length===9||st.wrong>=this.MAXW){st.done=true;if(st.wrong>=this.MAXW)st.gave=true;if(this.mode==='daily')recordResult('grid',Object.keys(st.cells).length===9);}
+    this.save();this.draw();
+  },
+  giveUpAsk(){openSheet('<h3>تنهي الجولة؟</h3><p class="muted">ستظهر أمثلة لإجابات صحيحة في الخانات الفارغة.</p><button class="btn block" style="background:var(--bad);color:#fff" onclick="GRID.giveUp()">نعم، أنهِ الجولة</button>');},
+  giveUp(){closeSheet();const st=this.st;st.gave=true;st.done=true;if(this.mode==='daily')recordResult('grid',false);this.save();this.draw();},
+  share(){
+    const st=this.st;let g='';for(let i=0;i<3;i++){for(let j=0;j<3;j++)g+=st.cells[i*3+j]!==undefined?'🟩':'⬜';g+='\n';}
+    share('تحدّي الكورة · شبكة الكورة #'+DAYNO+'\n'+Object.keys(st.cells).length+'/9 · ❌ '+st.wrong+'\n'+g);
+  }
+};
+
+/* =================== مسيرة لاعب =================== */
+const CAREER={
+  MAX:6,
+  pool(){return PL.filter(p=>p.car&&p.car.length>=4);},
+  start(mode){
+    mode=mode||this.mode||'daily';this.mode=mode;const pool=this.pool();
+    if(mode==='daily'){const t=dailyPick(pool,41);let st=store.get('day:career',null);if(!st||st.day!==DAY||st.t!==t.id)st={day:DAY,t:t.id,g:[],done:false,win:false};this.st=st;}
+    else this.st={t:randPick(pool,this.st&&byId(this.st.t)).id,g:[],done:false,win:false};
+    this.draw();
+  },
+  save(){if(this.mode==='daily')store.set('day:career',this.st);},
+  draw(){
+    const st=this.st,t=byId(st.t),car=t.car;
+    const shown=st.done?car.length:Math.min(car.length,2+st.g.length);
+    const extra=st.done?2:Math.max(0,2+st.g.length-car.length);
+    const path='<div class="path">'+car.map((c,i)=>'<div class="stop'+(i<shown?'':' hid')+'">'+(i<shown?esc(c):'نادٍ مخفي')+'<span class="i num">'+AR(i+1)+'</span></div>').join('')+'</div>';
+    const hints=[];
+    if(extra>=1)hints.push('<span class="pill g">'+NAT[t.nat][0]+' '+esc(t.nat)+'</span>');
+    if(extra>=2)hints.push('<span class="pill g">'+esc(t.pos)+'</span>');
+    const left=this.MAX-st.g.length;
+    const wrong=st.g.filter(id=>id!==st.t).map(id=>'<span>'+esc(byId(id).n)+'</span>').join('');
+    let top;
+    if(st.done){
+      top='<div class="card result pop"><div class="em">'+(st.win?'🎯':'😔')+'</div><h3>'+esc(t.n)+'</h3><p>'+(st.win?'عرفته في '+AR(st.g.length)+' محاولة':'انتهت المحاولات')+'</p>'+(this.mode==='daily'?statsHTML('career'):'')+
+       '<div class="btns">'+(this.mode==='daily'?'<button class="btn" onclick="CAREER.share()">مشاركة النتيجة</button>':'')+'<button class="btn sec" onclick="CAREER.start(\'free\')">مسيرة أخرى</button></div></div>';
+    } else top='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><b class="disp">من صاحب هذه المسيرة؟</b><span class="pill num">'+AR(left)+' محاولات</span></div><div class="ac" style="margin-top:12px"><input class="field" id="cin" placeholder="اكتب اسم لاعب…" autocomplete="off" autocapitalize="off" spellcheck="false"><div class="ac-list" id="cac"></div></div>'+(wrong?'<div class="wrong" style="margin-top:10px">'+wrong+'</div>':'')+'</div>';
+    $('#app').innerHTML=navHTML('مسيرة لاعب','career')+modeSeg('CAREER',this.mode)+'<div class="stack" style="margin-top:12px">'+top+
+      '<div class="card"><div class="muted small" style="margin-bottom:6px">المسيرة بالترتيب · '+AR(car.length)+' محطات</div>'+path+(hints.length?'<div class="hints" style="margin-top:10px">'+hints.join('')+'</div>':'')+'</div></div>';
+    if(!st.done)bindAC($('#cin'),$('#cac'),p=>this.guess(p.id),id=>st.g.includes(id));
+  },
+  guess(id){
+    const st=this.st;if(st.done||st.g.includes(id))return;
+    st.g.push(id);
+    if(id===st.t){st.done=true;st.win=true;}
+    else if(st.g.length>=this.MAX)st.done=true;
+    if(st.done&&this.mode==='daily')recordResult('career',st.win);
+    this.save();this.draw();
+    if(!st.done){toast('ليس هو، انكشف نادٍ جديد');const f=$('#cin');if(f)f.focus({preventScroll:true});}
+  },
+  share(){const st=this.st;const r=st.g.map(id=>id===st.t?'🟩':'🟥').join('');share('تحدّي الكورة · مسيرة لاعب #'+DAYNO+'\n'+(st.win?st.g.length:'X')+'/'+this.MAX+' '+r);}
+};
+
+/* =================== القائمة =================== */
+const LIST={
+  LIVES:3,
+  start(mode){
+    mode=mode||this.mode||'daily';this.mode=mode;
+    if(mode==='daily'){const l=dailyPick(LISTS,59);let st=store.get('day:list',null);if(!st||st.day!==DAY||st.l!==l.id)st={day:DAY,l:l.id,f:[],w:[],done:false};this.st=st;}
+    else this.st={l:randPick(LISTS,this.st&&LISTS.find(x=>x.id===this.st.l)).id,f:[],w:[],done:false};
+    this.draw();
+  },
+  save(){if(this.mode==='daily')store.set('day:list',this.st);},
+  L(){return LISTS.find(x=>x.id===this.st.l);},
+  draw(){
+    const st=this.st,L=this.L(),n=L.a.length;
+    const ans='<div class="ans">'+L.a.map((a,i)=>{const f=st.f.includes(i);return '<div class="'+(f?'f pop':(st.done?'m':''))+'"><b class="num">'+AR(i+1)+'</b>'+(f||st.done?esc(a[0]):'')+'</div>';}).join('')+'</div>';
+    const left=this.LIVES-st.w.length;
+    const lives='<div class="lives">'+Array.from({length:this.LIVES},(_,i)=>'<i class="'+(i<left?'':'off')+'" style="width:12px;height:12px"></i>').join('')+'</div>';
+    let top;
+    if(st.done){
+      const win=st.f.length===n;
+      top='<div class="card result pop"><div class="em">'+(win?'🏆':'📋')+'</div><h3>'+(win?'القائمة كاملة!':'انتهت الأرواح')+'</h3><p>ذكرت '+AR(st.f.length)+' من '+AR(n)+'</p>'+(this.mode==='daily'?statsHTML('list'):'')+
+        '<div class="btns">'+(this.mode==='daily'?'<button class="btn" onclick="LIST.share()">مشاركة النتيجة</button>':'')+'<button class="btn sec" onclick="LIST.start(\'free\')">قائمة أخرى</button></div></div>';
+    } else top='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span class="pill a num">'+AR(st.f.length)+' / '+AR(n)+'</span>'+lives+'</div><form id="lf" style="display:flex;gap:8px;margin-top:12px" autocomplete="off"><input class="field" id="lin" placeholder="اكتب إجابة…" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done"><button class="btn" type="submit">أضف</button></form>'+
+      (st.w.length?'<div class="wrong" style="margin-top:10px">'+st.w.map(w=>'<span>'+esc(w)+'</span>').join('')+'</div>':'')+'<div style="text-align:center;margin-top:6px"><button class="btn danger small" onclick="LIST.end()">استسلام وعرض الإجابات</button></div></div>';
+    $('#app').innerHTML=navHTML('القائمة','list')+modeSeg('LIST',this.mode)+'<div class="stack" style="margin-top:12px"><div class="card"><h2 style="font-size:1.25rem;font-weight:800">'+esc(L.t)+'</h2><div class="muted small">'+esc(L.sub)+' · '+AR(n)+' إجابات</div></div>'+top+'<div class="card">'+ans+'</div></div>';
+    if(!st.done){$('#lf').addEventListener('submit',e=>{e.preventDefault();this.guess($('#lin').value);});}
+  },
+  guess(v){
+    v=v.trim();if(!v)return;const st=this.st,L=this.L();
+    const i=L.a.findIndex(a=>same(v,a[0])||(a[1]||[]).some(x=>same(v,x)));
+    if(i>=0){
+      if(st.f.includes(i)){toast('ذكرتها من قبل');$('#lin').value='';return;}
+      st.f.push(i);
+      if(st.f.length===L.a.length){st.done=true;if(this.mode==='daily')recordResult('list',true);}
+    } else {
+      if(st.w.some(w=>same(w,v))){toast('جرّبتها من قبل');return;}
+      st.w.push(v);
+      if(st.w.length>=this.LIVES){st.done=true;if(this.mode==='daily')recordResult('list',false);}
+      else{this.save();this.draw();shake($('#lf'));toast('ليست في القائمة');$('#lin').focus({preventScroll:true});return;}
+    }
+    this.save();this.draw();const f=$('#lin');if(f)f.focus({preventScroll:true});
+  },
+  end(){const st=this.st;st.done=true;if(this.mode==='daily')recordResult('list',st.f.length===this.L().a.length);this.save();this.draw();},
+  share(){const st=this.st,L=this.L();share('تحدّي الكورة · القائمة #'+DAYNO+'\n'+L.t+'\n✅ '+st.f.length+'/'+L.a.length+' · '+'❤️'.repeat(this.LIVES-st.w.length)+'🖤'.repeat(st.w.length));}
+};
+
+render();
+</script>
