@@ -1537,8 +1537,7 @@ function openCrowdAdmin(){ if(!isCoach)return; openModal(''); crowdAdminInner();
 function crowdAdminInner(){
   var M=crowdModel(), c=crowdCfg(), h=mh('تقييم الزملاء');
   h+='<div class="foot" style="margin:0 4px 10px">كل لاعب مسجّل يقارن بين زملائه (مين أفضل في مهارة معيّنة). رأي الناس يدخل بوزن حتى 50٪ حسب عدد الأصوات، ولا تتغير أي طاقة إلا بعد ما تضغط «اعتماد».</div>';
-  h+='<div class="card"><div class="cell tap ind" id="crowdToggle" onclick="put(\'settings/crowd/off\','+(c.on?'true':'null')+')">'+tile(c.on?'#34C759':'#8E8E93',c.on?'check':'lock')+'<div class="body"><div class="t">'+(c.on?'التقييم مفتوح للاعبين':'التقييم متوقف')+'</div><div class="s">'+(c.on?'اضغط لإيقافه':'اضغط لفتحه')+'</div></div></div>'+
-     '<div class="cell tap ind" id="crowdRound" onclick="crowdNewRound()">'+tile('#0A84FF','undo')+'<div class="body"><div class="t">جولة جديدة</div><div class="s">تظهر بطاقة «قيّم زملاءك» للجميع من جديد · الجولة الحالية '+c.round+'</div></div></div></div>';
+  h+='<div class="card"><div class="cell tap ind" id="crowdToggle" onclick="put(\'settings/crowd/off\','+(c.on?'true':'null')+')">'+tile(c.on?'#34C759':'#8E8E93',c.on?'check':'lock')+'<div class="body"><div class="t">'+(c.on?'التقييم مفتوح للاعبين':'التقييم متوقف')+'</div><div class="s">'+(c.on?'اضغط لإيقافه':'اضغط لفتحه')+'</div></div></div></div>';
   h+='<div class="foot" style="margin:10px 4px 0">'+cnt(M.voters,'مصوّت')+' · '+cnt(M.votes,'مقارنة')+'</div>';
   var ids=Object.keys(M.p).filter(function(i){return M.p[i].ch;}).sort(function(a,b){return Math.abs(M.p[b].o2-M.p[b].o1)-Math.abs(M.p[a].o2-M.p[a].o1)||pname(a).localeCompare(pname(b),'ar');});
   h+=gh('الاقتراحات')+'<div class="card" id="crowdList">'+(ids.length?ids.map(function(i){var r=M.p[i], d=r.o2-r.o1;
@@ -1551,9 +1550,6 @@ function crowdApply(ids){
   var M=crowdModel(), m={}, k=0;
   ids.forEach(function(i){var r=M.p[i]; if(!r||!r.ch)return; m['players/'+i+'/attrs']=r.attrs; m['players/'+i+'/crowdAdj']=Object.keys(r.adj).length?r.adj:null; k++;});
   if(!k)return; putMany(m); toast('تم اعتماد '+cnt(k,'لاعب'));
-}
-function crowdNewRound(){
-  askConfirm('<b>بدء جولة جديدة؟</b><br><span class="small">تظهر بطاقة «قيّم زملاءك» لكل اللاعبين مرة ثانية، والأصوات السابقة تبقى محسوبة.</span>',function(){put('settings/crowd/round',crowdCfg().round+1); toast('بدأت جولة جديدة');},'بدء');
 }
 
 function lateBadge(s,pid,tap){
