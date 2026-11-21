@@ -1858,8 +1858,10 @@ function renderHome(el){
   var top=function(key,lbl,unit,color,icon,filled){
     var arr=vals(st).filter(function(x){return x[key]>0&&P(x.id);}).sort(function(a,b){return b[key]-a[key];});
     if(!arr.length)return '';
-    var x=arr[0];
-    return '<div class="cell tap ind toprow" onclick="openPlayer(\''+x.id+'\')"><span class="av-wrap">'+avatar(x.id,true)+'<span class="mini" style="background:'+color+'">'+(filled?icF(icon,'xs'):ic(icon,'xs'))+'</span></span>'+'<div class="body"><div class="t">'+esc(pname(x.id))+'</div><div class="s">'+lbl+'</div></div><span class="valcol"><b class="num">'+x[key]+'</b><span>'+nounFor(x[key],unit)+'</span></span></div>';
+    var best=arr.filter(function(x){return x[key]===arr[0][key];}); // تعادل: كل المتصدرين تحت بعض
+    return best.map(function(x){
+      return '<div class="cell tap ind toprow" data-top="'+key+'" onclick="openPlayer(\''+x.id+'\')"><span class="av-wrap">'+avatar(x.id,true)+'<span class="mini" style="background:'+color+'">'+(filled?icF(icon,'xs'):ic(icon,'xs'))+'</span></span>'+'<div class="body"><div class="t">'+esc(pname(x.id))+'</div><div class="s">'+lbl+(best.length>1?' · مشترك':'')+'</div></div><span class="valcol"><b class="num">'+x[key]+'</b><span>'+nounFor(x[key],unit)+'</span></span></div>';
+    }).join('');
   };
   var tops=top('goals','الهدّاف','هدف','var(--tint)','ball')+top('assists','المايسترو','صناعة','#0A84FF','assist')+top('mvp','أكثر من نال أفضل لاعب','مرة','#D4A93C','star',true);
   if(tops) h+=gh('أبرز اللاعبين',lnk('عرض الكل','go(\'stats\')'))+'<div class="card">'+tops+'</div>';
