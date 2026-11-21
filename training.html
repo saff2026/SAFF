@@ -2533,7 +2533,8 @@ function fieldLoc(){var st=S.settings||{}, f=st.field; if(f===undefined||f===nul
 function fieldR(){var f=fieldLoc(); return f&&+f.r>0?+f.r:150;}
 function geoDist(a,b,c,d){var R=6371000,r=Math.PI/180,x=(c-a)*r,y=(d-b)*r,h=Math.sin(x/2)*Math.sin(x/2)+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)*Math.sin(y/2);return 2*R*Math.asin(Math.min(1,Math.sqrt(h)));}
 function fmtDist(m){return m<1000?Math.round(m)+' م':(Math.round(m/100)/10)+' كم';}
-function selfCiWindow(s){var n=Date.now(),t=startTs(s);return !!s&&s.status!=='done'&&!s.matchEnd&&n>=t-CI_BEFORE&&n<=t+CI_AFTER;}
+function ciDayStart(s){var d=parseD(s.date);d.setHours(0,0,0,0);return Math.min(d.getTime(),startTs(s)-CI_BEFORE);} // زر التحضير يطلع من بداية يوم التمرين
+function selfCiWindow(s){var n=Date.now(),t=startTs(s);return !!s&&s.status!=='done'&&!s.matchEnd&&n>=ciDayStart(s)&&n<=t+CI_AFTER;}
 function selfCiH(s){
   if(isCoach||!s||!selfCiWindow(s))return '';
   var me=myId(), card=function(icon,color,t,sub,click,id){return '<div class="card" style="margin-top:10px"><div class="cell'+(click?' tap ind':'')+'" id="'+id+'"'+(click?' onclick="'+click+'"':'')+'>'+tile(color,icon)+'<div class="body"><div class="t">'+t+'</div><div class="s">'+sub+'</div></div>'+(click?chev():'')+'</div></div>';};
@@ -2586,7 +2587,7 @@ function fieldLocInner(){
   h+='<div class="m-foot" style="margin-top:12px"><button class="btn block" id="fieldHere" onclick="fieldHere()">'+ic('check','s')+'استخدم موقعي الحالي (وأنا في الملعب)</button></div>';
   h+=gh('<span style="font-size:16px">أو الصق رابط خرائط قوقل أو الإحداثيات</span>')+'<input class="field" id="fieldTxt" dir="ltr" placeholder="24.7136, 46.6753"><div class="small muted" id="fieldHint" style="margin:8px 4px 0">'+FIELD_HOWTO+'</div><div class="m-foot" style="margin-top:8px"><button class="btn gray" id="fieldSave" onclick="fieldSaveTxt()">حفظ</button></div>';
   h+=gh('<span style="font-size:16px">نطاق التحضير حول الملعب</span>')+'<div class="seg" id="fieldR" style="display:flex">'+[100,150,250,500].map(function(x){return '<button type="button" class="'+(r===x?'on':'')+'" onclick="fieldSetR('+x+')">'+x+' م</button>';}).join('')+'</div>';
-  h+='<div class="foot">اللاعب يحضّر نفسه من ساعة ونص قبل التمرين إلى 3 ساعات بعد بدايته، ويُحسب تأخيره تلقائياً.</div>';
+  h+='<div class="foot">اللاعب يحضّر نفسه من بداية يوم التمرين إلى 3 ساعات بعد بدايته، ويُحسب تأخيره تلقائياً.</div>';
   if(!isDef) h+='<div class="m-foot" style="margin-top:10px"><button class="btn tinted block" id="fieldDefault" onclick="put(\'settings/field\',null);toast(\'رجع موقع الملعب الافتراضي\')">📍 رجوع لموقع الملعب الافتراضي</button></div>';
   if(f) h+='<div style="text-align:center;margin-top:10px"><button class="lnk" style="background:none;border:none;color:#FF3B30;font-size:15px;cursor:pointer" id="fieldDel" onclick="askConfirm(\'إلغاء موقع الملعب؟ يتوقف تحضير اللاعبين لأنفسهم.\',function(){put(\'settings/field\',{off:true});},\'حذف\')">إلغاء موقع الملعب</button></div>';
   setModal(h);
