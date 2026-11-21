@@ -3249,10 +3249,14 @@ function drawPoster(kind,s,logo,ph){
     var gcp=goalCount(s), topOf=function(map){var mx=0,ids=[];Object.keys(map).forEach(function(id){if(!P(id))return;var v=map[id];if(v>mx){mx=v;ids=[id];}else if(v===mx&&v>0)ids.push(id);});return {n:mx,ids:ids};};
     var ts=topOf(gcp.g), ta=topOf(gcp.a);
     if(ts.n||ta.n){
-      var cw=(W-2*P0-24)/2, chh=240;
+      var cw=(W-2*P0-24)/2, MRH=100, mh2=function(r){return r.ids.length>1?92+r.ids.length*MRH+58:240;}, chh=Math.max(mh2(ts),mh2(ta));
       var card=function(x0,label,res,unit,color){ rrect(c,x0,y,cw,chh,20); c.fillStyle=PST.row; c.fill(); c.strokeStyle=PST.rowEdge; c.lineWidth=1.5; c.stroke();
         c.fillStyle=color; c.fillRect(x0+cw-24-6,y+26,6,26); txt(label,x0+cw-24-18,y+40,F(800,24),color);
         if(!res.n){ txt('—',x0+cw/2,y+chh/2+20,F(800,40),PST.faint,'center'); return; }
+        if(res.ids.length>1){ // تعادل: كل لاعب بصورته واسمه تحت بعض
+          res.ids.forEach(function(id,i){ var ry=y+92+i*MRH+MRH/2-6; circleImg(id,x0+cw-24-40,ry,40,color);
+            var tx2=x0+cw-24-80-20; c.font=F(900,28); txt(fitTxt(c,pname(id),tx2-x0-20),tx2,ry+2,F(900,28),'#fff'); });
+          txt(cnt(res.n,unit)+' · مشترك',x0+cw-24,y+chh-38,F(800,24),color); return; }
         circleImg(res.ids[0],x0+cw-24-52,y+140,52,color);
         var tx=x0+cw-24-104-20, tw=tx-x0-20; c.font=F(900,res.ids.length>1?26:32);
         txt(fitTxt(c,res.ids.map(function(id){return pname(id);}).join('، '),tw),tx,y+122,F(900,res.ids.length>1?26:32),'#fff');
