@@ -27,9 +27,21 @@ def main():
     app = HEAD + '<style>\n' + css + '</style>\n\n' + body
     with open(os.path.join(HERE, 'app.html'), 'w', encoding='utf-8') as f:
         f.write(app)
+    site = os.environ.get('KORA_SITE_URL', 'https://saff2026.github.io/kora/')
+    meta = ('<link rel="manifest" href="manifest.webmanifest">\n'
+            '<link rel="icon" type="image/png" href="assets/icon-192.png">\n'
+            '<link rel="apple-touch-icon" href="assets/icon-192.png">\n'
+            '<meta name="apple-mobile-web-app-capable" content="yes">\n'
+            '<meta name="apple-mobile-web-app-title" content="تحدّي الكورة">\n'
+            '<meta property="og:type" content="website">\n'
+            '<meta property="og:title" content="تحدّي الكورة">\n'
+            '<meta property="og:description" content="22 لعبة كرة قدم يومية بالعربي: الناقص 11، من اللاعب؟، شبكة الكورة، الروابط وغيرها.">\n'
+            f'<meta property="og:url" content="{site}">\n'
+            f'<meta property="og:image" content="{site}assets/share.png">\n'
+            '<meta name="twitter:card" content="summary_large_image">\n')
     full = ('<!DOCTYPE html>\n<html lang="ar" dir="rtl">\n<head>\n<meta charset="UTF-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
-            + HEAD + '<style>\n' + css + '</style>\n</head>\n<body>\n' + body + '</body>\n</html>\n')
+            + HEAD + meta + '<style>\n' + css + '</style>\n</head>\n<body>\n' + body + '</body>\n</html>\n')
     with open(os.path.join(HERE, 'index.html'), 'w', encoding='utf-8') as f:
         f.write(full)
     print('app.html', len(app), 'index.html', len(full))
