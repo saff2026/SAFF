@@ -27,7 +27,7 @@ def main():
     app = HEAD + '<style>\n' + css + '</style>\n\n' + body
     with open(os.path.join(HERE, 'app.html'), 'w', encoding='utf-8') as f:
         f.write(app)
-    site = os.environ.get('KORA_SITE_URL', 'https://saff2026.github.io/kora/')
+    site = os.environ.get('KORA_SITE_URL', 'https://saff2026.github.io/Kora/')
     meta = ('<link rel="manifest" href="manifest.webmanifest">\n'
             '<link rel="icon" type="image/png" href="assets/icon-192.png">\n'
             '<link rel="apple-touch-icon" href="assets/icon-192.png">\n'
