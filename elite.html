@@ -3231,6 +3231,7 @@ function openShare(sid){
   var hasSubs=['A','B'].some(function(t){return subsOf(s,t).some(function(id){return P(id);});});
   var opt=function(id,icon,color,t,sub,fn,off){return '<div class="cell tap ind shareopt" id="'+id+'" style="'+(off?'opacity:.45;pointer-events:none':'')+'" onclick="closeModal();setTimeout(function(){'+fn+'},250)">'+tile(color,icon)+'<div class="body"><div class="t">'+t+'</div><div class="s">'+sub+'</div></div>'+chev()+'</div>';};
   var h=mh('مشاركة')+'<div class="card">';
+  if(!done) h+=opt('sh-invite','plus','#34C759','رسالة الدعوة','نص الدعوة للقروب: الرقم والتاريخ والوقت جاهزة','openInvite(\''+s.id+'\')');
   if(done) h+=opt('sh-sum','trophy','#D4A93C','ملخص التمرين','النتيجة والأهداف وأفضل لاعب والتقييمات','posterShare(\'sum\',\''+s.id+'\')');
   var ended=done||liveState(s)==='ended'||(liveState(s)==='live'&&Object.keys(s.goals||{}).length>0);
   if(ended) h+=opt('sh-post','flag','#FF9500','بعد المباراة','النتيجة والأهداف وهدّاف ومايسترو التمرين والمتأخرين وتذكير التصويت','posterShare(\'post\',\''+s.id+'\')');
@@ -3628,9 +3629,56 @@ function saveSessionSettings(editId){
     var id=uid('s');
     put('sessions/'+id,{num:num,title:ttl,date:date,time:time,size:t.size,formation:t.fA,teams:{A:{name:an,formation:t.fA,slots:{},color:t.cA},B:{name:bn,formation:t.fB,slots:{},color:t.cB}},att:{},goals:{},ratings:{},status:'open',created:Date.now()});
     toast('تم إنشاء التمرين — اختر اللاعبين ثم وزّع الفريقين');
+    closeModal(); var tries=0; (function wait(){ if(S.sessions[id]) openInvite(id); else if(++tries<30) setTimeout(wait,200); })(); // الدعوة جاهزة للإرسال
+    return;
   }
   closeModal();
 }
+/* ---------- رسالة الدعوة: قالب محفوظ يتعبّى من بيانات التمرين ---------- */
+var INV_TAGS=[['رقم','رقم التمرين'],['اليوم','اليوم'],['هجري','التاريخ الهجري'],['ميلادي','التاريخ الميلادي'],['الوقت','الوقت (من-إلى)'],['العنوان','عنوان التمرين']];
+var INV_DEFAULT='تمرين نخبة السبت #{رقم} ⚽️\n🗓️ {اليوم} {هجري} الموافق {ميلادي}\n🕰️ {الوقت}\n\nاسجلك؟ 😍';
+function invCfg(){var v=(S.settings||{}).invite||{}; return {text:typeof v.text==='string'&&v.text.trim()?v.text:INV_DEFAULT, dur:+v.dur>0?+v.dur:2};}
+function arDigits(x){return String(x).replace(/[0-9]/g,function(d){return '٠١٢٣٤٥٦٧٨٩'[d];});}
+function invClock(h,m){return arDigits((h%12)||12)+(m?':'+arDigits(String(m).padStart(2,'0')):'');}
+function invPeriod(h){return h<12?'صباحًا':'مساءً';}
+function invTime(s,dur){var p=(s.time||'20:00').split(':'), h=+p[0], m=+p[1], e=h*60+m+Math.round(dur*60), eh=Math.floor(e/60)%24, em=e%60;
+  return invPeriod(h)===invPeriod(eh)?invClock(h,m)+'-'+invClock(eh,em)+' '+invPeriod(h):invClock(h,m)+' '+invPeriod(h)+'-'+invClock(eh,em)+' '+invPeriod(eh);}
+function invFmt(d,loc,o){try{return new Intl.DateTimeFormat(loc,o).format(d);}catch(e){return '';}}
+function invText(s,tpl,dur){
+  var c=invCfg(); tpl=tpl==null?c.text:tpl; dur=dur==null?c.dur:dur;
+  var d=parseD(s.date), n=+s.num||nextSessNum();
+  var v={'رقم':arDigits(n),'اليوم':invFmt(d,'ar-u-ca-gregory',{weekday:'long'}),'هجري':invFmt(d,'ar-SA-u-ca-islamic-umalqura-nu-arab',{day:'numeric',month:'long'}),
+    'ميلادي':invFmt(d,'ar-u-ca-gregory-nu-arab',{day:'numeric',month:'long'}),'الوقت':invTime(s,dur),'العنوان':(s.title||'').trim()};
+  return tpl.replace(/\{(رقم|اليوم|هجري|ميلادي|الوقت|العنوان)\}/g,function(_,k){return v[k];});
+}
+function openInvite(sid){
+  var s=S.sessions[sid]; if(!s||!isCoach)return;
+  var h=mh('رسالة الدعوة')+'<textarea class="field" id="invOut" rows="10" dir="rtl" style="height:auto;padding:12px;line-height:1.8;font-size:15px">'+esc(invText(s))+'</textarea>'+
+    '<div class="foot">تقدر تعدّل عليها هنا قبل الإرسال. الرقم والتاريخ والوقت ينحسبون لحالهم من التمرين.</div>'+
+    '<div class="m-foot" style="margin-top:12px"><button class="btn tinted" id="invCopy" onclick="invCopy()">نسخ</button><button class="btn" id="invWa" onclick="invWa()">إرسال واتساب</button></div>'+
+    '<div style="text-align:center;margin-top:12px"><button class="lnk" id="invEdit" style="background:none;border:none;color:var(--tint);font-size:15px;font-weight:700;cursor:pointer" onclick="openInvEdit(\''+sid+'\')">✎ تعديل قالب الدعوة</button></div>';
+  openModal(h);
+}
+function invCopy(){var e=document.getElementById('invOut'), v=e.value, ok=function(){toast('تم نسخ الدعوة — الصقها في القروب');};
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(v).then(ok,function(){e.focus();e.select();try{document.execCommand('copy');ok();}catch(x){toast('⚠️ حدّد النص وانسخه');}});
+  else { e.focus(); e.select(); try{document.execCommand('copy');ok();}catch(x){toast('⚠️ حدّد النص وانسخه');} } }
+function invWa(){var v=document.getElementById('invOut').value; window.open('https://wa.me/?text='+encodeURIComponent(v),'_blank');}
+var IVE=null;
+function openInvEdit(sid){var c=invCfg(); IVE={sid:sid,text:c.text,dur:c.dur}; openModal(''); invEditInner();}
+function invEditInner(){
+  var s=S.sessions[IVE.sid];
+  var h=mh('قالب الدعوة')+'<div class="foot" style="margin:0 4px 8px">اكتب الدعوة مرة وحدة، وحط الكلمات اللي بين { } مكان الأشياء اللي تتغيّر كل تمرين. اضغط أي وحدة تحت عشان تنضاف مكان المؤشر.</div>'+
+    '<div id="invTags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">'+INV_TAGS.map(function(x){return '<span class="chip" onclick="invIns(\'{'+x[0]+'}\')">{'+x[0]+'} · '+x[1]+'</span>';}).join('')+'</div>'+
+    '<textarea class="field" id="invTpl" rows="10" dir="rtl" style="height:auto;padding:12px;line-height:1.8;font-size:15px" oninput="IVE.text=this.value;invPrev()">'+esc(IVE.text)+'</textarea>'+
+    '<span class="lbl">مدة التمرين (لحساب وقت النهاية)</span><div class="seg" id="invDur" style="display:flex">'+[1,1.5,2,2.5,3].map(function(x){return '<button type="button" class="'+(IVE.dur===x?'on':'')+'" onclick="IVE.dur='+x+';invEditInner()">'+arDigits(x).replace('.','٫')+' س</button>';}).join('')+'</div>'+
+    (s?'<span class="lbl">كذا بتطلع لهذا التمرين</span><div class="card pad" id="invPrev" style="white-space:pre-wrap;line-height:1.8;font-size:14px"></div>':'')+
+    '<div class="m-foot" style="margin-top:12px"><button class="btn gray" onclick="openInvite(IVE.sid)">رجوع</button><button class="btn" id="invSave" onclick="invSave()">حفظ القالب</button></div>';
+  setModal(h); invPrev();
+}
+function invPrev(){var e=document.getElementById('invPrev'), s=S.sessions[IVE.sid]; if(e&&s)e.textContent=invText(s,IVE.text,IVE.dur);}
+function invIns(tag){var e=document.getElementById('invTpl'); if(!e)return; var a=e.selectionStart||e.value.length, b=e.selectionEnd||a; e.value=e.value.slice(0,a)+tag+e.value.slice(b); e.focus(); e.selectionStart=e.selectionEnd=a+tag.length; IVE.text=e.value; invPrev();}
+function invSave(){var tx=(IVE.text||'').trim(); if(!tx){toast('⚠️ اكتب نص الدعوة');return;} if(tx.length>1500){toast('⚠️ النص طويل');return;}
+  put('settings/invite',{text:tx,dur:IVE.dur}); toast('تم حفظ قالب الدعوة'); setTimeout(function(){openInvite(IVE.sid);},150);}
 function stripSess(s){var o=clone(s);delete o.id;Object.keys(o.goals||{}).forEach(function(k){delete o.goals[k]._k;});return o;}
 
 function toggleAtt(pid){
