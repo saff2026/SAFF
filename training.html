@@ -3520,9 +3520,7 @@ function drawPoster(kind,s,logo,ph){
       y+=hh+10; });
     y+=40;
   }
-  // التذييل
-  y+=10; c.fillStyle=PST.line; c.fillRect(P0,y,W-2*P0,1.5); y+=40;
-  txt('تمرين ساف',W/2,y,F(700,20),PST.faint,'center'); y+=46;
+  y+=30; // بدون اسم التطبيق تحت الصورة (موجود فوق)
   var H2=Math.min(H,Math.max(1200,Math.ceil(y))); var out=document.createElement('canvas'); out.width=W*IMG_SC; out.height=H2*IMG_SC; out.getContext('2d').drawImage(cv,0,0);
   return out.toDataURL('image/png');
 }
