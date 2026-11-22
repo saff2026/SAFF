@@ -296,6 +296,13 @@ body.v2 .gh h2:has(.bh):before{display:none;}
 .og-tag{font-size:11px;font-weight:700;color:var(--red);background:color-mix(in srgb,var(--red) 12%,transparent);padding:1px 6px;border-radius:6px;margin-inline-start:4px}
 .ci-min{flex-basis:100%;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 0 2px;font-size:13px;color:var(--label2)}.ci-min .field{width:76px;height:36px;padding:0 10px;text-align:center;font-size:16px}.ci-min .lnk{background:none;border:none;color:var(--tint);font:inherit;font-weight:700;cursor:pointer;padding:0}
 .crowd-bar{height:6px;border-radius:3px;background:var(--fill);overflow:hidden;margin:4px 2px 0}.crowd-bar i{display:block;height:100%;background:var(--tint);border-radius:3px;transition:width .25s}
+.inj-tag{display:inline-block;margin-top:4px;font-size:11px;font-weight:800;color:var(--red);background:color-mix(in srgb,var(--red) 12%,transparent);border-radius:7px;padding:1px 7px}
+.inj-left{flex:none;font-size:12px;font-weight:800;border-radius:9px;padding:4px 9px;white-space:nowrap}
+.inj-left.red{color:var(--red);background:color-mix(in srgb,var(--red) 12%,transparent)}
+.inj-left.orange{color:var(--orange);background:color-mix(in srgb,var(--orange) 14%,transparent)}
+.inj-left.green{color:var(--green);background:color-mix(in srgb,var(--green) 14%,transparent)}
+.inj-prof{display:flex;align-items:center;gap:12px;margin:10px 0 6px;padding:12px 14px;border-radius:16px;background:color-mix(in srgb,var(--red) 9%,var(--card,transparent));border:1px solid color-mix(in srgb,var(--red) 28%,transparent);text-align:right}
+.inj-prof .ip-i{font-size:26px}.inj-prof>div{flex:1;min-width:0}.inj-prof b{display:block;font-size:15px}.inj-prof span:not(.inj-left){display:block;font-size:13px;opacity:.75;margin-top:2px}
 .ci-row{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;margin-top:8px;border-radius:14px;background:var(--fill)}
 .ci-row .ci-ic{font-size:22px;line-height:1.2;flex:0 0 auto}
 .ci-row b{display:block;font-size:15px}
@@ -678,7 +685,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261122102957';
+var BUILD='20261122104044';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -853,6 +860,7 @@ function normalize(d){
   Object.keys(d.weeks||{}).forEach(function(k){ if(d.weeks[k]) out.weeks[k]=d.weeks[k]; });
   out.potm={}; Object.keys(d.potm||{}).forEach(function(k){ if(d.potm[k]&&typeof d.potm[k]==='object') out.potm[k]=d.potm[k]; });
   out.crowd={}; Object.keys(d.crowd||{}).forEach(function(k){ if(d.crowd[k]&&typeof d.crowd[k]==='object') out.crowd[k]=d.crowd[k]; });
+  out.inj={}; Object.keys(d.inj||{}).forEach(function(k){ var x=d.inj[k]; if(x&&typeof x==='object'&&x.back) out.inj[k]=x; });
   out.pins={}; Object.keys(d.pins||{}).forEach(function(k){ if(typeof d.pins[k]==='string') out.pins[k]=d.pins[k]; });
   return out;
 }
@@ -1021,7 +1029,10 @@ var NOUN={
   'متأخر':['متأخر','متأخران','متأخرَين','متأخرين','متأخرًا','واحد'],
   'ريال':['ريال','ريالان','ريالين','ريالات','ريالًا','واحد'],
   'مصوّت':['مصوّت','مصوّتان','مصوّتَين','مصوّتين','مصوّتًا','واحد'],
-  'مقارنة':['مقارنة','مقارنتان','مقارنتين','مقارنات','مقارنةً','واحدة']
+  'مقارنة':['مقارنة','مقارنتان','مقارنتين','مقارنات','مقارنةً','واحدة'],
+  'يوم':['يوم','يومان','يومين','أيام','يومًا','واحد'],
+  'أسبوع':['أسبوع','أسبوعان','أسبوعين','أسابيع','أسبوعًا','واحد'],
+  'شهر':['شهر','شهران','شهرين','أشهر','شهرًا','واحد']
 };
 // الكلمة فقط (والرقم يُعرض لحاله)
 function nounFor(n,w,gen){var f=NOUN[w]; if(!f)return w; n=Math.abs(Math.round(+n||0)); var r=n%100;
@@ -1499,6 +1510,64 @@ function crowdPairs(me,num){
   return out;
 }
 var CW=null;
+/* ---------- قائمة المصابين: نوع الإصابة، المدة، والوقت المتوقع للعودة ---------- */
+var INJ_TYPES=['شد عضلي','تمزق عضلي','التواء الكاحل','إصابة الركبة','الرباط الصليبي','كدمة','إصابة الظهر','كسر'];
+function injOf(id){var x=(S.inj||{})[id]; return x&&P(id)?x:null;}
+function injList(){return Object.keys(S.inj||{}).filter(function(id){return P(id);}).sort(function(a,b){return String(S.inj[a].back).localeCompare(String(S.inj[b].back))||pname(a).localeCompare(pname(b),'ar');});}
+function dayDiff(ds){var a=parseD(ds),t=new Date();t.setHours(0,0,0,0);return Math.round((a-t)/864e5);}
+function addDays(ds,n){var d=parseD(ds);d.setDate(d.getDate()+n);return fmtD(d);}
+function durTxt(days){days=Math.max(1,Math.round(+days||0)); if(days%30===0)return cnt(days/30,'شهر'); if(days%7===0)return cnt(days/7,'أسبوع'); return cnt(days,'يوم');}
+function injLeftTxt(x){var n=dayDiff(x.back); return n>1?'باقي '+cnt(n,'يوم'):n===1?'يرجع بكرة':n===0?'يرجع اليوم':'جاهز للعودة؟';}
+function injLeftCls(x){var n=dayDiff(x.back); return n>7?'red':n>0?'orange':'green';}
+function injBadge(id){return injOf(id)?'<span class="inj-tag" title="مصاب">🩹 مصاب</span>':'';}
+function injHomeH(){
+  var L=injList(); if(!L.length&&!isCoach)return '';
+  return '<div class="card" style="margin-top:10px"><div class="cell tap ind" id="injCard" onclick="openInjuries()"><span class="ico-tile" style="background:#FF3B30;font-size:17px">🩹</span><div class="body"><div class="t">قائمة المصابين'+(L.length?' <span class="num">('+L.length+')</span>':'')+'</div><div class="s">'+(L.length?L.slice(0,3).map(function(id){return esc(shortName(id));}).join('، ')+(L.length>3?'…':''):'لا يوجد مصابين · اضغط لإضافة مصاب')+'</div></div>'+chev()+'</div></div>';
+}
+function injRowH(id){var x=S.inj[id];
+  return '<div class="cell'+(isCoach?' tap ind':'')+' injrow" data-id="'+id+'"'+(isCoach?' onclick="openInjForm(\''+id+'\')"':' onclick="openPlayer(\''+id+'\')"')+'>'+avatar(id)+'<div class="body"><div class="t">'+esc(pname(id))+'</div>'+
+    '<div class="s"><b style="color:var(--label)">'+esc(x.type||'إصابة')+'</b> · المدة: '+durTxt(x.days)+'</div>'+
+    '<div class="s">العودة المتوقعة: <b style="color:var(--label)">'+niceDate(x.back)+'</b></div></div>'+
+    '<span class="inj-left '+injLeftCls(x)+'">'+injLeftTxt(x)+'</span></div>';}
+function openInjuries(){ openModal(''); injInner(); modalRefresh=injInner; }
+function injInner(){
+  var L=injList(), h=mh('قائمة المصابين');
+  h+=L.length?'<div class="card" id="injList">'+L.map(injRowH).join('')+'</div>':'<div class="card"><div class="empty" id="injEmpty"><div class="ei">🩹</div><b>لا يوجد مصابين</b>الحمد لله، الكل جاهز.</div></div>';
+  if(isCoach) h+='<div class="m-foot" style="margin-top:12px"><button class="btn block" id="injAdd" onclick="openInjForm()">'+ic('plus','s')+'إضافة مصاب</button></div><div class="foot" style="text-align:center">اضغط على أي مصاب لتعديل إصابته أو تأكيد تعافيه.</div>';
+  setModal(h);
+}
+var IF=null;
+function openInjForm(id){
+  if(!isCoach)return;
+  var x=id?injOf(id):null, today=fmtD(new Date());
+  IF={id:id||'',type:x?x.type:'',from:x?x.from:today,days:x?+x.days:7,edit:!!x};
+  openModal(''); injFormInner(); modalRefresh=null;
+}
+function injFormInner(){
+  var f=IF, back=addDays(f.from,f.days), unit=f.days%30===0?30:f.days%7===0?7:1, num=Math.round(f.days/unit);
+  var h=mh(f.edit?'تعديل الإصابة':'إضافة مصاب');
+  if(f.edit) h+='<div class="card cell" style="margin-bottom:12px">'+avatar(f.id)+'<div class="body"><div class="t">'+esc(pname(f.id))+'</div></div></div>';
+  else { var ps=playersArr().filter(function(p){return !injOf(p.id);}).sort(function(a,b){return a.name.localeCompare(b.name,'ar');});
+    h+='<span class="lbl">اللاعب</span><select class="field" id="injP" onchange="IF.id=this.value"><option value="">— اختر اللاعب —</option>'+ps.map(function(p){return '<option value="'+p.id+'"'+(f.id===p.id?' selected':'')+'>'+esc(p.name)+'</option>';}).join('')+'</select>'; }
+  h+='<span class="lbl">نوع الإصابة</span><div class="chips" id="injTypes" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">'+INJ_TYPES.map(function(x){return '<span class="chip'+(f.type===x?' on':'')+'" onclick="IF.type=\''+x+'\';injFormInner()">'+x+'</span>';}).join('')+'</div>'+
+     '<input class="field" id="injType" placeholder="أو اكتب نوع الإصابة" value="'+esc(INJ_TYPES.indexOf(f.type)<0?f.type:'')+'" oninput="IF.type=this.value.trim()">';
+  h+='<span class="lbl">تاريخ الإصابة</span><input type="date" class="field" id="injFrom" value="'+f.from+'" onchange="if(this.value){IF.from=this.value;injFormInner();}">';
+  h+='<span class="lbl">المدة</span><div style="display:flex;gap:8px;align-items:center"><input type="number" inputmode="numeric" min="1" max="365" class="field num" id="injNum" style="width:90px;flex:none;text-align:center" value="'+num+'" onchange="var n=Math.max(1,Math.min(365,parseInt(this.value,10)||1));IF.days=n*'+unit+';injFormInner()">'+
+     '<div class="seg" id="injUnit" style="display:flex;flex:1">'+[[1,'يوم'],[7,'أسبوع'],[30,'شهر']].map(function(u){return '<button type="button" class="'+(unit===u[0]?'on':'')+'" onclick="IF.days='+num+'*'+u[0]+';injFormInner()">'+u[1]+'</button>';}).join('')+'</div></div>';
+  h+='<span class="lbl">الوقت المتوقع للعودة</span><input type="date" class="field" id="injBack" value="'+back+'" onchange="var d=this.value&&Math.round((parseD(this.value)-parseD(IF.from))/864e5);if(d>0){IF.days=d;injFormInner();}else toast(\'⚠️ موعد العودة لازم يكون بعد تاريخ الإصابة\')">'+
+     '<div class="foot" id="injSum">المدة '+durTxt(f.days)+' · يرجع '+niceDate(back)+'</div>';
+  h+='<div class="m-foot" style="margin-top:14px">'+(f.edit?'<button class="btn tinted" id="injHealed" onclick="injHeal(\''+f.id+'\')">✓ تعافى</button>':'')+'<button class="btn" id="injSave" onclick="injSave()">حفظ</button></div>';
+  setModal(h);
+}
+function injSave(){
+  var f=IF; if(!f.id){toast('⚠️ اختر اللاعب');return;}
+  var tp=(f.type||'').trim(); if(!tp){toast('⚠️ اختر أو اكتب نوع الإصابة');return;}
+  if(tp.length>40)tp=tp.slice(0,40);
+  put('inj/'+f.id,{type:tp,from:f.from,days:f.days,back:addDays(f.from,f.days),at:Date.now()});
+  toast('🩹 '+(f.edit?'تم تعديل إصابة ':'تمت إضافة ')+pname(f.id)+(f.edit?'':' لقائمة المصابين'));
+  openInjuries();
+}
+function injHeal(id){askConfirm('<b>'+esc(pname(id))+' تعافى؟</b><br><span class="small">ينشال من قائمة المصابين.</span>',function(){put('inj/'+id,null);toast('💪 الحمد لله على السلامة يا '+pname(id).split(' ')[0]);openInjuries();},'تعافى');}
 function crowdCardH(){
   var me=myId(), c=crowdCfg(); if(!me||!c.on||crowdPool().length<3)return '';
   var done=(+(((S.crowd||{})[me]||{})._r)||0)>=c.round; // البطاقة دائماً موجودة، وكل ضغطة تفتح جولة جديدة
@@ -1719,7 +1788,7 @@ function cardHTML(p){
     '<div class="pc-top">'+(isJoker(p)?'<div class="pc-ph">'+photoHTML(p,'pc-photo')+'<div class="pc-joker">'+jokerBadge()+'</div></div>':photoHTML(p,'pc-photo'))+
     '<div><div class="ovr '+tier(o)+'"><b class="num">'+o+'</b></div>'+
     (tr?'<div class="trend '+(tr>0?'up':'dn')+'">'+(tr>0?'▲ ':'▼ ')+Math.abs(tr)+'</div>':'')+'</div></div>'+
-    '<div class="pc-name">'+esc(p.name)+potmBadge(p.id)+'</div>'+
+    '<div class="pc-name">'+esc(p.name)+potmBadge(p.id)+'</div>'+injBadge(p.id)+
     '<div class="pc-meta">'+POS[p.pos].ar+(p.age?' · '+cnt(+p.age||0,'سنة'):'')+'</div>'+
     '<div class="pc-stars"><span>المهارة '+starsHTML(p.sm)+'</span><span>القدم الضعيفة '+starsHTML(p.wf)+'</span></div>'+
     '<div class="pc-attrs">'+(function(){var L=cardAttrs(p).slice(),k=SORTS[ui.pSort]&&SORTS[ui.pSort].attr?ui.pSort:null; if(k&&L.indexOf(k)<0){L.pop();L.unshift(k);} return L;})().map(function(a){var v=p.attrs[a];return '<div class="at'+(a===ui.pSort?' hl':'')+'"><div class="r"><span>'+ATTR[a]+'</span><b class="num">'+v+'</b></div><div class="bar"><i class="'+barCls(v)+'" style="width:'+v+'%"></i></div></div>';}).join('')+'</div></div>';
@@ -1853,7 +1922,7 @@ function renderHome(el){
     h+='<div class="card"><div class="empty"><div class="ei">'+ic('ball')+'</div><b>لا يوجد تمرين قادم</b>'+(isCoach?'<button class="btn sm" style="margin-top:12px" onclick="go(\'session\')">'+ic('plus','xs')+'إنشاء تمرين</button>':'سيظهر هنا عندما يُنشئ مجلس الإدارة تمريناً')+'</div></div>';
   }
 
-  h+=bdayHomeH(); h+=kittyMeH(); h+=potmHomeH(); h+=crowdCardH();
+  h+=bdayHomeH(); h+=kittyMeH(); h+=potmHomeH(); h+=crowdCardH(); h+=injHomeH();
   if(ds.length){
     var last=ds[0], m=mvpOf(last);
     h+=gh('التمرين السابق',lnk('التفاصيل','openSessionDetail(\''+last.id+'\')'));
@@ -2040,7 +2109,7 @@ function detectFaceRaw(img){
 }
 // حالة القص: الوجه في نص الدائرة وبحجم مناسب
 function faceState(img,box){
-  var w=img.naturalWidth,h=img.naturalHeight,m=Math.min(w,h),OUT=320,Sd,cx,cy;
+  var w=img.naturalWidth,h=img.naturalHeight,m=Math.min(w,h),OUT=PHOTO_OUT,Sd,cx,cy;
   if(box){ var fs=Math.max(box.width,box.height); Sd=clamp(fs*2.3,Math.min(m,60),m); cx=box.x+box.width/2; cy=box.y+box.height/2+Sd*0.05; }
   else { Sd=m; cx=w/2; cy=h>w?Sd/2+(h-Sd)*0.2:h/2; }
   cx=clamp(cx,Sd/2,w-Sd/2); cy=clamp(cy,Sd/2,h-Sd/2);
@@ -2048,11 +2117,12 @@ function faceState(img,box){
   return {scale:scale,x:(w/2-cx)*k,y:(h/2-cy)*k,V:OUT};
 }
 function autoCrop(img){return renderCrop(img,{scale:1,x:0,y:0});}
-// أداة القص: تكبير وتحريك ثم حفظ دائرة 320×320
+// أداة القص: تكبير وتحريك ثم حفظ دائرة بدقة عالية (640×640)
+var PHOTO_OUT=640;
 var CR=null;
 function cropDims(){var b=document.getElementById('cropBox');return b?b.clientWidth:260;}
 function renderCrop(img,st){
-  var OUT=320, w=img.naturalWidth, h=img.naturalHeight, base=OUT/Math.min(w,h), k=base*st.scale;
+  var OUT=PHOTO_OUT, w=img.naturalWidth, h=img.naturalHeight, base=OUT/Math.min(w,h), k=base*st.scale;
   var c=document.createElement('canvas'); c.width=OUT; c.height=OUT;
   var x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,OUT,OUT);
   var dw=w*k, dh=h*k, f=OUT/(st.V||OUT);
@@ -2216,6 +2286,8 @@ function openPlayerInner(id){
   var h=mh('');
   if(isCoach) h=h.replace('<span class="side"></span>','<button class="m-edit" id="editPlayer" onclick="openPlayerForm(\''+id+'\')">'+ic('pencil','xs')+'تعديل</button>');
   h+='<div class="prof">'+ring(o,POS[p.pos].ar,photoSrc(p))+'<div class="nm">'+esc(p.name)+'</div>'+(isJoker(p)?'<div id="profJoker" style="margin:6px 0 4px">'+jokerBadge(true)+'<div class="small muted" style="margin-top:6px">يلعب في مراكز كثيرة</div></div>':'')+'<div class="mt">'+(p.age?cnt(+p.age||0,'سنة')+' · ':'')+'القدم: '+(FOOT[p.foot]||'—')+'</div><div class="mt" style="display:flex;gap:16px;justify-content:center;margin-top:8px"><span>المهارة '+starsHTML(p.sm,'big')+'</span><span>القدم الضعيفة '+starsHTML(p.wf,'big')+'</span></div>'+(isCoach&&traitsOf(p).length?'<div class="chips" id="profTraits" style="justify-content:center;gap:6px;margin-top:10px">'+traitsOf(p).map(function(k){return '<span class="tag on">'+TRAITS.filter(function(x){return x[0]===k;})[0][1]+'</span>';}).join('')+'</div>':'')+'</div>';
+  var ij=injOf(id); if(ij) h+='<div class="inj-prof" id="profInj"'+(isCoach?' onclick="openInjForm(\''+id+'\')" style="cursor:pointer"':'')+'><span class="ip-i">🩹</span><div><b>مصاب: '+esc(ij.type||'إصابة')+'</b><span>المدة '+durTxt(ij.days)+' · العودة المتوقعة '+niceDate(ij.back)+'</span></div><span class="inj-left '+injLeftCls(ij)+'">'+injLeftTxt(ij)+'</span></div>';
+  else if(isCoach) h+='<div style="text-align:center;margin:4px 0 8px"><button class="lnk" id="profInjAdd" style="background:none;border:none;color:var(--red);font-size:15px;font-weight:700;cursor:pointer" onclick="IF=null;openInjForm();IF.id=\''+id+'\';injFormInner()">🩹 تسجيل إصابة</button></div>';
   if(isBday(p)) h+='<div class="bd-prof" id="profBday">🎉 عيد ميلاد سعيد يا '+esc(p.name.split(' ')[0])+'! 🎂</div>';
   var pw=potmWins(id); if(pw.length) h+='<div class="potm-prof" id="profPotm"><span class="pp-m">🏅</span><div><b>لاعب الشهر'+(pw.length>1?' <span class="num ltr" dir="ltr">×'+pw.length+'</span>':'')+'</b><span>'+pw.map(function(ym){return ymName(ym)+' '+ym.slice(0,4);}).join(' · ')+'</span></div></div>';
   if(!isCoach&&myId()===id) h+='<div style="text-align:center;margin:4px 0 8px"><button class="lnk" id="myAgeBtn" style="background:none;border:none;color:var(--tint);font-size:15px;font-weight:700;cursor:pointer" onclick="editMyAge()">✎ '+(p.age?'تعديل عمري':'أضف عمري')+'</button></div>';
