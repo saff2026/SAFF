@@ -24,7 +24,7 @@ CHANGES = [
     ('var FEAT_TRAITS = true;', 'var FEAT_TRAITS = false;', 1),
     # قائمة المتأخرين العامة: تبدأ من التمرين 15، واللي في القائمة المنشورة بعد التمرين 14 متأخرين مرة (الهجلة والنهدي والمشحن حضروا في الوقت مرة)
     ("var POTM_FROM='2026-11', POTM_DAYS=5, POTM_SAT=false;", "var POTM_FROM='2026-11', POTM_DAYS=5, POTM_SAT=true;", 1),  # لاعب الشهر: التصويت بعد آخر سبت إلى السبت اللي بعده
-    ('var LATE_BASE = null;', 'var LATE_BASE = {from:15, ids:["pmwjnhmkz2fpn8","pmwgge5bxccfih","pmwggbwuk9bvs6","pmwggqzrquiejq","pmwggnfqvyjksj","pmwggs2yj8b3xl","pmwggt3uyxj1pb","pmwggkfuy2nnpm","pmwggld5c78l0s","pmwggsqrzpb3y0"], ok:{"pmwjnhmkz2fpn8":1,"pmwgge5bxccfih":1,"pmwggbwuk9bvs6":1}, cleared:["pmwgghkbsd57ce"]};', 1),  # بدون «يلعب تحت الضغط» و«لياقة عالية» في نخبة السبت  # خاصية «أناني» لتمرين ساف فقط
+    ('var LATE_BASE = null;', 'var LATE_BASE = {from:15, ids:["pmwjnhmkz2fpn8","pmwgge5bxccfih","pmwggbwuk9bvs6","pmwggqzrquiejq","pmwggnfqvyjksj","pmwggs2yj8b3xl","pmwggkfuy2nnpm","pmwggld5c78l0s","pmwggsqrzpb3y0"], ok:{"pmwjnhmkz2fpn8":1,"pmwgge5bxccfih":1,"pmwggbwuk9bvs6":1}, cleared:["pmwgghkbsd57ce"]};', 1),  # أبوبكر بخش (pmwggt3uyxj1pb) انشال من قائمة ما قبل 15 بطلب الإدارة: يبقى عليه تأخير واحد (تمرين 15)  # بدون «يلعب تحت الضغط» و«لياقة عالية» في نخبة السبت  # خاصية «أناني» لتمرين ساف فقط
 ]
 
 for old, new, at_least in CHANGES:
