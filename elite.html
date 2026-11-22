@@ -3152,8 +3152,9 @@ function openShare(sid){
   if(done) h+=opt('sh-sum','trophy','#D4A93C','ملخص التمرين','النتيجة والأهداف وأفضل لاعب والتقييمات','posterShare(\'sum\',\''+s.id+'\')');
   var ended=done||liveState(s)==='ended'||(liveState(s)==='live'&&Object.keys(s.goals||{}).length>0);
   if(ended) h+=opt('sh-post','flag','#FF9500','بعد المباراة','النتيجة والأهداف وهدّاف ومايسترو التمرين والمتأخرين وتذكير التصويت','posterShare(\'post\',\''+s.id+'\')');
-  if(done){ var hm=!!(mvpOf(s)&&P(mvpOf(s)));
-    h+=opt('sh-final','star','#E0A100','أفضل لاعب والتقييمات','أفضل لاعب، وتقييمات اللاعبين، وتغيّر الطاقات'+(hm?'':' — لا يوجد أفضل لاعب بعد'),'posterShare(\'final\',\''+s.id+'\')',!hm); }
+  var hasRt=Object.keys(s.ratings||{}).some(function(id){return P(id)&&typeof s.ratings[id]==='number';});
+  if(done||ended||hasRt){ var hm=!!(mvpOf(s)&&P(mvpOf(s))); // متاحة حتى قبل ما يتقفل التمرين
+    h+=opt('sh-final','star','#E0A100','أفضل لاعب والتقييمات',(done?'أفضل لاعب، وتقييمات اللاعبين، وتغيّر الطاقات':'أفضل لاعب حسب التصويت لين الحين، وتقييمات اللاعبين')+(hm?'':' — لا يوجد أفضل لاعب بعد'),'posterShare(\'final\',\''+s.id+'\')',!hm); }
   h+=opt('sh-lineup','ball','#0A7D4F','التشكيلة','الملعب بصور اللاعبين'+(hasLineup?'':' — وزّع الفريقين أولاً'),'lineupImage(\''+s.id+'\')',!hasLineup);
   if(!done) h+=opt('sh-rot','undo','#AF52DE','ترتيب التبديل','من يدخل ومن يخرج'+(hasSubs?'':' — لا يوجد بدلاء'),'posterShare(\'rot\',\''+s.id+'\')',!hasSubs);
   h+='</div><div class="foot">تطلع صورة جاهزة ترسلها في القروب.</div>';
