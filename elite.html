@@ -949,7 +949,7 @@ function startCloud(){
     Object.keys(RAWC.players||{}).forEach(function(id){var p=RAWC.players[id]; if(!p)return; raw.players[id]=Object.assign({},p); if(p.pv&&PH[id]&&PH[id].v===p.pv) raw.photos[id]=PH[id].url;});
     S=normalize(raw); ready=true; render(); maybeAskMe(); phFetchMissing(); photoMigrate();
   }
-  function schedRebuild(){clearTimeout(rbT); rbT=setTimeout(rebuild,60);}
+  function schedRebuild(){ if(rbT)return; rbT=true; Promise.resolve().then(function(){rbT=false; rebuild();}); } // تحديثات نفس اللحظة تنجمع في رسمة وحدة
   window._phRebuild=schedRebuild;
   function phFetchMissing(){
     var pl=RAWC.players||{};
