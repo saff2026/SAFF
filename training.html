@@ -2318,7 +2318,7 @@ function renderSession(el){
 
     h+=gh('الملاحظات')+'<textarea class="field" rows="3" placeholder="ملاحظات عن التمرين (اختياري)" onchange="put(\'sessions/'+s.id+'/notes\',this.value)">'+esc(s.notes||'')+'</textarea>';
 
-    h+='<div class="stack" style="margin-top:28px"><button class="btn block" id="finishBtn" onclick="finishSession()">'+ic('flag','s')+'إنهاء التمرين وحفظه في الأرشيف</button>'+
+    h+='<div class="stack" style="margin-top:28px"><button class="btn tinted block" id="updPrevBtn" onclick="openUpdPreview()">'+ic('chart','s')+'معاينة تغيّر الطاقات</button><button class="btn block" id="finishBtn" onclick="finishSession()">'+ic('flag','s')+'إنهاء التمرين وحفظه في الأرشيف</button>'+
        '<button class="btn danger block" id="delSess" onclick="deleteSession(\''+s.id+'\')">حذف هذا التمرين</button></div>';
   }
   // قبل البداية: القائمة والتشكيلة فوق · أثناء التمرين: التحضير والأهداف فوق · بعد ساعتين: القائمة والتشكيلة آخر شي
@@ -3805,6 +3805,23 @@ function rate(pid,d){
 function delVote(v){var s=openSession(); if(!s||!s.votes[v])return; askConfirm('مسح صوت <b>'+esc(pname(v))+'</b> (صوّت لـ '+esc(pname(s.votes[v]))+')؟ يقدر يصوّت من جديد ما دام التصويت مفتوح.',function(){put('sessions/'+s.id+'/votes/'+v,null);toast('تم مسح الصوت');},'حذف');}
 function clearVotes(){var s=openSession(); if(!s)return; var n=Object.keys(s.votes||{}).length; if(!n)return; askConfirm('مسح كل التصويت ('+cnt(n,'صوت',0,'b class="num"')+') لهذا التمرين؟ لا يمكن التراجع.',function(){put('sessions/'+s.id+'/votes',null);toast('تم مسح كل التصويت');},'حذف');}
 function setMvp(pid){var s=openSession(); if(!s)return; put('sessions/'+s.id+'/mvp',pid);}
+function updRowsH(rows,tap){ return rows.map(function(x){var c=x.c;
+      var det=c.d?Object.keys(c.d).map(function(k){var v=c.d[k];return '<span class="tag '+(v>0?'on':'')+'" style="'+(v<0?'color:var(--red)':'')+'">'+ATTR[k]+' <span class="ltr">'+(v>0?'+':'')+v+'</span></span>';}).join(' '):'<span class="small muted">بدون تغيير</span>';
+      return '<div class="cell'+(tap?' tap ind':'')+' updrow" data-id="'+x.id+'"'+(tap?' onclick="openPlayer(\''+x.id+'\')"':'')+'>'+avatar(x.id)+'<div class="body"><div class="t">'+esc(pname(x.id))+'</div>'+(c.perf!=null?'<div class="s">الأداء <b class="num" style="color:var(--label)">'+c.perf+'</b> · المتوقع <span class="num">'+c.exp+'</span></div>':'')+'<div class="s" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">'+det+'</div></div><span class="num muted">'+c.ovrB+'</span><span class="muted" style="display:inline-flex">'+ic('chev','xs')+'</span><span class="v strong num">'+c.ovrA+'</span></div>';
+    }).join(''); }
+// معاينة تغيّر الطاقات قبل إنهاء التمرين (ما يحفظ شي)
+function openUpdPreview(){
+  var s=openSession(); if(!s||!isCoach)return;
+  var ch=sessionChanges(s), rows=Object.keys(ch).filter(function(id){return P(id)&&updChanged(ch[id].c);}).map(function(id){return {id:id,c:ch[id].c};}).sort(function(a,b){return (b.c.ovrA-b.c.ovrB)-(a.c.ovrA-a.c.ovrB);});
+  var ups=rows.filter(function(x){return x.c.ovrA>x.c.ovrB;}).length, dns=rows.filter(function(x){return x.c.ovrA<x.c.ovrB;}).length;
+  var parts=participants(s).filter(function(id){return P(id);}), unr=parts.filter(function(id){return typeof s.ratings[id]!=='number';}), m=mvpOf(s);
+  var h=mh('معاينة تغيّر الطاقات')+'<div class="foot" id="updPrevNote" style="margin:0 4px 10px">هذي معاينة بس، والطاقات ما تتغيّر إلا لما تنهي التمرين. والمعاينة تتغيّر إذا تغيّرت التقييمات أو الأهداف أو أفضل لاعب.</div>';
+  h+='<div class="card pad" id="updPrevSum" style="display:flex;gap:18px;justify-content:center;font-weight:700"><span class="up">'+ups+' يتحسّن</span><span class="dn">'+dns+' يتراجع</span></div>';
+  if(m&&P(m)) h+='<div class="foot" style="margin:8px 4px 0">أفضل لاعب لين الحين: <b>'+esc(pname(m))+'</b></div>';
+  if(unr.length) h+='<div class="foot" style="margin:6px 4px 0;color:var(--orange)">'+cnt(unr.length,'لاعب')+' بدون تقييم: '+unr.slice(0,4).map(function(id){return esc(pname(id));}).join('، ')+(unr.length>4?'…':'')+'</div>';
+  h+=rows.length?'<div class="card" id="updPrevList" style="margin-top:12px">'+updRowsH(rows,false)+'</div>':'<div class="card" style="margin-top:12px"><div class="empty" id="updPrevEmpty"><b>ما فيه تغيير على الطاقات</b>أدخل تقييمات اللاعبين أول.</div></div>';
+  openModal(h);
+}
 function finishSession(){
   var s=openSession(); if(!s)return;
   var parts=participants(s).filter(function(id){return P(id);});
@@ -3886,10 +3903,7 @@ function sessionDetailInner(id){
   var updRows=s.upd?Object.keys(s.upd).filter(function(pid){return P(pid)&&updChanged(s.upd[pid]);}):[];
   if(updRows.length){
     var rows=updRows.map(function(pid){return {id:pid,c:s.upd[pid]};}).sort(function(a,b){return (b.c.ovrA-b.c.ovrB)-(a.c.ovrA-a.c.ovrB);});
-    h+='<div id="updSec">'+gh('تغيّر الطاقات')+'<div class="card">'+rows.map(function(x){var c=x.c, dd=c.ovrA-c.ovrB;
-      var det=c.d?Object.keys(c.d).map(function(k){var v=c.d[k];return '<span class="tag '+(v>0?'on':'')+'" style="'+(v<0?'color:var(--red)':'')+'">'+ATTR[k]+' <span class="ltr">'+(v>0?'+':'')+v+'</span></span>';}).join(' '):'<span class="small muted">بدون تغيير</span>';
-      return '<div class="cell tap ind updrow" onclick="openPlayer(\''+x.id+'\')">'+avatar(x.id)+'<div class="body"><div class="t">'+esc(pname(x.id))+'</div>'+(c.perf!=null?'<div class="s">الأداء <b class="num" style="color:var(--label)">'+c.perf+'</b> · المتوقع <span class="num">'+c.exp+'</span></div>':'')+'<div class="s" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">'+det+'</div></div><span class="num muted">'+c.ovrB+'</span><span class="muted" style="display:inline-flex">'+ic('chev','xs')+'</span><span class="v strong num">'+c.ovrA+'</span></div>';
-    }).join('')+'</div></div>';
+    h+='<div id="updSec">'+gh('تغيّر الطاقات')+'<div class="card">'+updRowsH(rows,true)+'</div></div>';
   }
   if(isCoach&&s.status==='done') h+='<div class="m-foot"><button class="btn tinted" onclick="reopenSession(\''+id+'\')">'+ic('pencil','s')+'إعادة فتح</button><button class="btn danger" id="delSessDetail" onclick="deleteSession(\''+id+'\')">حذف</button></div>';
   setModal(h);
