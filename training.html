@@ -678,7 +678,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261122102438';
+var BUILD='20261122102957';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -1310,7 +1310,7 @@ function lateImage(){
 }
 function drawLateImage(rows){
   var W=1080, P0=60, CW=475, GX=10, CH=77, GY=11, top=452, nR=Math.ceil(rows.length/2), H=Math.max(1080,top+nR*(CH+GY)+120);
-  var cv=document.createElement('canvas'); cv.width=W; cv.height=H; var c=cv.getContext('2d'); c.direction='rtl'; c.textBaseline='middle';
+  var cv=document.createElement('canvas'); cv.width=W*IMG_SC; cv.height=H*IMG_SC; var c=cv.getContext('2d'); c.scale(IMG_SC,IMG_SC); c.direction='rtl'; c.textBaseline='middle';
   var HF='"Changa",'+IMG_FONT, F=function(w,sz,ff){return w+' '+sz+'px '+(ff||IMG_FONT);};
   var txt=function(t,x,y,font,col,al){c.font=font;c.fillStyle=col;c.textAlign=al||'right';c.fillText(t,x,y);};
   var GOLD='#F2B53A';
@@ -1775,7 +1775,7 @@ function colorPick(t,cur){return '<div class="swatches" id="ns_col'+t+'">'+TEAM_
 // التقييمات تظهر للاعبين بعد إنهاء التمرين، أو قبله إذا نشرها مجلس الإدارة
 function ratingsVisible(s){return !!s&&(s.status==='done'||!!s.ratingsPub);}
 function rateCls(r){return r>=7.5?'hi':r>=5.5?'mid':'lo';}
-function setRatingsPub(on){var s=openSession();if(!s)return;put('sessions/'+s.id+'/ratingsPub',on?Date.now():null);toast(on?'⭐ تم تسليم التقييم — يظهر للاعبين على التشكيلة':'أُلغي التسليم — التقييمات مخفية عن اللاعبين');}
+function setRatingsPub(on){var s=openSession();if(!s)return;var up=putSync(s,{['sessions/'+s.id+'/ratingsPub']:on?Date.now():null});toast(on?(up?'⭐ تم تسليم التقييم وتحدّثت الطاقات':(s.mvp?'⭐ تم تسليم التقييم':'⭐ تم تسليم التقييم — اعتمد أفضل لاعب عشان تتحدث الطاقات')):'أُلغي التسليم — التقييمات مخفية عن اللاعبين');}
 // اسم التمرين ورقمه (اختياري): «التمرين 5 · كلاسيكو السبت»
 function sessLabel(s){if(!s)return '';var n=+s.num||0,t=(s.title||'').trim();return (n?'التمرين '+n:'')+(n&&t?' · ':'')+t;}
 function nextSessNum(){var m=0;sessArr().forEach(function(x){if(+x.num>m)m=+x.num;});return m?m+1:sessArr().length+1;}
@@ -2316,6 +2316,7 @@ function renderSession(el){
       h+='<div class="vwho" id="voteWho"><div class="vwho-h"><b>من صوّت لمين</b><span class="num">'+vlist.length+'</span>'+(vlist.length?'<span style="flex:1"></span><button class="lnk red" id="voteClearAll" onclick="clearVotes()">مسح كل التصويت</button>':'')+'</div>'+
         (vlist.length?vlist.map(function(v){var c=s.votes[v];return '<div class="vrow" data-v="'+v+'"><span class="vfrom">'+esc(pname(v))+'</span><span class="varr">←</span><b class="vto">'+esc(pname(c))+'</b>'+(!inSess(s,v)?'<span class="vbad">ليس من لاعبي التمرين، لا يُحتسب</span>':c===v?'<span class="vself">لنفسه</span>':'')+'<span style="flex:1"></span><button class="vdel" aria-label="مسح الصوت" onclick="delVote(\''+v+'\')">'+ic('trash','s')+'</button></div>';}).join(''):'<div class="small muted">لا توجد أصوات بعد.</div>')+'</div>';
       var byR=parts.slice().sort(function(a,b){return (typeof s.ratings[b]==='number'?s.ratings[b]:-1)-(typeof s.ratings[a]==='number'?s.ratings[a]:-1)||pname(a).localeCompare(pname(b),'ar');});
+      if(!s.mvp&&am&&P(am)) h+='<button class="btn tinted block" id="mvpApprove" style="margin-bottom:10px" onclick="setMvp(\''+am+'\')">'+ic('check','s')+'اعتماد '+esc(pname(am))+' أفضل لاعب</button>';
       h+='<select class="field" id="mvpSel" onchange="setMvp(this.value||null)"><option value="">تلقائي (تصويت اللاعبين ثم التقييم)'+(am?' — '+esc(pname(am)):'')+'</option>'+
         byR.map(function(id){var r=s.ratings[id];return '<option value="'+id+'"'+(s.mvp===id?' selected':'')+'>'+esc(pname(id))+(typeof r==='number'?' ('+r+')':'')+'</option>';}).join('')+'</select>';
       h+='</div>';
@@ -2323,7 +2324,7 @@ function renderSession(el){
 
     h+=gh('الملاحظات')+'<textarea class="field" rows="3" placeholder="ملاحظات عن التمرين (اختياري)" onchange="put(\'sessions/'+s.id+'/notes\',this.value)">'+esc(s.notes||'')+'</textarea>';
 
-    h+='<div class="stack" style="margin-top:28px">'+(s.updAt?'<div class="foot" id="liveUpdNote" style="text-align:center;margin:0 0 2px">✓ الطاقات محدّثة من هذا التمرين · آخر تحديث '+fmtClock(s.updAt)+'</div>':'')+'<button class="btn tinted block" id="updPrevBtn" onclick="openUpdPreview()">'+ic('chart','s')+'معاينة تغيّر الطاقات</button><button class="btn tinted block" id="liveUpdBtn" onclick="liveUpdate()">'+ic('undo','s')+(s.updAt?'تحديث الطاقات من جديد':'تحديث الطاقات الحين (بدون قفل التمرين)')+'</button><button class="btn block" id="finishBtn" onclick="finishSession()">'+ic('flag','s')+'إنهاء التمرين وحفظه في الأرشيف</button>'+
+    h+='<div class="stack" style="margin-top:28px">'+(s.updAt?'<div class="rpub on" id="liveUpdNote">✓ تحدّثت الطاقات من هذا التمرين · آخر تحديث '+fmtClock(s.updAt)+'<br><span class="small">وأي تعديل على التقييم أو الأهداف أو أفضل لاعب يحدّثها لحاله</span></div>':'<div class="rpub" id="liveUpdNote">الطاقات تتحدث لحالها أول ما '+(s.ratingsPub?'':'تسلّم التقييم')+(!s.ratingsPub&&!s.mvp?' و':'')+(s.mvp?'':'تعتمد أفضل لاعب')+'، أو لما تنهي التمرين.</div>')+'<button class="btn tinted block" id="updPrevBtn" onclick="openUpdPreview()">'+ic('chart','s')+'معاينة تغيّر الطاقات</button><button class="btn block" id="finishBtn" onclick="finishSession()">'+ic('flag','s')+'إنهاء التمرين وحفظه في الأرشيف</button>'+
        '<button class="btn danger block" id="delSess" onclick="deleteSession(\''+s.id+'\')">حذف هذا التمرين</button></div>';
   }
   // قبل البداية: القائمة والتشكيلة فوق · أثناء التمرين: التحضير والأهداف فوق · بعد ساعتين: القائمة والتشكيلة آخر شي
@@ -3024,7 +3025,7 @@ function saveImg(noShare){
 function hexMix(h,t,a){var p=function(x){return [parseInt(x.slice(1,3),16),parseInt(x.slice(3,5),16),parseInt(x.slice(5,7),16)];},A=p(h),B=p(t);return 'rgb('+A.map(function(v,i){return Math.round(v+(B[i]-v)*a);}).join(',')+')';}
 function hexA(h,a){return 'rgba('+parseInt(h.slice(1,3),16)+','+parseInt(h.slice(3,5),16)+','+parseInt(h.slice(5,7),16)+','+a+')';}
 function drawLineup2(s,ph){
-  var REF=refOf(s), W=1080,H=REF?1200:1080, cv=document.createElement('canvas'); cv.width=W; cv.height=H; var c=cv.getContext('2d'); c.direction='rtl'; c.textBaseline='middle';
+  var REF=refOf(s), W=1080,H=REF?1200:1080, cv=document.createElement('canvas'); cv.width=W*IMG_SC; cv.height=H*IMG_SC; var c=cv.getContext('2d'); c.scale(IMG_SC,IMG_SC); c.direction='rtl'; c.textBaseline='middle';
   var HF='"Changa",'+IMG_FONT, F=function(w,z,ff){return w+' '+z+'px '+(ff||IMG_FONT);};
   var txt=function(t,x,y,font,color,align){c.font=font;c.fillStyle=color;c.textAlign=align||'center';c.fillText(t,x,y);};
   var col={A:teamColor(s,'A'),B:teamColor(s,'B')};
@@ -3086,7 +3087,7 @@ function drawLineup2(s,ph){
 function drawLineup(s,logo,ph){
   var W=1080, subsA=subsOf(s,'A').filter(function(id){return P(id);}), subsB=subsOf(s,'B').filter(function(id){return P(id);});
   var PX=56, PY=330, PW=W-PX*2, PH=1120, H=PY+PH+70;
-  var cv=document.createElement('canvas'); cv.width=W; cv.height=H; var c=cv.getContext('2d');
+  var cv=document.createElement('canvas'); cv.width=W*IMG_SC; cv.height=H*IMG_SC; var c=cv.getContext('2d'); c.scale(IMG_SC,IMG_SC);
   c.direction='rtl'; c.textAlign='center'; c.textBaseline='middle';
   // الخلفية
   var g=c.createLinearGradient(0,0,0,H); g.addColorStop(0,'#0E4A35'); g.addColorStop(.45,'#082A1F'); g.addColorStop(1,'#041510'); c.fillStyle=g; c.fillRect(0,0,W,H);
@@ -3159,7 +3160,8 @@ function openShare(sid){
   if(ended) h+=opt('sh-post','flag','#FF9500','بعد المباراة','النتيجة والأهداف وهدّاف ومايسترو التمرين والمتأخرين وتذكير التصويت','posterShare(\'post\',\''+s.id+'\')');
   var hasRt=Object.keys(s.ratings||{}).some(function(id){return P(id)&&typeof s.ratings[id]==='number';});
   if(done||ended||hasRt){ var hm=!!(mvpOf(s)&&P(mvpOf(s))); // متاحة حتى قبل ما يتقفل التمرين
-    h+=opt('sh-final','star','#E0A100','أفضل لاعب والتقييمات',(done?'أفضل لاعب، وتقييمات اللاعبين، وتغيّر الطاقات':'أفضل لاعب حسب التصويت لين الحين، وتقييمات اللاعبين')+(hm?'':' — لا يوجد أفضل لاعب بعد'),'posterShare(\'final\',\''+s.id+'\')',!hm); }
+    h+=opt('sh-mvp','star','#E0A100','أفضل لاعب والتصويت',(done||s.mvp?'أفضل لاعب وكل التصويتات':'أفضل لاعب حسب التصويت لين الحين، وكل التصويتات')+(hm?'':' — لا يوجد أفضل لاعب بعد'),'posterShare(\'mvp\',\''+s.id+'\')',!hm);
+    h+=opt('sh-rates','chart','#0A84FF','التقييمات وتغيّر الطاقات','تقييمات اللاعبين'+(s.upd?'، وتغيّر الطاقات':'')+(hasRt?'':' — لا توجد تقييمات بعد'),'posterShare(\'rates\',\''+s.id+'\')',!hasRt); }
   h+=opt('sh-lineup','ball','#0A7D4F','التشكيلة','الملعب بصور اللاعبين'+(hasLineup?'':' — وزّع الفريقين أولاً'),'lineupImage(\''+s.id+'\')',!hasLineup);
   if(!done) h+=opt('sh-rot','undo','#AF52DE','ترتيب التبديل','من يدخل ومن يخرج'+(hasSubs?'':' — لا يوجد بدلاء'),'posterShare(\'rot\',\''+s.id+'\')',!hasSubs);
   h+='</div><div class="foot">تطلع صورة جاهزة ترسلها في القروب.</div>';
@@ -3172,7 +3174,7 @@ function posterShare(kind,sid){
   var fontP=(document.fonts&&document.fonts.load)?Promise.all(['900 90px Tajawal','800 34px Tajawal','700 24px Tajawal'].map(function(f){return document.fonts.load(f).catch(function(){});})):Promise.resolve();
   Promise.all([fontP,loadImg('saff-white.png')].concat(ids.map(function(id){return loadImg(photoSrc(P(id)));}))).then(function(r){
     var ph={}; ids.forEach(function(id,i){ph[id]=r[i+2];});
-    var url, name={sum:'summary',list:'players',rot:'rotation',mvp:'mvp',attr:'attributes',post:'after-match',final:'mvp-ratings'}[kind]+'-'+s.date+'.png', title={sum:'ملخص التمرين',list:'قائمة اللاعبين',rot:'ترتيب التبديل',mvp:'أفضل لاعب',attr:'تغيّر الطاقات',post:'بعد المباراة',final:'أفضل لاعب والتقييمات'}[kind];
+    var url, name={sum:'summary',list:'players',rot:'rotation',mvp:'mvp',attr:'attributes',post:'after-match',final:'mvp-ratings',rates:'ratings'}[kind]+'-'+s.date+'.png', title={sum:'ملخص التمرين',list:'قائمة اللاعبين',rot:'ترتيب التبديل',mvp:'أفضل لاعب والتصويت',attr:'تغيّر الطاقات',post:'بعد المباراة',final:'أفضل لاعب والتقييمات',rates:'التقييمات وتغيّر الطاقات'}[kind];
     try{ url=drawPoster(kind,s,r[1],ph); }catch(e){console.error(e);toast('⚠️ تعذّر تجهيز الصورة');return;}
     showShareImg(url,name,title);
   });
@@ -3187,12 +3189,13 @@ function showShareImg(url,name,title){
     '<div class="foot" id="imgHint" style="text-align:center">'+(isIOS()?'اضغط الزر واختر <b>«حفظ الصورة»</b> لتنزل في الصور، أو اختر الواتساب لإرسالها مباشرة. وتقدر بعد تضغط مطولاً على الصورة وتختار «حفظ في الصور».':'وتقدر تضغط مطولاً على الصورة (أو بالزر الأيمن) وتختار حفظ الصورة.')+'</div>');
 }
 // يقصّ النص بنقاط إذا كان أطول من المساحة
+var IMG_SC=2; // صور المشاركة بدقة عالية (ضعف 1080)
 function fitTxt(c,t,w){t=String(t);if(c.measureText(t).width<=w)return t;while(t.length>1&&c.measureText(t+'…').width>w)t=t.slice(0,-1);return t+'…';}
 // لون الفريق على خلفية البوستر الخضراء (الأخضر الافتراضي نخليه أفتح ليبان)
 function posterTeamColor(s,t){var c=teamColor(s,t);return c==='#0A7D4F'?'#2FD28A':c;}
 function drawPoster(kind,s,logo,ph){
-  var W=1080, H=7000, P0=72, R=W-P0, PILLW=150; // عرض موحّد لدوائر الأرقام
-  var cv=document.createElement('canvas'); cv.width=W; cv.height=H; var c=cv.getContext('2d');
+  var W=1080, H=3600, P0=72, R=W-P0, PILLW=150; // عرض موحّد لدوائر الأرقام
+  var cv=document.createElement('canvas'); cv.width=W*IMG_SC; cv.height=H*IMG_SC; var c=cv.getContext('2d'); c.scale(IMG_SC,IMG_SC);
   c.direction='rtl'; c.textBaseline='middle';
   var F=function(w,sz){return w+' '+sz+'px '+IMG_FONT;};
   var txt=function(t,x,y,font,color,align){c.font=font;c.fillStyle=color;c.textAlign=align||'right';c.fillText(t,x,y);};
@@ -3219,7 +3222,7 @@ function drawPoster(kind,s,logo,ph){
   var dstr=niceDate(s.date)+' · '+fmtStart(s); txt(dstr,P0,y,F(800,21),PST.mute,'left');
   // العنوان: الكلمة الأولى أبيض والثانية ذهبي
   var T={sum:['ملخص','التمرين'],list:['قائمة','اللاعبين'],rot:['ترتيب','التبديل'],mvp:['أفضل','لاعب'],attr:['تغيّر','الطاقات'],post:['انتهت','المباراة'],final:['أفضل','لاعب']}[kind];
-  if(kind==='post'||kind==='final'){ y+=110; } // بدون العنوان الكبير
+  if(kind==='post'||kind==='final'||kind==='mvp'||kind==='rates'){ y+=110; } // بدون العنوان الكبير
   else { y+=170; c.font=F(900,92); txt(T[0],R,y,F(900,92),'#fff'); var w0=c.measureText(T[0]+' ').width; txt(T[1],R-w0,y,F(900,92),PST.gold);
   y+=110; }
   if(kind==='sum'||kind==='post'){
@@ -3407,9 +3410,9 @@ function drawPoster(kind,s,logo,ph){
         txt(lab,x0+14+lw/2,cyv+2,F(900,24),i===0?PST.gold:'#fff','center'); });
       y+=vhalf*(vrh+10)+46;
     }
-    y=kind==='mvp'?Math.max(y+20,1240):y+10;
+    y+=10;
   }
-  if(kind==='final'){
+  if(kind==='final'||kind==='rates'){
     var rt2=Object.keys(s.ratings||{}).filter(function(id){return P(id)&&typeof s.ratings[id]==='number';}).sort(function(a,b){return s.ratings[b]-s.ratings[a]||pname(a).localeCompare(pname(b),'ar');});
     if(rt2.length){
       y=shead(y,'تقييمات اللاعبين');
@@ -3424,9 +3427,9 @@ function drawPoster(kind,s,logo,ph){
       y+=Math.ceil(rt2.length/2)*(rh2+10)+46;
     }
   }
-  if(kind==='attr'||(kind==='final'&&s.upd)){
+  if(kind==='attr'||((kind==='final'||kind==='rates')&&s.upd)){
     var U=s.upd||{}, ids2=Object.keys(U).filter(function(id){return P(id)&&updChanged(U[id]);}).sort(function(a,b){return (U[b].ovrA-U[b].ovrB)-(U[a].ovrA-U[a].ovrB)||pname(a).localeCompare(pname(b),'ar');});
-    if(kind==='final'){ if(ids2.length) y=shead(y,'تغيّر الطاقات'); } else { txt('تعدّلت الطاقات بعد انتهاء تصويت أفضل لاعب، حسب أداء كل لاعب',R,y-30,F(700,24),PST.mute); y+=20; }
+    if(kind==='final'||kind==='rates'){ if(ids2.length) y=shead(y,'تغيّر الطاقات'); } else { txt('تعدّلت الطاقات بعد انتهاء تصويت أفضل لاعب، حسب أداء كل لاعب',R,y-30,F(700,24),PST.mute); y+=20; }
     ids2.forEach(function(id){
       var cc=U[id], dd=cc.ovrA-cc.ovrB, ks=Object.keys(cc.d||{}).filter(function(k){return cc.d[k];}).sort(function(a,b){return Math.abs(cc.d[b])-Math.abs(cc.d[a]);});
       var hh=ks.length?118:92; rowBox(y,hh); var cy7=y+(ks.length?42:hh/2);
@@ -3448,7 +3451,7 @@ function drawPoster(kind,s,logo,ph){
   // التذييل
   y+=10; c.fillStyle=PST.line; c.fillRect(P0,y,W-2*P0,1.5); y+=40;
   txt('تمرين ساف',W/2,y,F(700,20),PST.faint,'center'); y+=46;
-  var H2=Math.max(1200,Math.ceil(y)); var out=document.createElement('canvas'); out.width=W; out.height=H2; out.getContext('2d').drawImage(cv,0,0);
+  var H2=Math.min(H,Math.max(1200,Math.ceil(y))); var out=document.createElement('canvas'); out.width=W*IMG_SC; out.height=H2*IMG_SC; out.getContext('2d').drawImage(cv,0,0);
   return out.toDataURL('image/png');
 }
 
@@ -3816,17 +3819,17 @@ function saveGoal(){
   var ae=document.getElementById('g_a'), a=g.og||!ae?'':ae.value; if(a===g.s)a='';
   var rec={t:g.t,at:Date.now()}; if(g.s)rec.s=g.s; if(a)rec.a=a; if(g.og)rec.og=true;
   var tm=tmOf(s); if(tmActive(s)){rec.h=tm.half; rec.m=Math.floor(tmElapsed(tm)/60000)+1;} // دقيقة الهدف
-  put('sessions/'+s.id+'/goals/'+uid('g'),rec); closeModal(); toast((g.og?'هدف عكسي لـ ':'هدف لـ ')+s.teams[g.t].name);
+  putSync(s,{['sessions/'+s.id+'/goals/'+uid('g')]:rec}); closeModal(); toast((g.og?'هدف عكسي لـ ':'هدف لـ ')+s.teams[g.t].name);
 }
-function delGoal(sid,gk){askConfirm('<b>حذف هذا الهدف؟</b>',function(){put('sessions/'+sid+'/goals/'+gk,null);},'حذف');}
+function delGoal(sid,gk){askConfirm('<b>حذف هذا الهدف؟</b>',function(){putSync(S.sessions[sid],{['sessions/'+sid+'/goals/'+gk]:null});},'حذف');}
 function rate(pid,d){
   var s=openSession(); if(!s)return;
   var r=s.ratings[pid]; r=(typeof r==='number')?clamp(r+d,1,10):5;
-  put('sessions/'+s.id+'/ratings/'+pid,r);
+  putSync(s,{['sessions/'+s.id+'/ratings/'+pid]:r});
 }
 function delVote(v){var s=openSession(); if(!s||!s.votes[v])return; askConfirm('مسح صوت <b>'+esc(pname(v))+'</b> (صوّت لـ '+esc(pname(s.votes[v]))+')؟ يقدر يصوّت من جديد ما دام التصويت مفتوح.',function(){put('sessions/'+s.id+'/votes/'+v,null);toast('تم مسح الصوت');},'حذف');}
 function clearVotes(){var s=openSession(); if(!s)return; var n=Object.keys(s.votes||{}).length; if(!n)return; askConfirm('مسح كل التصويت ('+cnt(n,'صوت',0,'b class="num"')+') لهذا التمرين؟ لا يمكن التراجع.',function(){put('sessions/'+s.id+'/votes',null);toast('تم مسح كل التصويت');},'حذف');}
-function setMvp(pid){var s=openSession(); if(!s)return; put('sessions/'+s.id+'/mvp',pid);}
+function setMvp(pid){var s=openSession(); if(!s)return; var up=putSync(s,{['sessions/'+s.id+'/mvp']:pid||null}); if(pid)toast(up?'⭐ اعتمدت '+pname(pid)+' أفضل لاعب وتحدّثت الطاقات':'⭐ اعتمدت '+pname(pid)+' أفضل لاعب — سلّم التقييم عشان تتحدث الطاقات');}
 function updRowsH(rows,tap){ return rows.map(function(x){var c=x.c;
       var det=c.d?Object.keys(c.d).map(function(k){var v=c.d[k];return '<span class="tag '+(v>0?'on':'')+'" style="'+(v<0?'color:var(--red)':'')+'">'+ATTR[k]+' <span class="ltr">'+(v>0?'+':'')+v+'</span></span>';}).join(' '):'<span class="small muted">بدون تغيير</span>';
       return '<div class="cell'+(tap?' tap ind':'')+' updrow" data-id="'+x.id+'"'+(tap?' onclick="openPlayer(\''+x.id+'\')"':'')+'>'+avatar(x.id)+'<div class="body"><div class="t">'+esc(pname(x.id))+'</div>'+(c.perf!=null?'<div class="s">الأداء <b class="num" style="color:var(--label)">'+c.perf+'</b> · المتوقع <span class="num">'+c.exp+'</span></div>':'')+'<div class="s" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">'+det+'</div></div><span class="num muted">'+c.ovrB+'</span><span class="muted" style="display:inline-flex">'+ic('chev','xs')+'</span><span class="v strong num">'+c.ovrA+'</span></div>';
@@ -3846,21 +3849,16 @@ function updMap(s,ch){
   Object.keys(ch).forEach(function(id){ up[id]=ch[id].c; if(ch[id].c.d) mp['players/'+id+'/attrs']=ch[id].after; mp['players/'+id+'/carry']=ch[id].carry; });
   mp['sessions/'+s.id+'/upd']=up; return mp;
 }
-// تحديث الطاقات الحين بدون ما يتقفل التمرين (ويتحسب من جديد عند الإنهاء)
-function liveUpdate(){
-  var s=openSession(); if(!s||!isCoach)return;
-  var parts=participants(s).filter(function(id){return P(id);});
-  if(!parts.length){toast('⚠️ لا يوجد لاعبون في هذا التمرين');return;}
-  var ch=freshChanges(s), ups=0, dns=0;
-  Object.keys(ch).forEach(function(id){var c=ch[id].c; if(c.ovrA>c.ovrB)ups++; else if(c.ovrA<c.ovrB)dns++;});
-  var unr=parts.filter(function(id){return typeof s.ratings[id]!=='number';});
-  var msg='<b>تحديث الطاقات الحين؟</b><br><span class="small">التمرين يبقى مفتوح: <span class="up">'+ups+' يتحسّن</span> · <span class="dn">'+dns+' يتراجع</span></span>'+
-    '<br><span class="small">وإذا عدّلت بعدين التقييمات أو الأهداف أو تغيّر أفضل لاعب، حدّثها مرة ثانية، وعند إنهاء التمرين تنحسب من جديد (ما تنضاف مرتين).</span>';
-  if(unr.length) msg+='<br><span class="small" style="color:var(--orange)">'+cnt(unr.length,'لاعب')+' بدون تقييم: '+unr.slice(0,4).map(function(id){return esc(pname(id));}).join('، ')+(unr.length>4?'…':'')+'</span>';
-  askConfirm(msg,function(){
-    var mp=updMap(s,ch); mp['sessions/'+s.id+'/updAt']=Date.now();
-    putMany(mp); toast('تم تحديث الطاقات');
-  },'تحديث');
+// الطاقات تتحدث لحالها لما يكون التقييم مسلّم وأفضل لاعب معتمد (والتمرين مفتوح)، وتتحسب من جديد مع كل تعديل
+function liveReady(s){return !!s&&s.status!=='done'&&!!s.ratingsPub&&!!s.mvp&&!!P(s.mvp);}
+function putSync(s,patch){
+  if(!s||s.status==='done'){putMany(patch);return false;}
+  var b='sessions/'+s.id+'/', s2=clone(s), mp={};
+  Object.keys(patch).forEach(function(k){mp[k]=patch[k]; if(k.indexOf(b)===0)setPath(s2,k.slice(b.length),patch[k]);});
+  var ok=liveReady(s2);
+  if(ok){ var ch=withReverted(s,function(){return sessionChanges(s2);}), um=updMap(s,ch); Object.keys(um).forEach(function(k){mp[k]=um[k];}); mp[b+'updAt']=Date.now(); }
+  else if(s.upd){ revertInto(s,mp); mp[b+'upd']=null; mp[b+'updAt']=null; }
+  putMany(mp); return ok;
 }
 // معاينة تغيّر الطاقات قبل إنهاء التمرين (ما يحفظ شي)
 function openUpdPreview(){
