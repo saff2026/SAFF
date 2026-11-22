@@ -497,7 +497,7 @@ body:has(#sbxBar) .page{padding-bottom:170px}
 .tm-reset{font-size:14px;background:none;border:none;padding:4px 0;color:var(--tint);font-weight:600;cursor:pointer;}
 .tm-live{display:flex;align-items:center;justify-content:center;gap:7px;margin:8px 4px 0;font-size:14px;font-weight:600;color:var(--label);}
 .tm-live .num{direction:ltr;font-variant-numeric:tabular-nums;}
-.gmin{font-size:12px;font-weight:700;color:var(--label2);margin-inline-start:4px;}
+.gmin{flex:none;font-size:13px;font-weight:800;color:var(--label);background:var(--fill,rgba(120,120,128,.14));border-radius:8px;padding:1px 6px;line-height:1.35;white-space:nowrap;}
 .gmin small{font-size:10px;}
 .joker{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:800;color:#5a3d00;background:linear-gradient(135deg,#F6E3A1,#D9AE45);box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 2px 6px rgba(201,162,74,.35);white-space:nowrap;}
 .joker.big{font-size:15px;padding:4px 14px;}
@@ -535,8 +535,12 @@ body:has(#sbxBar) .page{padding-bottom:170px}
 .gcol.B .gl{flex-direction:row-reverse;}
 .gl .gi{color:var(--label2);display:inline-flex;flex:none;margin-top:3px;}
 .gl .gb{min-width:0;}
-.gl .gn{font-size:15px;font-weight:600;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.gl .ga{font-size:12px;color:var(--label2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.gl .gn{font-size:15px;font-weight:600;line-height:1.3;display:flex;align-items:center;gap:5px;min-width:0;}
+.gl .gn .gnm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.gl .ga .og-tag{flex:none;margin:0;}
+.gl .ga{font-size:12px;color:var(--label2);margin-top:3px;display:flex;align-items:flex-start;gap:6px;min-width:0;}
+.gl .ga .gmin{margin-top:-1px;}
+.gl .ga .gas{min-width:0;line-height:1.45;}
 .gl .gx{width:22px;height:22px;flex:none;margin-top:1px;}
 .m-edit{height:30px;padding:0 12px;border-radius:15px;border:none;background:var(--tint-soft);color:var(--tint);font:inherit;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:5px;flex:none;cursor:pointer;}
 .m-foot .btn{flex:1;}
@@ -613,6 +617,7 @@ body.v2 #pg-home .card.tap:has(.score) .cell .t, body.v2 #ov .card:has(.score) .
 body.v2 #pg-home .card.tap:has(.score) .cell+.cell:before, body.v2 #ov .card:has(.score) .cell+.cell:before{background:rgba(255,255,255,.14);}
 body.v2 #pg-home .card.tap:has(.score) .gx, body.v2 #ov .card:has(.score) .gx{background:rgba(255,255,255,.15);color:#fff;}
 body.v2 #pg-home .card.tap:has(.score) .gn, body.v2 #ov .card:has(.score) .gn{color:#fff;}
+body.v2 #pg-home .card.tap:has(.score) .gmin, body.v2 #ov .card:has(.score) .gmin{color:#fff;background:rgba(255,255,255,.18);}
 body.v2 #pg-home .card.tap:has(.score) .ga, body.v2 #pg-home .card.tap:has(.score) .gi, body.v2 #ov .card:has(.score) .ga, body.v2 #ov .card:has(.score) .gi{color:rgba(255,255,255,.7);}
 body.v2 #pg-home .card.tap:has(.score) .gcols, body.v2 #ov .card:has(.score) .gcols{border-top-color:rgba(255,255,255,.14);}
 body.v2 #pg-home .card.tap:has(.score) .gcols:before, body.v2 #ov .card:has(.score) .gcols:before{background:rgba(255,255,255,.14);}
@@ -3502,7 +3507,7 @@ function goalsHTML(s,C){
   if(!gs.length)return '<div class="cell"><div class="body" style="text-align:center"><div class="s">لم تُسجَّل أهداف بعد</div></div></div>';
   var col=function(t){var xs=gs.filter(function(g){return g.t===t;});
     return '<div class="gcol '+t+'">'+xs.map(function(g){
-      return '<div class="gl gitem"><span class="gi">'+ic('ball','xs')+'</span><div class="gb"><div class="gn">'+(g.s?esc(pname(g.s)):'غير محدد')+(g.og?' <span class="og-tag">هدف عكسي</span>':'')+(g.m?' <span class="gmin num">'+g.m+'′'+(g.h===2?' <small>ش2</small>':'')+'</span>':'')+'</div>'+(g.a?'<div class="ga">صناعة: '+esc(pname(g.a))+'</div>':'')+'</div>'+
+      return '<div class="gl gitem"><span class="gi">'+ic('ball','xs')+'</span><div class="gb"><div class="gn"><span class="gnm">'+(g.s?esc(pname(g.s)):'غير محدد')+'</span></div>'+(g.m||g.a||g.og?'<div class="ga">'+(g.og?'<span class="og-tag">هدف عكسي</span>':'')+(g.m?'<span class="gmin num">'+g.m+'′'+(g.h===2?' <small>ش2</small>':'')+'</span>':'')+(g.a?'<span class="gas">صناعة: '+esc(pname(g.a))+'</span>':'')+'</div>':'')+'</div>'+
         (C?'<button class="m-x gx" onclick="delGoal(\''+s.id+'\',\''+g._k+'\')" aria-label="حذف الهدف">'+ic('x','xs')+'</button>':'')+'</div>';}).join('')+'</div>';};
   return '<div class="gcols">'+col('A')+col('B')+'</div>';
 }
