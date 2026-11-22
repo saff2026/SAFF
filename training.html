@@ -703,7 +703,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261122184514';
+var BUILD='20261122193550';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -846,6 +846,12 @@ var ui = {posOpen:{}, pSel:{}, attFs:{}, pFilter:'all', pSort:'ovr', pDir:'desc'
 var QS = {}; location.search.replace(/^\?/,'').split('&').forEach(function(kv){if(!kv)return;var a=kv.split('=');QS[decodeURIComponent(a[0])]=decodeURIComponent(a[1]||'');});
 var LS_KEY = 'saff_training_v1';
 
+var CKEYS=['players','sessions','weeks','settings','potm','crowd','pins','inj'], RAWC={};
+var PH={}, PHF={}, PHDB=null; // صور اللاعبين محفوظة في الجوال: تنزل مرة وحدة، وما تنزل من جديد إلا إذا تغيّرت
+function phDB(){ if(PHDB)return PHDB; PHDB=new Promise(function(res){ try{ var q=indexedDB.open('saff_photos',1); q.onupgradeneeded=function(){q.result.createObjectStore('p');}; q.onsuccess=function(){res(q.result);}; q.onerror=function(){res(null);}; }catch(e){res(null);} }); return PHDB; }
+function phLoadAll(){ return phDB().then(function(d){ if(!d)return; return new Promise(function(res){ try{ var rq=d.transaction('p').objectStore('p').openCursor(), pre=ROOT+'|';
+  rq.onsuccess=function(){var c=rq.result; if(c){ if(String(c.key).indexOf(pre)===0&&c.value&&c.value.url)PH[String(c.key).slice(pre.length)]=c.value; c.continue(); } else res(); }; rq.onerror=function(){res();}; }catch(e){res();} }); }).catch(function(){}); }
+function phSave(pid,v,url){ PH[pid]={v:v,url:url}; phDB().then(function(d){ if(!d)return; try{ d.transaction('p','readwrite').objectStore('p').put({v:v,url:url},ROOT+'|'+pid); }catch(e){} }); }
 var SBX=false, SBX_PLAYER=false, SBX_HERE=false, RAW_SBX=null; // وضع التجربة (لمجلس الإدارة فقط)
 function lk(k){return SBX&&/^saff_tr_(me|meh|me_skip|tour)$/.test(k)?k+'_sbx':k;}
 function lsGet(k){try{return localStorage.getItem(lk(k));}catch(e){return null;}}
@@ -863,6 +869,7 @@ function normalize(d){
   var out = {players:{},sessions:{},weeks:{},settings:(d.settings&&typeof d.settings==='object')?d.settings:{}};
   Object.keys(d.players||{}).forEach(function(k){
     var p=d.players[k]; if(!p)return; p.id=k; p.attrs=p.attrs||{};
+    if(!p.photo&&d.photos&&typeof d.photos[k]==='string') p.photo=d.photos[k]; // الصور في مسار منفصل (أسرع في الفتح)
     // المراكز الملغاة (صانع ألعاب، وسط دفاعي) تصير «وسط»
     if(OLD_POS[p.pos]){p.pos=OLD_POS[p.pos];p._mig=true;} if(OLD_POS[p.pos2]){p.pos2=OLD_POS[p.pos2];p._mig=true;} if(p.pos2&&p.pos2===p.pos){p.pos2='';p._mig=true;} if(!POS[p.pos]){p.pos='CM';p._mig=true;}
     ATTR_KEYS.forEach(function(a){ if(typeof p.attrs[a]!=='number') p.attrs[a]= a==='gk'?25:60; });
@@ -934,14 +941,39 @@ function startCloud(){
   }catch(e){ console.error(e); showErr('تعذّر تشغيل Firebase.'); startLocal(); return; }
   var to = setTimeout(function(){ if(!ready) showErr('⏳ الاتصال بقاعدة البيانات يأخذ وقت أطول من المعتاد… تحقق من الإنترنت ثم حدّث الصفحة.'); },12000);
   // الاستماع للبيانات: إذا انقطع (مثلاً انتهت صلاحية الدخول والتطبيق في الخلفية) نعيد الدخول ونرجع نستمع تلقائياً
-  var subOn=false, subTries=0;
+  var subOn=false, subTries=0, refs=[], got={}, rbT=null, migrated=false;
+  // نستمع لكل قسم لحاله (بدون صور اللاعبين والتمرين التجريبي) عشان يفتح التطبيق بسرعة
+  function rebuild(){
+    if(CKEYS.some(function(k){return !got[k];}))return;
+    var raw={}; CKEYS.forEach(function(k){raw[k]=RAWC[k];}); raw.players={}; raw.photos={};
+    Object.keys(RAWC.players||{}).forEach(function(id){var p=RAWC.players[id]; if(!p)return; raw.players[id]=Object.assign({},p); if(p.pv&&PH[id]&&PH[id].v===p.pv) raw.photos[id]=PH[id].url;});
+    S=normalize(raw); ready=true; render(); maybeAskMe(); phFetchMissing(); photoMigrate();
+  }
+  function schedRebuild(){ if(rbT)return; rbT=true; Promise.resolve().then(function(){rbT=false; rebuild();}); } // تحديثات نفس اللحظة تنجمع في رسمة وحدة
+  window._phRebuild=schedRebuild;
+  function phFetchMissing(){
+    var pl=RAWC.players||{};
+    Object.keys(pl).forEach(function(id){var p=pl[id]; if(!p||!p.pv||(PH[id]&&PH[id].v===p.pv)||PHF[id]===p.pv)return; PHF[id]=p.pv;
+      db.ref(ROOT+'/photos/'+id).once('value').then(function(sn){var u=sn.val(); if(typeof u==='string'){phSave(id,p.pv,u); schedRebuild();}}).catch(function(){PHF[id]=0;});});
+  }
+  // نقل الصور القديمة (داخل بيانات اللاعب) لمسارها المنفصل — مرة وحدة، من جوال مجلس الإدارة
+  function photoMigrate(){
+    if(migrated||!isCoach)return; var pl=RAWC.players||{}, m={}, n=0, now=Date.now();
+    Object.keys(pl).forEach(function(id){var u=pl[id]&&pl[id].photo; if(typeof u==='string'&&u){m['photos/'+id]=u; m['players/'+id+'/photo']=null; m['players/'+id+'/pv']=now+n; phSave(id,now+n,u); n++;}});
+    migrated=true; if(n) db.ref(ROOT).update(m).catch(function(e){console.warn(e);migrated=false;});
+  }
+  function offAll(){refs.forEach(function(r){try{r.off();}catch(e){}}); refs=[];}
   function subscribe(){
-    if(subOn) return; subOn=true;
-    db.ref(ROOT).on('value',function(snap){
-      clearTimeout(to); subTries=0;
-      document.getElementById('bnErr').classList.remove('show');
-      var raw=snap.val()||{}; RAW_SBX=SBX?null:(raw.sandbox||null); S = normalize(raw); ready=true; render(); maybeAskMe();
-    },function(err){
+    if(subOn) return; subOn=true; got={};
+    CKEYS.forEach(function(k){ var ref=db.ref(ROOT+'/'+k); refs.push(ref);
+      ref.on('value',function(snap){
+        clearTimeout(to); subTries=0;
+        document.getElementById('bnErr').classList.remove('show');
+        RAWC[k]=snap.val(); var first=!got[k]; got[k]=true; if(first&&CKEYS.every(function(x){return got[x];}))rebuild(); else schedRebuild();
+      },onErr); });
+  }
+  function onErr(err){
+      if(!subOn)return; offAll();
       subOn=false; console.error(err); subTries++;
       if(subTries<=5){ // نحاول من جديد بهدوء قبل ما نظهر أي تنبيه
         setTimeout(function(){
@@ -953,9 +985,8 @@ function startCloud(){
       clearTimeout(to);
       showErr('🔒 انقطع الاتصال بقاعدة البيانات. <a href="#" onclick="event.preventDefault();location.reload()">حدّث الصفحة</a>، وإذا تكرر تأكد من الإنترنت.');
       document.getElementById('loading').style.display='none';
-    });
   }
-  firebase.auth().onAuthStateChanged(function(user){ if(user) subscribe(); });
+  firebase.auth().onAuthStateChanged(function(user){ if(user) phLoadAll().then(subscribe); });
   document.addEventListener('visibilitychange',function(){ if(!document.hidden&&!subOn&&firebase.auth().currentUser){ subTries=0; subscribe(); } });
   firebase.auth().signInAnonymously().catch(function(e){
     clearTimeout(to); console.error(e);
@@ -2289,7 +2320,7 @@ function bulkSheet(){
 function bulkAdjust(i){var b=BULK[i];openCropper(b.img,b.pid?pname(b.pid):b.name,function(url,st){b.url=url;b.st=st;b.face=true;bulkSheet();},b.st);}
 function bulkSave(){
   var m={},n=0,seen={};
-  BULK.forEach(function(b){ if(!b.err&&b.pid&&P(b.pid)&&!seen[b.pid]){seen[b.pid]=1;m['players/'+b.pid+'/photo']=b.url;n++;} });
+  BULK.forEach(function(b){ if(!b.err&&b.pid&&P(b.pid)&&!seen[b.pid]){seen[b.pid]=1;var v=Date.now()+n;m['photos/'+b.pid]=b.url;m['players/'+b.pid+'/pv']=v;m['players/'+b.pid+'/photo']=null;if(mode==='cloud')phSave(b.pid,v,b.url);n++;} });
   if(!n){toast('⚠️ لم تُطابَق أي صورة مع لاعب');return;}
   putMany(m); closeModal(); toast('تم حفظ '+cnt(n,'صورة')); BULK=[];
 }
@@ -2330,11 +2361,11 @@ function savePlayer(){
   var nv={}; Object.keys(p.never||{}).forEach(function(k){if(p.never[k]&&POS[k]&&pr.indexOf(k)<0)nv[k]=true;});
   var dup=playersArr().filter(function(x){return x.id!==pf.id&&x.name===p.name;});
   if(dup.length){toast('⚠️ يوجد لاعب بنفس الاسم');return;}
-  var id=pf.id||uid('p'); var tr={}; TRAITS.forEach(function(x){if((p.traits||{})[x[0]])tr[x[0]]=true;}); var rec={joker:FEAT_JOKER&&p.joker?true:null,name:p.name,age:p.age,foot:p.foot,traits:tr,sm:clamp(+p.sm||3,1,5),wf:clamp(+p.wf||3,1,5),pos:p.pos,pos2:p.pos2,pos3:p.pos3,pos4:p.pos4,never:nv,attrs:p.attrs,created:p.created||Date.now()}; if(p.carry)rec.carry=p.carry; if(p.crowdAdj)rec.crowdAdj=p.crowdAdj; var bm=document.getElementById('f_bm').value, bd=document.getElementById('f_bd').value; if(bm&&bd)rec.bday=bm+'-'+bd; if(photoSrc(p))rec.photo=p.photo;
-  put('players/'+id,rec); closeModal(); toast(pf.id?'تم حفظ التعديلات':'تمت إضافة '+p.name);
+  var id=pf.id||uid('p'); var tr={}; TRAITS.forEach(function(x){if((p.traits||{})[x[0]])tr[x[0]]=true;}); var rec={joker:FEAT_JOKER&&p.joker?true:null,name:p.name,age:p.age,foot:p.foot,traits:tr,sm:clamp(+p.sm||3,1,5),wf:clamp(+p.wf||3,1,5),pos:p.pos,pos2:p.pos2,pos3:p.pos3,pos4:p.pos4,never:nv,attrs:p.attrs,created:p.created||Date.now()}; if(p.carry)rec.carry=p.carry; if(p.crowdAdj)rec.crowdAdj=p.crowdAdj; var bm=document.getElementById('f_bm').value, bd=document.getElementById('f_bd').value; if(bm&&bd)rec.bday=bm+'-'+bd; var phNew=photoSrc(p), phOld=pf.id&&P(pf.id)?photoSrc(P(pf.id)):'', phM={}; if(phNew){ rec.pv=(phNew!==phOld||!(P(pf.id)||{}).pv)?Date.now():P(pf.id).pv; if(rec.pv!==(P(pf.id)||{}).pv){phM['photos/'+id]=phNew; if(mode==='cloud')phSave(id,rec.pv,phNew);} } else if(phOld) phM['photos/'+id]=null;
+  phM['players/'+id]=rec; putMany(phM); closeModal(); toast(pf.id?'تم حفظ التعديلات':'تمت إضافة '+p.name);
 }
 function deletePlayer(id){
-  askConfirm('<b>حذف '+esc(pname(id))+'؟</b><br><span class="small">سجله في التمارين القديمة يبقى باسم «لاعب محذوف».</span>',function(){put('players/'+id,null);closeModal();toast('تم الحذف');},'حذف');
+  askConfirm('<b>حذف '+esc(pname(id))+'؟</b><br><span class="small">سجله في التمارين القديمة يبقى باسم «لاعب محذوف».</span>',function(){putMany({['players/'+id]:null,['photos/'+id]:null});closeModal();toast('تم الحذف');},'حذف');
 }
 
 /* ---------- ملف اللاعب ---------- */
@@ -2652,9 +2683,9 @@ function sbxWrite(data,cb){
 }
 function enterSandbox(){
   askConfirm('<b>🧪 الدخول لوضع التجربة؟</b><br><span class="small">نسخة منفصلة فيها لاعبينك وتمرين تجريبي يبدأ بعد 10 دقائق، والتصويت فيه مفتوح من البداية. كل شي تسويه فيها ما يأثّر على التطبيق الحقيقي، واللاعبون ما يشوفونها.</span>',function(){
-    var has=mode==='cloud'?!!(RAW_SBX&&RAW_SBX.players):!!lsGet(LS_KEY+'_sandbox');
     var go2=function(){lsSet('saff_tr_sandbox','1');location.reload();};
-    if(has) go2(); else sbxWrite(sbxData(),go2);
+    if(mode==='cloud') db.ref(ROOT+'/sandbox/players').limitToFirst(1).once('value').then(function(sn){ if(sn.exists()) go2(); else sbxWrite(sbxData(),go2); }).catch(writeErr);
+    else { if(lsGet(LS_KEY+'_sandbox')) go2(); else sbxWrite(sbxData(),go2); }
   },'دخول');
 }
 function exitSandbox(){lsDel('saff_tr_sandbox');location.reload();}
