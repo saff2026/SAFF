@@ -2318,7 +2318,7 @@ function renderSession(el){
 
     h+=gh('الملاحظات')+'<textarea class="field" rows="3" placeholder="ملاحظات عن التمرين (اختياري)" onchange="put(\'sessions/'+s.id+'/notes\',this.value)">'+esc(s.notes||'')+'</textarea>';
 
-    h+='<div class="stack" style="margin-top:28px"><button class="btn tinted block" id="updPrevBtn" onclick="openUpdPreview()">'+ic('chart','s')+'معاينة تغيّر الطاقات</button><button class="btn block" id="finishBtn" onclick="finishSession()">'+ic('flag','s')+'إنهاء التمرين وحفظه في الأرشيف</button>'+
+    h+='<div class="stack" style="margin-top:28px">'+(s.updAt?'<div class="foot" id="liveUpdNote" style="text-align:center;margin:0 0 2px">✓ الطاقات محدّثة من هذا التمرين · آخر تحديث '+fmtClock(s.updAt)+'</div>':'')+'<button class="btn tinted block" id="updPrevBtn" onclick="openUpdPreview()">'+ic('chart','s')+'معاينة تغيّر الطاقات</button><button class="btn tinted block" id="liveUpdBtn" onclick="liveUpdate()">'+ic('undo','s')+(s.updAt?'تحديث الطاقات من جديد':'تحديث الطاقات الحين (بدون قفل التمرين)')+'</button><button class="btn block" id="finishBtn" onclick="finishSession()">'+ic('flag','s')+'إنهاء التمرين وحفظه في الأرشيف</button>'+
        '<button class="btn danger block" id="delSess" onclick="deleteSession(\''+s.id+'\')">حذف هذا التمرين</button></div>';
   }
   // قبل البداية: القائمة والتشكيلة فوق · أثناء التمرين: التحضير والأهداف فوق · بعد ساعتين: القائمة والتشكيلة آخر شي
@@ -3826,10 +3826,41 @@ function updRowsH(rows,tap){ return rows.map(function(x){var c=x.c;
       var det=c.d?Object.keys(c.d).map(function(k){var v=c.d[k];return '<span class="tag '+(v>0?'on':'')+'" style="'+(v<0?'color:var(--red)':'')+'">'+ATTR[k]+' <span class="ltr">'+(v>0?'+':'')+v+'</span></span>';}).join(' '):'<span class="small muted">بدون تغيير</span>';
       return '<div class="cell'+(tap?' tap ind':'')+' updrow" data-id="'+x.id+'"'+(tap?' onclick="openPlayer(\''+x.id+'\')"':'')+'>'+avatar(x.id)+'<div class="body"><div class="t">'+esc(pname(x.id))+'</div>'+(c.perf!=null?'<div class="s">الأداء <b class="num" style="color:var(--label)">'+c.perf+'</b> · المتوقع <span class="num">'+c.exp+'</span></div>':'')+'<div class="s" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">'+det+'</div></div><span class="num muted">'+c.ovrB+'</span><span class="muted" style="display:inline-flex">'+ic('chev','xs')+'</span><span class="v strong num">'+c.ovrA+'</span></div>';
     }).join(''); }
+// يحسب تغيّرات التمرين من الطاقات اللي قبله (يتجاهل أي تحديث مبكر سابق لنفس التمرين)
+function withReverted(s,fn){
+  var keep={}, up=s.upd||{};
+  Object.keys(up).forEach(function(id){var p=P(id),c=up[id]; if(!p||!c)return; keep[id]={a:p.attrs,c:p.carry};
+    var at=clone(p.attrs); if(c.d)Object.keys(c.d).forEach(function(k){at[k]=clamp((at[k]||0)-c.d[k],20,99);}); p.attrs=at;
+    if(c.cd){var cr=clone(p.carry||{}); Object.keys(c.cd).forEach(function(k){cr[k]=Math.round(((cr[k]||0)-c.cd[k])*1000)/1000;}); p.carry=cr;}});
+  try{ return fn(); } finally { Object.keys(keep).forEach(function(id){var p=P(id); if(p){p.attrs=keep[id].a; p.carry=keep[id].c;}}); }
+}
+function freshChanges(s){ return withReverted(s,function(){return sessionChanges(s);}); }
+// خريطة الحفظ: نلغي التحديث المبكر السابق ثم نطبّق الجديد
+function updMap(s,ch){
+  var mp={}, up={}; revertInto(s,mp);
+  Object.keys(ch).forEach(function(id){ up[id]=ch[id].c; if(ch[id].c.d) mp['players/'+id+'/attrs']=ch[id].after; mp['players/'+id+'/carry']=ch[id].carry; });
+  mp['sessions/'+s.id+'/upd']=up; return mp;
+}
+// تحديث الطاقات الحين بدون ما يتقفل التمرين (ويتحسب من جديد عند الإنهاء)
+function liveUpdate(){
+  var s=openSession(); if(!s||!isCoach)return;
+  var parts=participants(s).filter(function(id){return P(id);});
+  if(!parts.length){toast('⚠️ لا يوجد لاعبون في هذا التمرين');return;}
+  var ch=freshChanges(s), ups=0, dns=0;
+  Object.keys(ch).forEach(function(id){var c=ch[id].c; if(c.ovrA>c.ovrB)ups++; else if(c.ovrA<c.ovrB)dns++;});
+  var unr=parts.filter(function(id){return typeof s.ratings[id]!=='number';});
+  var msg='<b>تحديث الطاقات الحين؟</b><br><span class="small">التمرين يبقى مفتوح: <span class="up">'+ups+' يتحسّن</span> · <span class="dn">'+dns+' يتراجع</span></span>'+
+    '<br><span class="small">وإذا عدّلت بعدين التقييمات أو الأهداف أو تغيّر أفضل لاعب، حدّثها مرة ثانية، وعند إنهاء التمرين تنحسب من جديد (ما تنضاف مرتين).</span>';
+  if(unr.length) msg+='<br><span class="small" style="color:var(--orange)">'+cnt(unr.length,'لاعب')+' بدون تقييم: '+unr.slice(0,4).map(function(id){return esc(pname(id));}).join('، ')+(unr.length>4?'…':'')+'</span>';
+  askConfirm(msg,function(){
+    var mp=updMap(s,ch); mp['sessions/'+s.id+'/updAt']=Date.now();
+    putMany(mp); toast('تم تحديث الطاقات');
+  },'تحديث');
+}
 // معاينة تغيّر الطاقات قبل إنهاء التمرين (ما يحفظ شي)
 function openUpdPreview(){
   var s=openSession(); if(!s||!isCoach)return;
-  var ch=sessionChanges(s), rows=Object.keys(ch).filter(function(id){return P(id)&&updChanged(ch[id].c);}).map(function(id){return {id:id,c:ch[id].c};}).sort(function(a,b){return (b.c.ovrA-b.c.ovrB)-(a.c.ovrA-a.c.ovrB);});
+  var ch=freshChanges(s), rows=Object.keys(ch).filter(function(id){return P(id)&&updChanged(ch[id].c);}).map(function(id){return {id:id,c:ch[id].c};}).sort(function(a,b){return (b.c.ovrA-b.c.ovrB)-(a.c.ovrA-a.c.ovrB);});
   var ups=rows.filter(function(x){return x.c.ovrA>x.c.ovrB;}).length, dns=rows.filter(function(x){return x.c.ovrA<x.c.ovrB;}).length;
   var parts=participants(s).filter(function(id){return P(id);}), unr=parts.filter(function(id){return typeof s.ratings[id]!=='number';}), m=mvpOf(s);
   var h=mh('معاينة تغيّر الطاقات')+'<div class="foot" id="updPrevNote" style="margin:0 4px 10px">هذي معاينة بس، والطاقات ما تتغيّر إلا لما تنهي التمرين. والمعاينة تتغيّر إذا تغيّرت التقييمات أو الأهداف أو أفضل لاعب.</div>';
@@ -3844,7 +3875,7 @@ function finishSession(){
   var parts=participants(s).filter(function(id){return P(id);});
   if(!parts.length){toast('⚠️ لا يوجد لاعبون في هذا التمرين');return;}
   var unr=parts.filter(function(id){return typeof s.ratings[id]!=='number';});
-  var m=mvpOf(s), ch=sessionChanges(s), ups=0, dns=0;
+  var m=mvpOf(s), ch=freshChanges(s), ups=0, dns=0;
   Object.keys(ch).forEach(function(id){var c=ch[id].c; if(c.ovrA>c.ovrB)ups++; else if(c.ovrA<c.ovrB)dns++;});
   var msg='<b>إنهاء التمرين وحفظه في الأرشيف؟</b><br><span class="small">سيتم تحديث الطاقات الآن (مع انتهاء تصويت أفضل لاعب): <span class="up">'+ups+' يتحسّن</span> · <span class="dn">'+dns+' يتراجع</span></span>';
   if(unr.length) msg+='<br><span class="small" style="color:var(--orange)">'+cnt(unr.length,'لاعب')+' بدون تقييم: '+unr.slice(0,4).map(function(id){return esc(pname(id));}).join('، ')+(unr.length>4?'…':'')+'</span>';
@@ -3853,8 +3884,8 @@ function finishSession(){
   if(voteOpen(s)) msg+='<br><span class="small" style="color:var(--orange)">التصويت مفتوح الآن، وإنهاء التمرين يقفله.</span>';
   else if(Date.now()<voteStart(s)) msg+='<br><span class="small" style="color:var(--orange)">التصويت ما فتح بعد (يفتح '+fmtWhen(voteStart(s))+')، وإنهاء التمرين الآن يلغيه.</span>';
   askConfirm(msg,function(){
-    var mp={}, up={};
-    Object.keys(ch).forEach(function(id){ up[id]=ch[id].c; if(ch[id].c.d) mp['players/'+id+'/attrs']=ch[id].after; mp['players/'+id+'/carry']=ch[id].carry; });
+    var mp=updMap(s,ch), up=mp['sessions/'+s.id+'/upd'];
+    mp['sessions/'+s.id+'/updAt']=null;
     mp['sessions/'+s.id+'/status']='done'; mp['sessions/'+s.id+'/finished']=Date.now(); mp['sessions/'+s.id+'/upd']=up;
     mp['sessions/'+s.id+'/mvpAtFinish']=m||null;
     putMany(mp); toast('تم حفظ التمرين وتحديث الطاقات'); go('archive');
