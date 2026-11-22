@@ -703,7 +703,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261122184437';
+var BUILD='20261122184514';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -1570,7 +1570,7 @@ function cmpInner(){
     cmpRow('معدل التقييم',sa.avg,sb.avg,{max:10})+cmpRow('الفوز',sa.w||0,sb.w||0)+cmpRow('مرات التأخير',sa.late||0,sb.late||0,{low:true})+'</div>';
   var both=0, wA=0, wB=0;
   sessArr().forEach(function(s){ if(s.status!=='done')return; var ta=teamOf(s,A.id), tb=teamOf(s,B.id); if(!ta||!tb||ta.t===tb.t)return; both++; var sc=scoreOf(s), x=sc[ta.t], y=sc[tb.t]; if(x>y)wA++; else if(y>x)wB++; });
-  if(both) h+=gh('وجهاً لوجه')+'<div class="card pad cmp-card" id="cmpH2H">'+cmpRow('الفوز على الثاني',wA,wB)+'<div class="foot" style="text-align:center;margin:6px 0 0">لعبوا ضد بعض '+cnt(both,'مرة')+' · تعادل '+cnt(both-wA-wB,'مرة')+'</div></div>';
+  if(both) h+=gh('وجهاً لوجه')+'<div class="card pad cmp-card" id="cmpH2H">'+cmpRow('الفوز على الثاني',wA,wB)+'<div class="foot" style="text-align:center;margin:6px 0 0">لعبوا ضد بعض '+cnt(both,'مرة',1)+(both-wA-wB>0?' · تعادلوا '+cnt(both-wA-wB,'مرة',1):'')+'</div></div>';
   setModal(h);
 }
 /* ---------- قائمة المصابين: نوع الإصابة، المدة، والوقت المتوقع للعودة ---------- */
