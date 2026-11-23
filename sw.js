@@ -1,21 +1,28 @@
 // Minimal service worker for PWA installability + offline shell.
 // Caches static assets; never intercepts cross-origin requests
 // (so Firebase Realtime DB / Google Fonts work normally).
-var CACHE = 'wc2026-v19';
+var CACHE = 'wc2026-v49';
 var ASSETS = [
   './',
   './index.html',
   './saff-ar.html',
+  './volley.html',
   './gulf27.html',
   './manifest-en.json',
   './manifest-ar.json',
+  './manifest-volley.json',
   './manifest-gulf.json',
   './icon-en-192.png',
   './icon-en-512.png',
   './icon-saff-192.png',
   './icon-saff-512.png',
+  './icon-volley-192.png',
+  './icon-volley-512.png',
   './icon-gulf-192.png',
   './icon-gulf-512.png',
+  './gulf27-trophy.png',
+  './prize-jersey.png',
+  './gulf27-logo.png',
   './wc26.png',
   './saff-white.png',
   './logo-dark.png'
@@ -70,4 +77,24 @@ self.addEventListener('fetch', function(e){
       });
     })
   );
+});
+
+// ---------- تذكيرات «تمرين ساف» و«تمرين نخبة السبت» (Web Push) ----------
+// لا تحذف هذا الجزء: التطبيقان يستخدمان نفس الـ Service Worker لاستقبال التذكيرات
+self.addEventListener('push', function(e){
+  var d = {};
+  try { d = e.data ? e.data.json() : {}; } catch(x){ d = { body: e.data ? e.data.text() : '' }; }
+  e.waitUntil(self.registration.showNotification(d.title || 'تذكير', {
+    body: d.body || '', icon: d.icon || 'icon-saff-192.png', badge: d.icon || 'icon-saff-192.png',
+    tag: d.tag || undefined, data: { url: d.url || './' }
+  }));
+});
+self.addEventListener('notificationclick', function(e){
+  e.notification.close();
+  var url = (e.notification.data && e.notification.data.url) || './';
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(ws){
+    var page = url.replace(/^\.\//, '');
+    for (var i = 0; i < ws.length; i++) { if (page && ws[i].url.indexOf(page) >= 0 && 'focus' in ws[i]) return ws[i].focus(); }
+    return self.clients.openWindow(url);
+  }));
 });

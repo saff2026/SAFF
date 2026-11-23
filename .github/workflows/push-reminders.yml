@@ -1,0 +1,29 @@
+name: تذكيرات التمرين
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: push-reminders
+  cancel-in-progress: false
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/push
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: تثبيت مكتبة التنبيهات
+        working-directory: .github/push
+        run: npm install --no-save --no-audit --no-fund web-push@3.6.7
+      - name: إرسال التذكيرات
+        working-directory: .github/push
+        env:
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+        run: node send.js

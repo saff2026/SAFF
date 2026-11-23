@@ -1,0 +1,16 @@
+{
+  "name": "تمرين نخبة السبت",
+  "short_name": "تمرين نخبة السبت",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./elite.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F2F2F7",
+  "theme_color": "#0A3528",
+  "icons": [
+    {"src": "icon-elite-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-elite-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"}
+  ]
+}

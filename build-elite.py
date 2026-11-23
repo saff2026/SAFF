@@ -12,6 +12,7 @@ s = open(SRC, encoding='utf-8').read()
 CHANGES = [
     ('تمرين ساف', 'تمرين نخبة السبت', 5),       # الاسم في كل مكان
     ('var ROOT = "training";', 'var ROOT = "training_elite";', 1),  # قاعدة البيانات
+    ('manifest-training.json', 'manifest-elite.json', 1),  # التطبيق في الشاشة الرئيسية (للتذكيرات)
     ("'saff_training_v1'", "'saff_elite_v1'", 1),        # الحفظ على الجهاز
     ('saff_tr_', 'saff_el_', 10),                        # إعدادات الجوال (الدخول، اسمي، الأقسام...)
     # بدون شعار الاتحاد: شعار «نخبة السبت» (درع ذهبي وكورة) بدلاً منه

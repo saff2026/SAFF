@@ -14,6 +14,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="تمرين نخبة السبت">
 <link rel="apple-touch-icon" href="icon-elite-192.png?v=3">
+<link rel="manifest" href="manifest-elite.json">
 <link rel="icon" type="image/png" href="icon-elite-192.png?v=3">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Changa:wght@700;800&display=swap" rel="stylesheet">
@@ -1604,6 +1605,51 @@ function cmpInner(){
   if(both) h+=gh('وجهاً لوجه')+'<div class="card pad cmp-card" id="cmpH2H">'+cmpRow('الفوز على الثاني',wA,wB)+'<div class="foot" style="text-align:center;margin:6px 0 0">لعبوا ضد بعض '+cnt(both,'مرة',1)+(both-wA-wB>0?' · تعادلوا '+cnt(both-wA-wB,'مرة',1):'')+'</div></div>';
   setModal(h);
 }
+/* ---------- تذكيرات الجوال (Web Push) ---------- */
+var VAPID_PUB='BNVKWLcEbGEPg8UbotgKEw2Y1SlLraw_78p4pziF_YIApU_GHQqdcKnS4KFT5BGs6pTEsuXhaXDzVaj2CR13GVQ';
+function pushSupported(){return 'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;}
+function isStandalone(){return !!(window.navigator.standalone||(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches));}
+function pushState(){ // on: مفعّلة · ask: نقدر نطلب · home: لازم تنضاف للشاشة الرئيسية (آيفون) · no: ما ينفع
+  if(SBX)return 'no';
+  if(pushSupported()){ if(Notification.permission==='denied')return 'denied'; return Notification.permission==='granted'&&lsGet('saff_el_push')?'on':'ask'; }
+  return isIOS()&&!isStandalone()?'home':'no';
+}
+function pushCardH(){
+  var st=pushState(); if(st==='no'||st==='on'||st==='denied')return '';
+  var sk=+lsGet('saff_el_pushskip')||0; if(Date.now()-sk<7*864e5)return '';
+  return '<div class="card" style="margin-top:10px"><div class="cell tap ind" id="pushCard" onclick="openPush()"><span class="ico-tile" style="background:#FF9500;font-size:17px">🔔</span><div class="body"><div class="t">فعّل التذكيرات</div><div class="s">قبل التمرين، والتحضير، وتصويت أفضل لاعب، والتمارين الجديدة</div></div>'+chev()+'</div></div>';
+}
+function openPush(){
+  var st=pushState(), h=mh('التذكيرات');
+  var list='<div class="card pad" style="line-height:1.9;font-size:15px">🆕 لما ينزل تمرين جديد<br>⏰ قبل التمرين بساعتين<br>📍 قبل التمرين بنص ساعة: لا تنسى تسجّل حضورك<br>⭐ لما يفتح تصويت أفضل لاعب</div>';
+  if(st==='home') h+='<div class="foot" style="margin:0 4px 10px">عشان توصلك التذكيرات في الآيفون، لازم يكون التطبيق مضاف للشاشة الرئيسية:</div>'+
+    '<div class="card pad" id="pushHome" style="line-height:2;font-size:15px">١. اضغط زر المشاركة <b>⬆︎</b> تحت في سفاري<br>٢. اختر <b>«إضافة إلى الشاشة الرئيسية»</b><br>٣. افتح التطبيق من أيقونته في الشاشة الرئيسية<br>٤. ارجع هنا واضغط <b>«تفعيل التذكيرات»</b></div>'+
+    '<div class="foot" style="margin:8px 4px 0">إذا كان التطبيق مضاف من قبل، احذف الأيقونة القديمة وأضفه من جديد.</div>'+list;
+  else if(st==='ask') h+=list+'<div class="m-foot" style="margin-top:12px"><button class="btn gray" id="pushLater" onclick="lsSet(\'saff_el_pushskip\',String(Date.now()));closeModal();render()">لاحقاً</button><button class="btn" id="pushOn" onclick="pushEnable()">🔔 تفعيل التذكيرات</button></div>';
+  else if(st==='on') h+='<div class="card pad" id="pushIsOn" style="text-align:center;font-weight:700">✓ التذكيرات مفعّلة على هذا الجوال</div>'+list+'<div style="text-align:center;margin-top:12px"><button class="lnk" id="pushOff" style="background:none;border:none;color:var(--red);font-size:15px;font-weight:700;cursor:pointer" onclick="pushDisable()">إيقاف التذكيرات</button></div>';
+  else if(st==='denied') h+='<div class="card pad" style="line-height:1.8">التنبيهات مقفلة لهذا التطبيق. فعّلها من <b>الإعدادات ← الإشعارات</b> في جوالك، وارجع هنا.</div>';
+  else h+='<div class="card pad">جهازك أو متصفحك ما يدعم التذكيرات.</div>';
+  openModal(h);
+}
+function b64u(s){var p='='.repeat((4-s.length%4)%4), b=atob((s+p).replace(/-/g,'+').replace(/_/g,'/')), a=new Uint8Array(b.length); for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i); return a;}
+function pushKey(ep){var h=2166136261; for(var i=0;i<ep.length;i++){h^=ep.charCodeAt(i); h=Math.imul(h,16777619)>>>0;} return 'k'+h.toString(36)+ep.length.toString(36);}
+function pushEnable(){
+  if(!pushSupported()){openPush();return;}
+  Notification.requestPermission().then(function(perm){
+    if(perm!=='granted'){toast('⚠️ ما سمحت بالتنبيهات');closeModal();render();return;}
+    return navigator.serviceWorker.register('sw.js').then(function(){return navigator.serviceWorker.ready;}).then(function(reg){
+      return reg.pushManager.getSubscription().then(function(s){return s||reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(VAPID_PUB)});});
+    }).then(function(sub){
+      var j=sub.toJSON(); putVote('push/'+pushKey(j.endpoint),{s:{endpoint:j.endpoint,keys:j.keys},me:myId()||'',at:Date.now()});
+      lsSet('saff_el_push','1'); lsSet('saff_el_pushkey',pushKey(j.endpoint)); toast('🔔 تم تفعيل التذكيرات'); closeModal(); render();
+    });
+  }).catch(function(e){console.error(e);toast('⚠️ تعذّر تفعيل التذكيرات، حاول مرة ثانية');});
+}
+function pushDisable(){
+  var k=lsGet('saff_el_pushkey'); if(k)putVote('push/'+k,null); lsDel('saff_el_push'); lsDel('saff_el_pushkey'); lsSet('saff_el_pushskip',String(Date.now()));
+  if(pushSupported()) navigator.serviceWorker.ready.then(function(reg){return reg.pushManager.getSubscription();}).then(function(s){if(s)s.unsubscribe();}).catch(function(){});
+  toast('تم إيقاف التذكيرات'); closeModal(); render();
+}
 /* ---------- قائمة المصابين: نوع الإصابة، المدة، والوقت المتوقع للعودة ---------- */
 var INJ_TYPES=['شد عضلي','تمزق عضلي','التواء الكاحل','إصابة الركبة','الرباط الصليبي','كدمة','إصابة الظهر','كسر'];
 function injOf(id){var x=(S.inj||{})[id]; return x&&P(id)?x:null;}
@@ -2016,7 +2062,7 @@ function renderHome(el){
     h+='<div class="card"><div class="empty"><div class="ei">'+ic('ball')+'</div><b>لا يوجد تمرين قادم</b>'+(isCoach?'<button class="btn sm" style="margin-top:12px" onclick="go(\'session\')">'+ic('plus','xs')+'إنشاء تمرين</button>':'سيظهر هنا عندما يُنشئ مجلس الإدارة تمريناً')+'</div></div>';
   }
 
-  h+=bdayHomeH(); h+=kittyMeH(); h+=potmHomeH(); h+=crowdCardH(); h+=injHomeH();
+  h+=bdayHomeH(); h+=kittyMeH(); h+=potmHomeH(); h+=pushCardH(); h+=crowdCardH(); h+=injHomeH();
   if(ds.length){
     var last=ds[0], m=mvpOf(last);
     h+=gh('التمرين السابق',lnk('التفاصيل','openSessionDetail(\''+last.id+'\')'));
@@ -2046,6 +2092,7 @@ function renderHome(el){
   if(!ps.length){
     h+='<div style="margin-top:22px">'+emptyBox('people','أهلاً بك في تمرين نخبة السبت',isCoach?'ابدأ بإضافة اللاعبين من تبويب «اللاعبون».':'اضغط «صلاحيات مجلس الإدارة» في الأعلى وأدخل كلمة السر لتبدأ.')+'</div>';
   }
+  if(pushState()!=='no') h+='<div class="foot" style="text-align:center;margin-top:18px"><a href="#" id="pushLink" style="color:var(--tint);font-weight:600" onclick="event.preventDefault();openPush()">🔔 التذكيرات</a></div>';
   if(ps.length) h+='<div class="foot" style="text-align:center;margin-top:22px"><a href="#" id="tourLink" style="color:var(--tint);font-weight:600" onclick="event.preventDefault();openTour()">🧭 جولة سريعة في التطبيق</a></div>';
   if(isCoach&&!SBX) h+='<div class="card" style="margin-top:14px"><div class="cell tap ind" id="sbxEnter" onclick="enterSandbox()">'+tile('#AF52DE','star',true)+'<div class="body"><div class="t">🧪 تمرين تجريبي</div><div class="s">جرّب كل شي (التحضير، التصويت، النتيجة…) بدون ما يشوفه اللاعبون</div></div>'+chev()+'</div></div>';
   h+=lateCardH(); h+=crowdAdminCardH();
@@ -4282,6 +4329,7 @@ else if(lsGet('saff_el_sandbox')) lsDel('saff_el_sandbox');
 if(QS.tab&&document.getElementById('pg-'+QS.tab)) curTab=QS.tab;
 document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-t')===curTab);});
 if(typeof firebase!=='undefined' && !('local' in QS)) startCloud(); else startLocal();
+if('serviceWorker' in navigator&&!SBX) window.addEventListener('load',function(){ navigator.serviceWorker.register('sw.js').catch(function(e){console.log('SW',e);}); });
 </script>
 </body>
 </html>

@@ -1,0 +1,16 @@
+{
+  "name": "تمرين ساف",
+  "short_name": "تمرين ساف",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./training.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F2F2F7",
+  "theme_color": "#0A7D4F",
+  "icons": [
+    {"src": "icon-saff-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-saff-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"}
+  ]
+}
