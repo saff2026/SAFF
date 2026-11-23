@@ -723,7 +723,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261123155351';
+var BUILD='20261123162259';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -1041,7 +1041,25 @@ function keyAttrs(pos){if(pos==='GK')return ['gk','pas'];var w=W[pos]||W.CM;retu
 // الطاقات المهمة للاعب: الحارس = الحراسة + التمرير فقط
 function relAttrs(p){ var pr=prefsOf(p); if(p.pos==='GK') return pr.length>1?['gk','pas','pac','sho','dri','def','phy']:['gk','pas']; return ['pac','sho','pas','dri','def','phy'].concat(pr.indexOf('GK')>0?['gk']:[]); }
 function cardAttrs(p){ var r=relAttrs(p); return r.length>6?(p.pos==='GK'?['gk','pas','pac','dri','def','phy']:['pac','sho','pas','dri','def','gk']):r; }
-function playersArr(){return vals(S.players);}
+function playersArr(){return vals(S.players).filter(function(p){return !p.hidden;});} // المخفيين ما يطلعون في أي مكان (وسجلهم القديم باقي)
+function hiddenPlayers(){return vals(S.players).filter(function(p){return p.hidden;}).sort(function(a,b){return a.name.localeCompare(b.name,'ar');});}
+function setHidden(id,on){
+  var p=P(id); if(!p||!isCoach)return;
+  if(!on){ put('players/'+id+'/hidden',null); toast('👁️ رجع '+p.name+' يطلع'); return; }
+  askConfirm('<b>إخفاء '+esc(p.name)+'؟</b><br><span class="small">يبقى مسجّل وتاريخه محفوظ، لكن ما يطلع في اللاعبين ولا القائمة ولا التقييمات ولا التصويت ولا الإحصائيات. وتقدر ترجّعه متى ما بغيت من «اللاعبين ← مخفيين».</span>',function(){
+    var m={}; m['players/'+id+'/hidden']=true; var os=openSession();
+    if(os){ var b='sessions/'+os.id+'/'; if(os.att[id])m[b+'att/'+id]=null;
+      ['A','B'].forEach(function(t){ Object.keys(os.teams[t].slots||{}).forEach(function(k){if(os.teams[t].slots[k]===id)m[b+'teams/'+t+'/slots/'+k]=null;}); if((os.teams[t].subs||{})[id])m[b+'teams/'+t+'/subs/'+id]=null; }); }
+    putMany(m); closeModal(); toast('🙈 تم إخفاء '+p.name);
+  },'إخفاء');
+}
+function openHidden(){ openModal(''); hiddenInner(); modalRefresh=hiddenInner; }
+function hiddenInner(){
+  var L=hiddenPlayers(), h=mh('اللاعبين المخفيين');
+  h+=L.length?'<div class="card" id="hidList">'+L.map(function(p){return '<div class="cell hidrow" data-id="'+p.id+'">'+avatar(p.id)+'<div class="body tap" onclick="openPlayer(\''+p.id+'\')" style="cursor:pointer"><div class="t">'+esc(p.name)+'</div><div class="s">'+(POS[p.pos]?POS[p.pos].ar:'')+'</div></div><button class="btn sm tinted" onclick="setHidden(\''+p.id+'\',false)">إظهار</button></div>';}).join('')+'</div>':'<div class="card"><div class="empty"><b>ما فيه لاعبين مخفيين</b></div></div>';
+  h+='<div class="foot">المخفي يبقى مسجّل وتاريخه محفوظ، بس ما يطلع لأحد.</div>';
+  setModal(h);
+}
 // التمارين اللي غيّرت الطاقات، الأحدث أول (ومعها التمرين المفتوح إذا تحدّثت طاقاته قبل القفل)
 function updSessions(){var ds=doneSessions().filter(function(s){return s.upd;}), os=openSession(); if(os&&os.upd&&os.updAt)ds.unshift(os); return ds;}
 function lastTrend(pid){
@@ -1671,8 +1689,8 @@ function pushDisable(){
 }
 /* ---------- قائمة المصابين: نوع الإصابة، المدة، والوقت المتوقع للعودة ---------- */
 var INJ_TYPES=['شد عضلي','تمزق عضلي','التواء الكاحل','إصابة الركبة','الرباط الصليبي','كدمة','إصابة الظهر','كسر'];
-function injOf(id){var x=(S.inj||{})[id]; return x&&P(id)?x:null;}
-function injList(){return Object.keys(S.inj||{}).filter(function(id){return P(id);}).sort(function(a,b){return String(S.inj[a].back).localeCompare(String(S.inj[b].back))||pname(a).localeCompare(pname(b),'ar');});}
+function injOf(id){var x=(S.inj||{})[id]; return x&&P(id)&&!P(id).hidden?x:null;}
+function injList(){return Object.keys(S.inj||{}).filter(function(id){return P(id)&&!P(id).hidden;}).sort(function(a,b){return String(S.inj[a].back).localeCompare(String(S.inj[b].back))||pname(a).localeCompare(pname(b),'ar');});}
 function dayDiff(ds){var a=parseD(ds),t=new Date();t.setHours(0,0,0,0);return Math.round((a-t)/864e5);}
 function addDays(ds,n){var d=parseD(ds);d.setDate(d.getDate()+n);return fmtD(d);}
 function durTxt(days){days=Math.max(1,Math.round(+days||0)); if(days%30===0)return cnt(days/30,'شهر'); if(days%7===0)return cnt(days/7,'أسبوع'); return cnt(days,'يوم');}
@@ -1790,9 +1808,9 @@ function lateBadge(s,pid,tap){
   var b=late?'<span class="rb r-mid num">متأخر'+(m>0&&(s.lateSet||{})[pid]!==true?' '+m+' د':(m>0?' '+m+' د':''))+'</span>':'<span class="rb r-hi">في الوقت</span>';
   return tap?'<button class="late-tg" style="background:none;border:none;padding:0" onclick="toggleLate(\''+pid+'\')" aria-label="تغيير حالة التأخير">'+b+'</button>':b;
 }
-function computeStats(){
+function computeStats(all){ // all: مع المخفيين (لصفحة اللاعب المخفي عند مجلس الإدارة)
   var st={};
-  playersArr().forEach(function(p){st[p.id]={id:p.id,apps:0,goals:0,assists:0,mvp:0,rSum:0,rN:0,w:0,d:0,l:0,ratings:[],late:0,lateMin:0};});
+  (all?vals(S.players):playersArr()).forEach(function(p){st[p.id]={id:p.id,apps:0,goals:0,assists:0,mvp:0,rSum:0,rN:0,w:0,d:0,l:0,ratings:[],late:0,lateMin:0};});
   // التمارين المنتهية + التمرين الحالي إذا ضغطت «نهاية المباراة» (الإحصائيات تتحدّث فوراً)
   var ss=doneSessions().slice().reverse(), os=openSession(); if(os&&liveState(os)==='ended') ss.push(os);
   ss.forEach(function(s){
@@ -2137,7 +2155,7 @@ function renderPlayers(el){
   var nTodo=isCoach?playersArr().filter(function(p){return missingOf(p).length;}).length:0;
   var caps=[['all','الكل'],['gk','حراس'],['def','دفاع'],['mid','وسط'],['att','هجوم']];
   h+='<div class="caps" style="margin-top:12px">'+caps.map(function(f){return '<button class="cap'+((f[0]==='all'?(ui.pFilter!=='todo'&&!Object.keys(ui.pSel).length):(ui.pFilter!=='todo'&&ui.pSel[f[0]]))?' on':'')+'" data-f="'+f[0]+'" onclick="pFTog(\''+f[0]+'\')">'+f[1]+'</button>';}).join('')+'</div>';
-  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px"><button class="cap" id="sortBtn" onclick="openSort()">'+ic('sort','xs')+'ترتيب: '+SORTS[ui.pSort].l+' · '+SORTS[ui.pSort][ui.pDir]+'</button><button class="cap" id="cmpBtn" onclick="openCompare()">⚖️ مقارنة لاعبين</button>'+
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px"><button class="cap" id="sortBtn" onclick="openSort()">'+ic('sort','xs')+'ترتيب: '+SORTS[ui.pSort].l+' · '+SORTS[ui.pSort][ui.pDir]+'</button><button class="cap" id="cmpBtn" onclick="openCompare()">⚖️ مقارنة لاعبين</button>'+(isCoach&&hiddenPlayers().length?'<button class="cap" id="hidBtn" onclick="openHidden()">🙈 مخفيين <span class="num">'+hiddenPlayers().length+'</span></button>':'')+
     (isCoach?'<button class="cap todo'+(ui.pFilter==='todo'?' on':'')+'" id="todoCap" onclick="ui.pFilter=ui.pFilter===\'todo\'?\'all\':\'todo\';render()">'+ic('warn','xs')+'ناقص البيانات <span class="num">'+nTodo+'</span></button>':'')+'</div>';
   h+='<div id="pGrid"></div>';
   el.innerHTML=h;
@@ -2427,7 +2445,7 @@ function savePlayer(){
   var nv={}; Object.keys(p.never||{}).forEach(function(k){if(p.never[k]&&POS[k]&&pr.indexOf(k)<0)nv[k]=true;});
   var dup=playersArr().filter(function(x){return x.id!==pf.id&&x.name===p.name;});
   if(dup.length){toast('⚠️ يوجد لاعب بنفس الاسم');return;}
-  var id=pf.id||uid('p'); var tr={}; TRAITS.forEach(function(x){if((p.traits||{})[x[0]])tr[x[0]]=true;}); var rec={joker:FEAT_JOKER&&p.joker?true:null,name:p.name,age:p.age,foot:p.foot,traits:tr,sm:clamp(+p.sm||3,1,5),wf:clamp(+p.wf||3,1,5),pos:p.pos,pos2:p.pos2,pos3:p.pos3,pos4:p.pos4,never:nv,attrs:p.attrs,created:p.created||Date.now()}; if(p.carry)rec.carry=p.carry; if(p.crowdAdj)rec.crowdAdj=p.crowdAdj; var bm=document.getElementById('f_bm').value, bd=document.getElementById('f_bd').value; if(bm&&bd)rec.bday=bm+'-'+bd; var phNew=photoSrc(p), phOld=pf.id&&P(pf.id)?photoSrc(P(pf.id)):'', phM={}; if(phNew){ rec.pv=(phNew!==phOld||!(P(pf.id)||{}).pv)?Date.now():P(pf.id).pv; if(rec.pv!==(P(pf.id)||{}).pv){phM['photos/'+id]=phNew; if(mode==='cloud')phSave(id,rec.pv,phNew);} } else if(phOld) phM['photos/'+id]=null;
+  var id=pf.id||uid('p'); var tr={}; TRAITS.forEach(function(x){if((p.traits||{})[x[0]])tr[x[0]]=true;}); var rec={joker:FEAT_JOKER&&p.joker?true:null,name:p.name,age:p.age,foot:p.foot,traits:tr,sm:clamp(+p.sm||3,1,5),wf:clamp(+p.wf||3,1,5),pos:p.pos,pos2:p.pos2,pos3:p.pos3,pos4:p.pos4,never:nv,attrs:p.attrs,created:p.created||Date.now()}; if(p.carry)rec.carry=p.carry; if(p.hidden)rec.hidden=true; if(p.crowdAdj)rec.crowdAdj=p.crowdAdj; var bm=document.getElementById('f_bm').value, bd=document.getElementById('f_bd').value; if(bm&&bd)rec.bday=bm+'-'+bd; var phNew=photoSrc(p), phOld=pf.id&&P(pf.id)?photoSrc(P(pf.id)):'', phM={}; if(phNew){ rec.pv=(phNew!==phOld||!(P(pf.id)||{}).pv)?Date.now():P(pf.id).pv; if(rec.pv!==(P(pf.id)||{}).pv){phM['photos/'+id]=phNew; if(mode==='cloud')phSave(id,rec.pv,phNew);} } else if(phOld) phM['photos/'+id]=null;
   phM['players/'+id]=rec; putMany(phM); closeModal(); toast(pf.id?'تم حفظ التعديلات':'تمت إضافة '+p.name);
 }
 function deletePlayer(id){
@@ -2437,16 +2455,19 @@ function deletePlayer(id){
 /* ---------- ملف اللاعب ---------- */
 function openPlayer(id){
   if(!P(id)){toast('⚠️ اللاعب غير موجود');return;}
+  if(P(id).hidden&&!isCoach){toast('⚠️ هذا اللاعب غير متاح');return;}
   openModal('');
   openPlayerInner(id);
   modalRefresh=function(){ if(!P(id)){closeModal();return;} openPlayerInner(id); };
 }
 function openPlayerInner(id){
-  var p=P(id), st=computeStats()[id], o=ovr(p);
+  var p=P(id), st=computeStats(!!p.hidden)[id], o=ovr(p);
   var h=mh('');
   if(isCoach) h=h.replace('<span class="side"></span>','<button class="m-edit" id="editPlayer" onclick="openPlayerForm(\''+id+'\')">'+ic('pencil','xs')+'تعديل</button>');
   h+='<div class="prof">'+ring(o,POS[p.pos].ar,photoSrc(p))+'<div class="nm">'+esc(p.name)+'</div>'+(isJoker(p)?'<div id="profJoker" style="margin:6px 0 4px">'+jokerBadge(true)+'<div class="small muted" style="margin-top:6px">يلعب في مراكز كثيرة</div></div>':'')+'<div class="mt">'+(p.age?cnt(+p.age||0,'سنة')+' · ':'')+'القدم: '+(FOOT[p.foot]||'—')+'</div><div class="mt" style="display:flex;gap:16px;justify-content:center;margin-top:8px"><span>المهارة '+starsHTML(p.sm,'big')+'</span><span>القدم الضعيفة '+starsHTML(p.wf,'big')+'</span></div>'+(isCoach&&traitsOf(p).length?'<div class="chips" id="profTraits" style="justify-content:center;gap:6px;margin-top:10px">'+traitsOf(p).map(function(k){return '<span class="tag on">'+TRAITS.filter(function(x){return x[0]===k;})[0][1]+'</span>';}).join('')+'</div>':'')+'</div>';
-  h+='<div style="text-align:center;margin:2px 0 6px"><button class="lnk" id="profCmp" style="background:none;border:none;color:var(--tint);font-size:15px;font-weight:700;cursor:pointer" onclick="openCompare(\''+id+'\')">⚖️ قارنه مع لاعب ثاني</button></div>';
+  if(p.hidden) h+='<div class="rpub" id="profHidden" style="margin:8px 0">🙈 هذا اللاعب مخفي، وما يطلع لأحد</div>';
+  if(isCoach) h+='<div style="text-align:center;margin:2px 0 4px"><button class="lnk" id="profHide" style="background:none;border:none;color:'+(p.hidden?'var(--tint)':'var(--label2)')+';font-size:15px;font-weight:700;cursor:pointer" onclick="setHidden(\''+id+'\','+(p.hidden?'false':'true')+')">'+(p.hidden?'👁️ إظهار اللاعب':'🙈 إخفاء اللاعب')+'</button></div>';
+  if(!p.hidden) h+='<div style="text-align:center;margin:2px 0 6px"><button class="lnk" id="profCmp" style="background:none;border:none;color:var(--tint);font-size:15px;font-weight:700;cursor:pointer" onclick="openCompare(\''+id+'\')">⚖️ قارنه مع لاعب ثاني</button></div>';
   var ij=injOf(id); if(ij) h+='<div class="inj-prof" id="profInj"'+(isCoach?' onclick="openInjForm(\''+id+'\')" style="cursor:pointer"':'')+'><span class="ip-i">🩹</span><div><b>مصاب: '+esc(ij.type||'إصابة')+'</b><span>المدة '+durTxt(ij.days)+' · العودة المتوقعة '+niceDate(ij.back)+'</span></div><span class="inj-left '+injLeftCls(ij)+'">'+injLeftTxt(ij)+'</span></div>';
   else if(isCoach) h+='<div style="text-align:center;margin:4px 0 8px"><button class="lnk" id="profInjAdd" style="background:none;border:none;color:var(--red);font-size:15px;font-weight:700;cursor:pointer" onclick="IF=null;openInjForm();IF.id=\''+id+'\';injFormInner()">🩹 تسجيل إصابة</button></div>';
   if(isBday(p)) h+='<div class="bd-prof" id="profBday">🎉 عيد ميلاد سعيد يا '+esc(p.name.split(' ')[0])+'! 🎂</div>';
