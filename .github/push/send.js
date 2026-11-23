@@ -63,8 +63,11 @@ async function main() {
   let webpush = null;
   if (!DRY) {
     if (!process.env.VAPID_PRIVATE_KEY) { console.log('⚠️ المفتاح السري VAPID_PRIVATE_KEY مو موجود في Secrets حق GitHub — ما انرسل شي'); return; } // بدون فشل عشان ما توصلك رسائل خطأ كل 10 دقائق
+    // ننظّف المفتاح من أي مسافة أو سطر أو رمز زايد ينضاف بالغلط وقت النسخ من الجوال
+    const key = String(process.env.VAPID_PRIVATE_KEY).normalize('NFKC').replace(/[\s\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF"'`]/g, '').replace(/[\u2010-\u2015\u2212]/g, '-').replace(/=+$/, '');
+    if (!/^[A-Za-z0-9_-]{43}$/.test(key)) { console.error('❌ المفتاح السري مو مكتوب صح: طوله ' + key.length + ' حرف (لازم 43)، وفيه رموز غلط: ' + (/[^A-Za-z0-9_-]/.test(key) ? 'نعم' : 'لا') + '. احذفه من Secrets وحطه من جديد.'); process.exit(1); }
     webpush = require('web-push');
-    webpush.setVapidDetails(SITE, VAPID_PUB, process.env.VAPID_PRIVATE_KEY);
+    webpush.setVapidDetails(SITE, VAPID_PUB, key);
   }
   const tk = await token();
   for (const app of APPS) {
