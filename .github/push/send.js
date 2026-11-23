@@ -62,7 +62,7 @@ async function main() {
   const DRY = process.env.DRY === '1', now = process.env.NOW ? +process.env.NOW : Date.now();
   let webpush = null;
   if (!DRY) {
-    if (!process.env.VAPID_PRIVATE_KEY) { console.error('❌ المفتاح السري VAPID_PRIVATE_KEY مو موجود في Secrets حق GitHub'); process.exit(1); }
+    if (!process.env.VAPID_PRIVATE_KEY) { console.log('⚠️ المفتاح السري VAPID_PRIVATE_KEY مو موجود في Secrets حق GitHub — ما انرسل شي'); return; } // بدون فشل عشان ما توصلك رسائل خطأ كل 10 دقائق
     webpush = require('web-push');
     webpush.setVapidDetails(SITE, VAPID_PUB, process.env.VAPID_PRIVATE_KEY);
   }
