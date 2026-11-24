@@ -195,6 +195,10 @@
     "training": {
       ".read": "auth != null",
       ".write": "auth != null"
+    },
+    "training_elite": {
+      ".read": "auth != null",
+      ".write": "auth != null"
     }
   }
 }
