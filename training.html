@@ -723,7 +723,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261125162329';
+var BUILD='20261125194236';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -1796,9 +1796,16 @@ function crowdAdminInner(){
   if(ids.length>1) h+='<div class="m-foot"><button class="btn" id="crowdAll" onclick="crowdApply('+esc(JSON.stringify(ids))+')">اعتماد الكل ('+ids.length+')</button></div>';
   setModal(h);
 }
+// سجل تعديلات الطاقات خارج التمارين (تقييم الزملاء أو تعديل مجلس الإدارة)
+function histEntry(kind,p,newAttrs,at){
+  var d={}; ATTR_KEYS.forEach(function(k){var x=(+newAttrs[k]||0)-(+p.attrs[k]||0); if(x)d[k]=x;}); if(!Object.keys(d).length)return null;
+  return {t:kind,at:at,d:d,ovrB:ovr(p),ovrA:ovr({pos:p.pos,pos2:p.pos2,pos3:p.pos3,pos4:p.pos4,never:p.never,attrs:newAttrs})};
+}
+function attrChips(d){return Object.keys(d||{}).filter(function(k){return d[k]&&ATTR[k];}).sort(function(a,b){return Math.abs(d[b])-Math.abs(d[a]);}).map(function(k){var v=d[k];return '<span class="tag '+(v>0?'on':'')+'" style="'+(v<0?'color:var(--red)':'')+'">'+ATTR[k]+' <span class="ltr">'+(v>0?'+':'')+v+'</span></span>';}).join(' ');}
 function crowdApply(ids){
   var M=crowdModel(), m={}, k=0;
-  ids.forEach(function(i){var r=M.p[i]; if(!r||!r.ch)return; m['players/'+i+'/attrs']=r.attrs; m['players/'+i+'/crowdAdj']=Object.keys(r.adj).length?r.adj:null; k++;});
+  var now=Date.now();
+  ids.forEach(function(i){var r=M.p[i]; if(!r||!r.ch)return; m['players/'+i+'/attrs']=r.attrs; m['players/'+i+'/crowdAdj']=Object.keys(r.adj).length?r.adj:null; var e=histEntry('crowd',P(i),r.attrs,now); if(e)m['players/'+i+'/hist/h'+now]=e; k++;});
   if(!k)return; putMany(m); toast('تم اعتماد '+cnt(k,'لاعب'));
 }
 
@@ -2444,7 +2451,7 @@ function savePlayer(){
   var nv={}; Object.keys(p.never||{}).forEach(function(k){if(p.never[k]&&POS[k]&&pr.indexOf(k)<0)nv[k]=true;});
   var dup=playersArr().filter(function(x){return x.id!==pf.id&&x.name===p.name;});
   if(dup.length){toast('⚠️ يوجد لاعب بنفس الاسم');return;}
-  var id=pf.id||uid('p'); var tr={}; TRAITS.forEach(function(x){if((p.traits||{})[x[0]])tr[x[0]]=true;}); var rec={joker:FEAT_JOKER&&p.joker?true:null,name:p.name,age:p.age,foot:p.foot,traits:tr,sm:clamp(+p.sm||3,1,5),wf:clamp(+p.wf||3,1,5),pos:p.pos,pos2:p.pos2,pos3:p.pos3,pos4:p.pos4,never:nv,attrs:p.attrs,created:p.created||Date.now()}; if(p.carry)rec.carry=p.carry; if(p.hidden)rec.hidden=true; if(p.crowdAdj)rec.crowdAdj=p.crowdAdj; var bm=document.getElementById('f_bm').value, bd=document.getElementById('f_bd').value; if(bm&&bd)rec.bday=bm+'-'+bd; var phNew=photoSrc(p), phOld=pf.id&&P(pf.id)?photoSrc(P(pf.id)):'', phM={}; if(phNew){ rec.pv=(phNew!==phOld||!(P(pf.id)||{}).pv)?Date.now():P(pf.id).pv; if(rec.pv!==(P(pf.id)||{}).pv){phM['photos/'+id]=phNew; if(mode==='cloud')phSave(id,rec.pv,phNew);} } else if(phOld) phM['photos/'+id]=null;
+  var id=pf.id||uid('p'); var tr={}; TRAITS.forEach(function(x){if((p.traits||{})[x[0]])tr[x[0]]=true;}); var rec={joker:FEAT_JOKER&&p.joker?true:null,name:p.name,age:p.age,foot:p.foot,traits:tr,sm:clamp(+p.sm||3,1,5),wf:clamp(+p.wf||3,1,5),pos:p.pos,pos2:p.pos2,pos3:p.pos3,pos4:p.pos4,never:nv,attrs:p.attrs,created:p.created||Date.now()}; if(p.carry)rec.carry=p.carry; if(p.hidden)rec.hidden=true; if(p.hist)rec.hist=p.hist; if(pf.id&&P(pf.id)){ var he=histEntry('edit',P(pf.id),p.attrs,Date.now()); if(he){ rec.hist=Object.assign({},rec.hist||{}); rec.hist['h'+he.at]=he; } } if(p.crowdAdj)rec.crowdAdj=p.crowdAdj; var bm=document.getElementById('f_bm').value, bd=document.getElementById('f_bd').value; if(bm&&bd)rec.bday=bm+'-'+bd; var phNew=photoSrc(p), phOld=pf.id&&P(pf.id)?photoSrc(P(pf.id)):'', phM={}; if(phNew){ rec.pv=(phNew!==phOld||!(P(pf.id)||{}).pv)?Date.now():P(pf.id).pv; if(rec.pv!==(P(pf.id)||{}).pv){phM['photos/'+id]=phNew; if(mode==='cloud')phSave(id,rec.pv,phNew);} } else if(phOld) phM['photos/'+id]=null;
   phM['players/'+id]=rec; putMany(phM); closeModal(); toast(pf.id?'تم حفظ التعديلات':'تمت إضافة '+p.name);
 }
 function deletePlayer(id){
@@ -2478,12 +2485,17 @@ function openPlayerInner(id){
     '<div><b class="num">'+st.mvp+'</b><span>أفضل لاعب</span></div><div><b class="num">'+(st.avg==null?'—':st.avg)+'</b><span>معدل التقييم</span></div><div id="profWDL"><b class="num" style="font-size:18px"><i style="font-style:normal;color:var(--green)">'+st.w+'</i> · '+st.d+' · <i style="font-style:normal;color:var(--red)">'+st.l+'</i></b><span>فوز · تعادل · خسارة</span></div></div>'+(st.late?'<div class="foot" style="text-align:center;color:var(--orange)">تأخّر '+cnt(st.late,'مرة')+' · المجموع '+cnt(st.lateMin,'دقيقة')+'</div>':'');
   var showA=relAttrs(p);
   h+=gh('الطاقات')+'<div class="card pad abars">'+showA.map(function(a){var v=p.attrs[a];return '<div class="at"><div class="r"><span>'+ATTR[a]+'</span><b class="num">'+v+'</b></div><div class="bar"><i class="'+barCls(v)+'" style="width:'+v+'%"></i></div></div>';}).join('')+'</div><div class="foot" id="attrNote">الطاقات تتعدّل بعد كل تمرين، بعد انتهاء تصويت أفضل لاعب.</div>';
-  var hist=[]; updList().forEach(function(ss){var c=ss.upd[id]; if(c){ if(!hist.length)hist.push({v:c.ovrB}); hist.push({v:c.ovrA,d:c.ovrA-c.ovrB,s:ss,c:c}); }});
+  var ev=[]; updList().forEach(function(ss){var c=ss.upd[id]; if(c) ev.push({at:ss.finished||startTs(ss),s:ss,c:c});});
+  Object.keys(p.hist||{}).forEach(function(k){var e=p.hist[k]; if(e&&e.at) ev.push({at:+e.at,e:e});});
+  ev.sort(function(a,b){return a.at-b.at;});
+  var hist=[]; ev.forEach(function(x){var b=x.c||x.e; if(!hist.length)hist.push({v:b.ovrB}); hist.push({v:b.ovrA,d:b.ovrA-b.ovrB,s:x.s,c:x.c,e:x.e,at:x.at});});
   h+=gh('تطور التقييم');
   if(hist.length>1){
-    h+='<div class="card"><div style="padding:12px 12px 0">'+sparkline(hist.slice(-12).map(function(x){return x.v;}))+'</div>'+hist.slice(1).reverse().slice(0,6).map(function(x){
+    h+='<div class="card"><div style="padding:12px 12px 0">'+sparkline(hist.slice(-12).map(function(x){return x.v;}))+'</div>'+hist.slice(1).reverse().slice(0,8).map(function(x){
+      var arrow='<span class="num ltr '+(x.d>0?'up':x.d<0?'dn':'muted')+'">'+(x.d>0?'▲ '+x.d:x.d<0?'▼ '+(-x.d):'—')+'</span>';
+      if(x.e) return '<div class="cell histrow" data-k="'+x.e.t+'"><div class="body"><div class="t" style="font-size:15px">'+niceDate(fmtD(new Date(x.at)))+'</div><div class="s">'+(x.e.t==='crowd'?'👥 تعديل حسب تقييم الزملاء':'✎ تعديل من مجلس الإدارة')+' · <span class="num ltr">'+x.e.ovrB+' → '+x.e.ovrA+'</span></div><div class="s" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">'+attrChips(x.e.d)+'</div></div>'+arrow+'</div>';
       var bits=[]; if(x.c.r!=null)bits.push('تقييم '+x.c.r); if(x.c.g)bits.push(cnt(x.c.g,'هدف')); if(x.c.a)bits.push(cnt(x.c.a,'صناعة')); if(x.c.mvp)bits.push('أفضل لاعب');
-      return '<div class="cell tap" onclick="openSessionDetail(\''+x.s.id+'\')"><div class="body"><div class="t" style="font-size:15px">'+niceDate(x.s.date)+'</div><div class="s">'+(bits.join(' · ')||'بدون تقييم')+'</div></div><span class="num ltr '+(x.d>0?'up':x.d<0?'dn':'muted')+'">'+(x.d>0?'▲ '+x.d:x.d<0?'▼ '+(-x.d):'—')+'</span></div>';
+      return '<div class="cell tap" onclick="openSessionDetail(\''+x.s.id+'\')"><div class="body"><div class="t" style="font-size:15px">'+niceDate(x.s.date)+(sessLabel(x.s)?' · '+esc(sessLabel(x.s)):'')+'</div><div class="s">'+(bits.join(' · ')||'بدون تقييم')+'</div>'+(x.c.d?'<div class="s" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">'+attrChips(x.c.d)+'</div>':'')+'</div>'+arrow+'</div>';
     }).join('')+'</div>';
   }else h+='<div class="card"><div class="cell"><div class="body"><div class="s">يظهر هنا تطور التقييم بعد أول تمرين يشارك فيه.</div></div></div></div>';
   h+=gh('آخر التقييمات');
