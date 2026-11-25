@@ -723,7 +723,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261123162259';
+var BUILD='20261125162329';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -1062,10 +1062,9 @@ function hiddenInner(){
 }
 // التمارين اللي غيّرت الطاقات، الأحدث أول (ومعها التمرين المفتوح إذا تحدّثت طاقاته قبل القفل)
 function updSessions(){var ds=doneSessions().filter(function(s){return s.upd;}), os=openSession(); if(os&&os.upd&&os.updAt)ds.unshift(os); return ds;}
-function lastTrend(pid){
-  var ds=updSessions();
-  for(var i=0;i<ds.length;i++){ var c=ds[i].upd&&ds[i].upd[pid]; if(c) return c.ovrA-c.ovrB; }
-  return 0;
+function lastTrend(pid){ // «في الفورمة» والأسهم: من آخر تمرين انلعب بس (اللي غاب عنه بطاقته عادية)
+  var s=updSessions()[0], c=s&&s.upd&&s.upd[pid];
+  return c?c.ovrA-c.ovrB:0;
 }
 
 /* ------------------------- helpers: sessions ------------------------- */
