@@ -4269,6 +4269,14 @@ function sessionDetailInner(id){
   if(isCoach) h+='<button class="btn tinted block" id="shareSess" style="margin-top:12px" onclick="openShare(\''+s.id+'\')">'+ic('upl','s')+'مشاركة '+(done?'ملخص التمرين':'التشكيلة')+'</button>';
   if(done&&voteOpen(s)) h+='<div class="card" style="margin-top:12px"><div class="cell tap ind" onclick="openVote(\''+s.id+'\')">'+tile('#D4A93C','star',true)+'<div class="body"><div class="t">التصويت لأفضل لاعب مفتوح</div><div class="s">حتى '+fmtWhen(voteEnd(s))+' — النتيجة تظهر بعدها</div></div>'+chev()+'</div></div>';
   else if(m) h+='<div class="card" style="margin-top:12px"><div class="mvp" onclick="openPlayer(\''+m+'\')"><div class="medal">'+icF('star')+'</div><div class="grow"><div class="k">أفضل لاعب في التمرين</div><div class="n">'+esc(pname(m))+'</div></div>'+rBadge(s.ratings[m])+'</div></div>';
+  if(done&&!voteOpen(s)){ // من صوّت لمين (بعد ما يقفل التصويت)
+    var vt=voteTally(s), pp={}; participants(s).forEach(function(x){pp[x]=1;});
+    var by={}; Object.keys(s.votes||{}).forEach(function(v){var c=s.votes[v]; if(c&&P(c)&&pp[v]&&pp[c])(by[c]=by[c]||[]).push(v);});
+    var cs=Object.keys(vt).filter(function(c){return P(c);}).sort(function(x,y){return vt[y]-vt[x]||(x===m?-1:y===m?1:0)||pname(x).localeCompare(pname(y),'ar');});
+    var tot=cs.reduce(function(a,c){return a+vt[c];},0);
+    if(cs.length) h+=gh('التصويت لأفضل لاعب','<span class="small muted">'+cnt(tot,'صوت')+'</span>')+'<div class="card" id="voteList">'+cs.map(function(c){
+      return '<div class="cell tap vlrow" data-id="'+c+'" onclick="openPlayer(\''+c+'\')">'+avatar(c)+'<div class="body"><div class="t">'+(c===m?'⭐ ':'')+esc(pname(c))+'</div><div class="s">صوّت له: '+by[c].sort(function(x,y){return pname(x).localeCompare(pname(y),'ar');}).map(function(v){return esc(pname(v));}).join('، ')+'</div></div><span class="v strong num">'+vt[c]+'</span></div>';}).join('')+'</div>';
+  }
   if(hasLineup(s)) h+=gh('التشكيلة',!done&&isCoach?lnk('صورة','lineupImage(\''+s.id+'\')','lineupImg2','down'):'')+'<div class="card pad">'+pitchHTML(s,false)+'</div>'+refHTML(s,false);
   if(!done&&isCoach) h+=rotationHTML(s,false);
   if(!done&&s.ratingsPub){ var rr=Object.keys(s.ratings||{}).filter(function(id){return P(id)&&typeof s.ratings[id]==='number';}).sort(function(a,b){return s.ratings[b]-s.ratings[a];});
