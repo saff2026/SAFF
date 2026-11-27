@@ -175,6 +175,7 @@ select.field{appearance:none;-webkit-appearance:none;background-image:url("data:
 
 .att-gh{min-height:36px;padding:8px 16px;background:var(--fill2);font-size:13px;font-weight:600;color:var(--label2);}
 .att-gh,.att-sh{white-space:nowrap}.pinfo{display:inline-flex;align-items:center;gap:3px;margin-inline-start:8px;font-size:12px;font-weight:600;color:var(--label2)}.pinfo.done{color:var(--green)}.pinfo.over{color:var(--red)}.pinfo .i{width:13px;height:13px}.att-sh .pmore,.att-gh .pmore{background:none;border:none;color:var(--tint);font:inherit;font-size:12px;font-weight:700;margin-inline-start:auto;padding:0}.att-gh .pmore{margin-inline-start:10px}.att-sh{display:flex;align-items:center;min-height:28px;padding:5px 16px;padding-inline-start:28px;font-size:12px;font-weight:700;color:var(--tint);background:var(--bg2,transparent);border-top:.5px solid var(--sep)}
+.sesspos{flex:none;font-size:10px;font-weight:800;color:var(--orange);background:color-mix(in srgb,var(--orange) 14%,transparent);border-radius:6px;padding:1px 5px}
 .posline{display:flex;align-items:center;gap:6px;min-width:0;white-space:nowrap}.pos2t{overflow:hidden;text-overflow:ellipsis;min-width:0;font-size:12px}.possel{flex:none;border:none;background:var(--fill2);color:var(--label2);font:inherit;font-size:12.5px;font-weight:600;border-radius:7px;padding:2px 6px;margin:1px 0;max-width:120px}
 .att-gh .lnk{background:none;border:none;color:var(--tint);font-size:13px;font-weight:600;margin-inline-start:auto;}
 .ck{width:24px;height:24px;border-radius:50%;border:1.6px solid var(--label3);flex:none;display:inline-flex;align-items:center;justify-content:center;color:transparent;transition:background .15s,border-color .15s;}
@@ -723,7 +724,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261125194236';
+var BUILD='20261127180854';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -2514,7 +2515,8 @@ function sparkline(v){
 }
 
 /* ---------- التمرين ---------- */
-function renderSession(el){
+function renderSession(el){ return withSessPos(openSession(),function(){ return renderSession0(el); }); }
+function renderSession0(el){
   var s=openSession(), h='';
   if(!s){
     h+=largeTitle('التمرين','');
@@ -2923,7 +2925,7 @@ function attDropdown(s,ps){
       var gv=gp.filter(function(p){return s.att[p.id]||!posInfo(p.pos).col;});
       gv.forEach(function(p){var on=!!s.att[p.id];
         if(multi&&p.pos!==lastPos){lastPos=p.pos;h+='<div class="cell att-sh" data-pos="'+p.pos+'">'+POS[p.pos].ar+posInfo(p.pos).h+'</div>';}
-        h+='<div class="cell tap attrow'+(on?' on':'')+'" style="'+(!on&&full?'opacity:.4':'')+'" data-id="'+p.id+'" onclick="toggleAtt(\''+p.id+'\')"><span class="ck">'+ic('check','xs')+'</span><div class="body"><div class="t">'+esc(p.name)+'</div><div class="s posline"><select class="possel" aria-label="مركز اللاعب" onclick="event.stopPropagation()" onchange="setMainPos(\''+p.id+'\',this.value)">'+POS_ORDER.map(function(k){return '<option value="'+k+'"'+(p.pos===k?' selected':'')+'>'+POS[k].ar+'</option>';}).join('')+'</select></div></div><span class="v num attovr">'+ovr(p)+'</span>'+
+        h+='<div class="cell tap attrow'+(on?' on':'')+'" style="'+(!on&&full?'opacity:.4':'')+'" data-id="'+p.id+'" onclick="toggleAtt(\''+p.id+'\')"><span class="ck">'+ic('check','xs')+'</span><div class="body"><div class="t">'+esc(p.name)+'</div><div class="s posline"><select class="possel" aria-label="مركز اللاعب" onclick="event.stopPropagation()" onchange="setMainPos(\''+p.id+'\',this.value)">'+POS_ORDER.map(function(k){return '<option value="'+k+'"'+(p.pos===k?' selected':'')+'>'+POS[k].ar+'</option>';}).join('')+'</select>'+(p._sessPos?'<span class="sesspos" title="مركزه الحقيقي '+POS[p._sessPos].ar+'">لهذا التمرين</span>':'')+'</div></div><span class="v num attovr">'+ovr(p)+'</span>'+
           (function(){var cv=confOf(s,p.id);return '<select class="confsel c-'+(cv||'none')+'" aria-label="حالة التأكيد" onclick="event.stopPropagation()" onchange="applyConf(\''+s.id+'\',\''+p.id+'\',this.value)">'+CONF.map(function(x){return '<option value="'+x[0]+'"'+(cv===x[0]?' selected':'')+'>'+x[1]+'</option>';}).join('')+'</select>';})()+'</div>';
       });
     });
@@ -2932,13 +2934,24 @@ function attDropdown(s,ps){
   return h+'</div>';
 }
 // تغيير المركز الأساسي للاعب من قائمة التمرين (للإدارة): المركز الجديد أولاً وتبقى بقية تفضيلاته بعده
+// مركز اللاعب في هذا التمرين بس (ما يغيّر مركزه الحقيقي ولا طاقاته)
+function sessPosOf(s,id){var k=s&&s.posFor&&s.posFor[id];return k&&POS[k]?k:null;}
 function setMainPos(id,k){
-  var p=P(id); if(!p||!POS[k]||p.pos===k)return;
-  var old=prefsOf(p), pr=(k==='GK'||p.pos==='GK')?[k]:[k].concat(old.filter(function(q){return q!==k;})).slice(0,4);
-  var m={}, b='players/'+id+'/';
-  m[b+'pos']=pr[0]; m[b+'pos2']=pr[1]||''; m[b+'pos3']=pr[2]||''; m[b+'pos4']=pr[3]||'';
-  if(p.never&&p.never[k]) m[b+'never/'+k]=null;
-  putMany(m); toast(p.name+' صار '+POS[k].ar);
+  var s=openSession(), p=P(id); if(!s||!p||!POS[k])return;
+  var cur=sessPosOf(s,id)||p.pos; if(cur===k)return;
+  put('sessions/'+s.id+'/posFor/'+id,k===p.pos?null:k);
+  toast(k===p.pos?p.name+' رجع لمركزه '+POS[k].ar:p.name+' يلعب '+POS[k].ar+' في هذا التمرين بس');
+}
+// نشغّل حسابات التمرين (القائمة، التوزيع، التشكيلة) بمراكز هذا التمرين، وبعدها ترجع المراكز الحقيقية
+function withSessPos(s,fn){
+  if(!s||!s.posFor)return fn();
+  var keep={};
+  Object.keys(s.posFor).forEach(function(id){var p=S.players[id], k=sessPosOf(s,id); if(!p||!k||p.pos===k)return;
+    var old=prefsOf(p), pr=(k==='GK'||p.pos==='GK')?[k]:[k].concat(old.filter(function(q){return q!==k;})).slice(0,4);
+    var c=Object.assign({},p,{pos:pr[0],pos2:pr[1]||'',pos3:pr[2]||'',pos4:pr[3]||'',_sessPos:p.pos});
+    if(c.never&&c.never[k]){c.never=Object.assign({},c.never); delete c.never[k];}
+    keep[id]=p; S.players[id]=c;});
+  try{ return fn(); } finally { Object.keys(keep).forEach(function(id){S.players[id]=keep[id];}); }
 }
 // الفلاتر تقبل أكثر من خيار: «الكل» يمسح الاختيار، وأي خيار ثاني يتبدّل (يتفعّل أو يتلغى)
 var PER_POS=2; // كم لاعب نبي في كل مركز
@@ -3994,7 +4007,8 @@ function balanceSolve(s,pri,noSubs){
   var subA={},subB={}; ea.bench.forEach(function(id){subA[id]=true;}); eb.bench.forEach(function(id){subB[id]=true;});
   return {slotsA:ea.asg,slotsB:eb.asg,subA:subA,subB:subB,cost:best.c,evals:evals,total:exhaustive?total:evals,exhaustive:exhaustive,ms:Date.now()-t0,left:attendees(s).filter(function(id){return P(id)&&!(s.absent||{})[id]&&best.A.indexOf(id)<0&&best.B.indexOf(id)<0;})};
 }
-function autoBalance(pri,noSubs){
+function autoBalance(pri,noSubs){ return withSessPos(openSession(),function(){ return autoBalance0(pri,noSubs); }); }
+function autoBalance0(pri,noSubs){
   var s=openSession(); if(!s)return; pri=BAL_PRI[pri]?pri:(BAL_PRI[s.balPri]?s.balPri:'mix'); if(typeof noSubs!=='boolean')noSubs=!!s.noSubs;
   var ids=attendees(s).filter(function(id){return P(id)&&!(s.absent||{})[id];});
   if(ids.length<2){toast('⚠️ أضف لاعبين على الأقل لقائمة التمرين');return;}
@@ -4022,7 +4036,8 @@ function setBalPri(k){
 }
 function fmtNum(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
 
-function openSlot(t,slotId){
+function openSlot(t,slotId){ return withSessPos(openSession(),function(){ return openSlot0(t,slotId); }); }
+function openSlot0(t,slotId){
   var s=openSession(); if(!s)return;
   var sl=slotsOf(s,t).filter(function(x){return x.id===slotId;})[0]; if(!sl)return;
   var cur=s.teams[t].slots[slotId];
