@@ -724,7 +724,7 @@ body.v2 .mvp .medal{box-shadow:0 8px 18px -8px rgba(212,169,60,.8);}
 </style>
 <script>
 /* تحديث تلقائي: إذا نزلت نسخة أحدث من الموقع يعيد تحميل الصفحة (يتجاوز النسخ المخزّنة في الجوال) */
-var BUILD='20261127181946';
+var BUILD='20261128112931';
 (function(){
   function check(){
     if(BUILD==='dev'||!window.fetch)return;
@@ -1687,6 +1687,54 @@ function pushDisable(){
   if(pushSupported()) navigator.serviceWorker.ready.then(function(reg){return reg.pushManager.getSubscription();}).then(function(s){if(s)s.unsubscribe();}).catch(function(){});
   toast('تم إيقاف التذكيرات'); closeModal(); render();
 }
+/* ---------- رسائل واتساب خاصة للاعبين (الأرقام في مسار منفصل، لمجلس الإدارة) ---------- */
+var PHONES=null;
+function loadPhones(cb){
+  if(PHONES){cb&&cb();return;}
+  if(mode==='cloud') db.ref(ROOT+'/phones').once('value').then(function(sn){PHONES=sn.val()||{};cb&&cb();}).catch(function(e){console.warn(e);PHONES={};cb&&cb();});
+  else { PHONES=clone(LOCAL.phones||{}); cb&&cb(); }
+}
+function normPhone(v){ v=arNum(String(v||'')).replace(/[^\d+]/g,''); if(!v)return '';
+  if(v.indexOf('+')===0)v=v.slice(1); if(v.indexOf('00')===0)v=v.slice(2);
+  if(/^05\d{8}$/.test(v))v='966'+v.slice(1); else if(/^5\d{8}$/.test(v))v='966'+v;
+  return /^\d{9,15}$/.test(v)?v:null; }
+function savePhone(id,v){ var n=normPhone(v); if(n===null){toast('⚠️ الرقم مو صحيح، اكتبه مثل 05xxxxxxxx');return false;}
+  PHONES=PHONES||{}; if(n)PHONES[id]=n; else delete PHONES[id]; put('phones/'+id,n||null); return true; }
+var WAM=null;
+var WA_SETS=[['all','كل اللي في القائمة'],['noci','ما حضّروا'],['late','المتأخرين'],['unpaid','ما دفعوا القطة']];
+function openWaMsg(sid){
+  var s=S.sessions[sid]||openSession(); if(!s||!isCoach)return;
+  WAM=WAM&&WAM.sid===s.id?WAM:{sid:s.id,set:'all',text:'هلا {الاسم} 👋\n',sent:{}};
+  openModal('<div class="empty"><b>جاري التحميل…</b></div>'); loadPhones(waInner); modalRefresh=waInner;
+}
+function waIds(s,set){
+  var ids=attendees(s).filter(function(id){return P(id)&&!P(id).hidden&&!(s.absent||{})[id];});
+  if(set==='noci') ids=ids.filter(function(id){return !s.checkin[id];});
+  if(set==='late') ids=ids.filter(function(id){return isLate(s,id);});
+  if(set==='unpaid'){ var k=kOf(s); ids=ids.filter(function(id){return !k.paid[id];}); }
+  return ids.sort(function(a,b){return pname(a).localeCompare(pname(b),'ar');});
+}
+function waText(id){return (WAM.text||'').replace(/\{الاسم\}/g,pname(id).split(' ')[0]);}
+function waInner(){
+  var s=S.sessions[WAM.sid]; if(!s)return; var ids=waIds(s,WAM.set), withP=ids.filter(function(id){return PHONES[id];}).length;
+  var h=mh('رسالة واتساب للاعبين');
+  h+='<div class="chips" id="waSets" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">'+WA_SETS.map(function(x){return '<span class="chip'+(WAM.set===x[0]?' on':'')+'" onclick="WAM.set=\''+x[0]+'\';waInner()">'+x[1]+' <span class="num">'+waIds(s,x[0]).length+'</span></span>';}).join('')+'</div>';
+  h+='<textarea class="field" id="waTxt" rows="4" dir="rtl" style="height:auto;padding:12px;line-height:1.7" placeholder="اكتب الرسالة…" oninput="WAM.text=this.value">'+esc(WAM.text)+'</textarea>';
+  h+='<div class="foot" style="margin:4px 4px 10px">{الاسم} ينحط مكانه اسم اللاعب الأول. اضغط «إرسال» جنب كل لاعب: يفتح الواتساب على محادثته والرسالة جاهزة، وأنت تضغط إرسال.</div>';
+  h+=ids.length?'<div class="card" id="waList">'+ids.map(function(id){var ph=PHONES[id], sent=WAM.sent[id];
+    return '<div class="cell warow" data-id="'+id+'">'+avatar(id)+'<div class="body"><div class="t">'+esc(pname(id))+'</div><div class="s num ltr" style="text-align:right">'+(ph?(/^9665\d{8}$/.test(ph)?'0'+ph.slice(3):'+'+ph):'<span style="color:var(--orange)">ما فيه رقم</span>')+'</div></div>'+
+      (ph?'<button class="btn sm '+(sent?'gray':'')+'" onclick="waSend(\''+id+'\')">'+(sent?'✓ انرسلت':'إرسال')+'</button>':'<button class="btn sm tinted" onclick="waAddPhone(\''+id+'\')">أضف رقم</button>')+'</div>';}).join('')+'</div>'
+    :'<div class="card"><div class="empty"><b>ما فيه أحد في هذي القائمة</b></div></div>';
+  if(ids.length) h+='<div class="foot">'+cnt(withP,'لاعب')+' عندهم رقم من '+ids.length+'.</div>';
+  setModal(h);
+}
+function waSend(id){ var ph=PHONES[id]; if(!ph)return; var tx=waText(id).trim(); if(!tx){toast('⚠️ اكتب الرسالة أول');return;}
+  WAM.sent[id]=1; window.open('https://wa.me/'+ph+'?text='+encodeURIComponent(tx),'_blank'); setTimeout(waInner,300); }
+function waAddPhone(id){
+  var row=document.querySelector('.warow[data-id="'+id+'"]'); if(!row)return;
+  row.querySelector('.btn').outerHTML='<input class="field num" id="waPh-'+id+'" type="tel" inputmode="tel" placeholder="05xxxxxxxx" style="width:130px;flex:none;height:36px" onkeydown="if(event.key===\'Enter\')this.blur()" onchange="if(savePhone(\''+id+'\',this.value))waInner()">';
+  var e=document.getElementById('waPh-'+id); if(e)e.focus();
+}
 /* ---------- قائمة المصابين: نوع الإصابة، المدة، والوقت المتوقع للعودة ---------- */
 var INJ_TYPES=['شد عضلي','تمزق عضلي','التواء الكاحل','إصابة الركبة','الرباط الصليبي','كدمة','إصابة الظهر','كسر'];
 function injOf(id){var x=(S.inj||{})[id]; return x&&P(id)&&!P(id).hidden?x:null;}
@@ -2226,6 +2274,7 @@ function openPlayerForm(id){
   var h=mh(id?'تعديل اللاعب':'لاعب جديد');
   h+='<div class="photo-edit"><div id="f_pv">'+pfPhotoBox()+'</div><div class="hstack"><label class="btn sm tinted" style="cursor:pointer">'+ic('cam','xs')+'اختيار صورة<input type="file" accept="image/*" id="f_file" style="display:none" onchange="pickPhoto(this)"></label><button type="button" class="btn sm gray" id="f_adjphoto" onclick="adjustPhoto()">ضبط</button><button type="button" class="btn sm gray" id="f_rmphoto" onclick="pf.p.photo=\'\';document.getElementById(\'f_pv\').innerHTML=pfPhotoBox()">إزالة</button></div></div>';
   h+='<span class="lbl">الاسم</span><input class="field" id="f_name" maxlength="30" value="'+esc(p.name)+'" placeholder="مثال: سالم الدوسري">';
+  h+='<span class="lbl">رقم الجوال (للواتساب، يشوفه مجلس الإدارة بس)</span><input class="field num" id="f_tel" type="tel" inputmode="tel" dir="ltr" placeholder="05xxxxxxxx" value="">';
   h+='<span class="lbl">العمر</span><input class="field num" id="f_age" type="number" inputmode="numeric" min="5" max="60" value="'+esc(p.age)+'">';
   var bdp=String(p.bday||'').split('-'); h+='<span class="lbl">يوم الميلاد (اختياري)</span><div style="display:flex;gap:8px"><select class="field" id="f_bd" style="flex:1"><option value="">اليوم</option>'+Array.from({length:31},function(_,i){var v=('0'+(i+1)).slice(-2);return '<option value="'+v+'"'+(bdp[1]===v?' selected':'')+'>'+(i+1)+'</option>';}).join('')+'</select><select class="field" id="f_bm" style="flex:2"><option value="">الشهر</option>'+Array.from({length:12},function(_,i){var v=('0'+(i+1)).slice(-2);return '<option value="'+v+'"'+(bdp[0]===v?' selected':'')+'>'+ymName('2026-'+v)+'</option>';}).join('')+'</select></div>';
   h+='<span class="lbl">القدم المفضلة</span><div class="seg" id="f_foot">'+['R','L','B'].map(function(k){return '<button type="button" class="'+(p.foot===k?'on':'')+'" onclick="pf.p.foot=\''+k+'\';this.parentNode.querySelectorAll(\'button\').forEach(function(b){b.classList.remove(\'on\')});this.classList.add(\'on\')">'+FOOT[k]+'</button>';}).join('')+'</div>';
@@ -2244,6 +2293,7 @@ function openPlayerForm(id){
   h+='<div class="card" style="margin-top:14px"><div class="cell"><div class="body"><div class="t">التقييم العام</div><div class="s">في مركزه الأساسي</div></div><b class="num" id="f_ovr" style="font-size:28px;color:var(--tint)">'+ovr(p)+'</b></div></div>';
   h+='<div class="m-foot">'+(id?'<button class="btn danger" onclick="deletePlayer(\''+id+'\')">حذف</button>':'')+'<button class="btn" id="f_save" onclick="savePlayer()">حفظ</button></div>';
   openModal(h); pfVis(); pfNever();
+  if(id) loadPhones(function(){var e=document.getElementById('f_tel'), n=PHONES[id]; if(e&&n&&!e.value) e.value=/^9665\d{8}$/.test(n)?'0'+n.slice(3):'+'+n;});
 }
 function pfPhotoBox(){var u=photoSrc(pf.p);return u?'<img class="pv" src="'+u+'" alt="">':'<div class="pv">'+ic('people')+'</div>';}
 // تصغير الصورة وقصّها مربعاً (320×320) حتى تُحفظ بسرعة
@@ -2444,6 +2494,7 @@ function savePlayer(){
   var p=pf.p;
   p.name=document.getElementById('f_name').value.trim().replace(/\s+/g,' ');
   if(!p.name){toast('⚠️ اكتب اسم اللاعب');return;}
+  var telE=document.getElementById('f_tel'), tel=telE?telE.value.trim():'', telN=normPhone(tel); if(telN===null){toast('⚠️ رقم الجوال مو صحيح، اكتبه مثل 05xxxxxxxx');return;}
   var age=document.getElementById('f_age').value.trim();
   p.age=age===''?'':clamp(parseInt(age,10)||0,0,99);
   var pr=pfReadPrefs(); if(!pr.length){toast('⚠️ اختر مركزه الأول');return;}
@@ -2453,10 +2504,10 @@ function savePlayer(){
   var dup=playersArr().filter(function(x){return x.id!==pf.id&&x.name===p.name;});
   if(dup.length){toast('⚠️ يوجد لاعب بنفس الاسم');return;}
   var id=pf.id||uid('p'); var tr={}; TRAITS.forEach(function(x){if((p.traits||{})[x[0]])tr[x[0]]=true;}); var rec={joker:FEAT_JOKER&&p.joker?true:null,name:p.name,age:p.age,foot:p.foot,traits:tr,sm:clamp(+p.sm||3,1,5),wf:clamp(+p.wf||3,1,5),pos:p.pos,pos2:p.pos2,pos3:p.pos3,pos4:p.pos4,never:nv,attrs:p.attrs,created:p.created||Date.now()}; if(p.carry)rec.carry=p.carry; if(p.hidden)rec.hidden=true; if(p.hist)rec.hist=p.hist; if(pf.id&&P(pf.id)){ var he=histEntry('edit',P(pf.id),p.attrs,Date.now()); if(he){ rec.hist=Object.assign({},rec.hist||{}); rec.hist['h'+he.at]=he; } } if(p.crowdAdj)rec.crowdAdj=p.crowdAdj; var bm=document.getElementById('f_bm').value, bd=document.getElementById('f_bd').value; if(bm&&bd)rec.bday=bm+'-'+bd; var phNew=photoSrc(p), phOld=pf.id&&P(pf.id)?photoSrc(P(pf.id)):'', phM={}; if(phNew){ rec.pv=(phNew!==phOld||!(P(pf.id)||{}).pv)?Date.now():P(pf.id).pv; if(rec.pv!==(P(pf.id)||{}).pv){phM['photos/'+id]=phNew; if(mode==='cloud')phSave(id,rec.pv,phNew);} } else if(phOld) phM['photos/'+id]=null;
-  phM['players/'+id]=rec; putMany(phM); closeModal(); toast(pf.id?'تم حفظ التعديلات':'تمت إضافة '+p.name);
+  phM['players/'+id]=rec; if(telE&&(PHONES?(PHONES[id]||'')!==telN:!!telN)){ phM['phones/'+id]=telN||null; if(PHONES){ if(telN)PHONES[id]=telN; else delete PHONES[id]; } } putMany(phM); closeModal(); toast(pf.id?'تم حفظ التعديلات':'تمت إضافة '+p.name);
 }
 function deletePlayer(id){
-  askConfirm('<b>حذف '+esc(pname(id))+'؟</b><br><span class="small">سجله في التمارين القديمة يبقى باسم «لاعب محذوف».</span>',function(){putMany({['players/'+id]:null,['photos/'+id]:null});closeModal();toast('تم الحذف');},'حذف');
+  askConfirm('<b>حذف '+esc(pname(id))+'؟</b><br><span class="small">سجله في التمارين القديمة يبقى باسم «لاعب محذوف».</span>',function(){putMany({['players/'+id]:null,['photos/'+id]:null,['phones/'+id]:null});closeModal();toast('تم الحذف');},'حذف');
 }
 
 /* ---------- ملف اللاعب ---------- */
@@ -3434,6 +3485,7 @@ function openShare(sid){
   var opt=function(id,icon,color,t,sub,fn,off){return '<div class="cell tap ind shareopt" id="'+id+'" style="'+(off?'opacity:.45;pointer-events:none':'')+'" onclick="closeModal();setTimeout(function(){'+fn+'},250)">'+tile(color,icon)+'<div class="body"><div class="t">'+t+'</div><div class="s">'+sub+'</div></div>'+chev()+'</div>';};
   var h=mh('مشاركة')+'<div class="card">';
   if(!done) h+=opt('sh-invite','plus','#34C759','رسالة الدعوة','نص الدعوة للقروب: الرقم والتاريخ والوقت جاهزة','openInvite(\''+s.id+'\')');
+  h+=opt('sh-wa','people','#25D366','رسالة واتساب خاصة للاعبين','لكل لاعب في القائمة: الكل، أو اللي ما حضّروا، أو المتأخرين، أو اللي ما دفعوا','openWaMsg(\''+s.id+'\')');
   if(done) h+=opt('sh-sum','trophy','#D4A93C','ملخص التمرين','النتيجة والأهداف وأفضل لاعب والتقييمات','posterShare(\'sum\',\''+s.id+'\')');
   var ended=done||liveState(s)==='ended'||(liveState(s)==='live'&&Object.keys(s.goals||{}).length>0);
   if(ended) h+=opt('sh-post','flag','#FF9500','بعد المباراة','النتيجة والأهداف وهدّاف ومايسترو التمرين والمتأخرين وتذكير التصويت','posterShare(\'post\',\''+s.id+'\')');
